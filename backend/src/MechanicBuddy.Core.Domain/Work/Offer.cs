@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public class Offer : GuidIdentityEntity
     {

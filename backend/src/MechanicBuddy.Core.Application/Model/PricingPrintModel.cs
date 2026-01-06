@@ -1,7 +1,7 @@
-﻿using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Domain;
 
-namespace Carmasters.Core.Application.Model
+namespace MechanicBuddy.Core.Application.Model
 {
     public class PricingPrintModel
     {

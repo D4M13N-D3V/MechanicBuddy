@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public class Vehicle: GuidIdentityEntity
     {

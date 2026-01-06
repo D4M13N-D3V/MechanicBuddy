@@ -3,19 +3,19 @@ services:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: carcare
-      POSTGRES_PASSWORD: carcare
-      POSTGRES_DB: carcare            # template DB name seed
+      POSTGRES_USER: mechanicbuddy
+      POSTGRES_PASSWORD: mechanicbuddy
+      POSTGRES_DB: mechanicbuddy            # template DB name seed
     volumes:
       - dbdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "carcare"]
+      test: ["CMD", "pg_isready", "-U", "mechanicbuddy"]
       interval: 10s
       retries: 10
 
   migrate:
     volumes:
-      - ./backend/src/Carmasters.Http.Api/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
+      - ./backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
     build:
       context: .
       dockerfile: backend/DbUp.Dockerfile
@@ -25,7 +25,7 @@ services:
 
   api:
     volumes:
-      - ./backend/src/Carmasters.Http.Api/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
+      - ./backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json:/app/appsettings.Secrets.json:ro
     build:
       context: .
       dockerfile: backend/Dockerfile

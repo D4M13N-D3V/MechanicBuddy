@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
     public interface IMultiTenancyConnectionDriver
     {

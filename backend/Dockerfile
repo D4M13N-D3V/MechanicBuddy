@@ -3,13 +3,13 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # copy solution & **all project directories**
-COPY backend/src/Carmasters.sln .
+COPY backend/src/MechanicBuddy.sln .
 COPY backend/src/. .
 
-RUN dotnet restore Carmasters.sln
+RUN dotnet restore MechanicBuddy.sln
 
 # publish API
-RUN dotnet publish Carmasters.Http.Api/Carmasters.Http.Api.csproj \
+RUN dotnet publish MechanicBuddy.Http.Api/MechanicBuddy.Http.Api.csproj \
         -c Release -o /app/publish
 
 # ---------- runtime ----------
@@ -18,7 +18,7 @@ ENV ASPNETCORE_URLS=http://+:15567
 WORKDIR /app
 COPY --from=build /app/publish .
 
-RUN mkdir -p /var/carcare/pdf /opt/puppeteer
+RUN mkdir -p /var/mechanicbuddy/pdf /opt/puppeteer
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     fonts-liberation \
@@ -58,5 +58,5 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
-    
-ENTRYPOINT ["dotnet","Carmasters.Http.Api.dll"]
+
+ENTRYPOINT ["dotnet","MechanicBuddy.Http.Api.dll"]

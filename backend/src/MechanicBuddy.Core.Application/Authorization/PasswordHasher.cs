@@ -6,7 +6,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Authorization
+namespace MechanicBuddy.Core.Application.Authorization
 {
     //todo , more secure login implementation
     public static class PasswordHasher

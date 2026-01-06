@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public class Employee: GuidIdentityEntity
     {

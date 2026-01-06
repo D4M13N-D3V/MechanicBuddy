@@ -1,9 +1,9 @@
-﻿using Carmasters.Core.Application;
-using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+﻿using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Dapper;
 using Microsoft.Extensions.Options;
 using NHibernate;
@@ -14,7 +14,7 @@ using System.Net.Mail;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Repository.Postgres
+namespace MechanicBuddy.Core.Repository.Postgres
 {
     /// <summary>
     /// TODO, transaction handling and separate connection handling .. kinda special case but without multitenancy it should work as normal .. needs to implemented better

@@ -2,7 +2,7 @@
 set -e
 
 # Paths
-APPSETTINGS=backend/src/Carmasters.Http.Api/appsettings.Secrets.json
+APPSETTINGS=backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json
 ENVFILE=frontend/.env
 
 # Secrets

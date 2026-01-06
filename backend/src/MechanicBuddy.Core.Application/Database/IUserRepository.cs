@@ -1,11 +1,11 @@
-﻿using Carmasters.Core.Application.Model;
-using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Domain;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using System.Net.Mail;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
     public interface IUserRepository
     {

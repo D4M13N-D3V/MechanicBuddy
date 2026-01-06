@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application
+namespace MechanicBuddy.Core.Application
 {
     public class ShellCommand
     {

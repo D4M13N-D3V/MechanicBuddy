@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Http.Api.Model
+namespace MechanicBuddy.Http.Api.Model
 {
     public class IssuanceDto
     {

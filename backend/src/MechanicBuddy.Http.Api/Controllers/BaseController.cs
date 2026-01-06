@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
-using Carmasters.Core;
-using Carmasters.Core.Application;
-using Carmasters.Core.Domain;
-using Carmasters.Core.Repository.Postgres;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Core.Repository.Postgres;
+using MechanicBuddy.Http.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
 
     /// <summary>

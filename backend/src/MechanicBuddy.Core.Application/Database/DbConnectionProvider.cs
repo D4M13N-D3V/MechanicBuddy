@@ -6,7 +6,7 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
     public class DbConnectionProvider
     {

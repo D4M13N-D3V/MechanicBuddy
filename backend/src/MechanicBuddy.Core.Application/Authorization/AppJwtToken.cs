@@ -3,12 +3,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
-using Carmasters.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Carmasters.Core.Application.Authorization
+namespace MechanicBuddy.Core.Application.Authorization
 {
     public class AppJwtToken
     {

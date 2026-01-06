@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Microsoft.AspNetCore.Mvc;
-using Carmasters.Core.Application.Services;
+using MechanicBuddy.Core.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using System;
 using NHibernate;
@@ -10,11 +10,11 @@ using System.Linq;
 using NHibernate.Mapping;
 using System.Collections.Generic;
 using Dapper;
-using Carmasters.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Application.RateLimiting;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     /// <summary>
     /// todo refract not http methods out

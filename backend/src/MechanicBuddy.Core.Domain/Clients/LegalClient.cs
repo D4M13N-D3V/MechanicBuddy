@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public class LegalClient : Client
     {

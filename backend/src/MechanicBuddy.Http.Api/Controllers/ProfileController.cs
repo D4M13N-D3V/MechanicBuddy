@@ -1,15 +1,15 @@
 ﻿using System;
-using Carmasters.Core.Application.Authorization;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Extensions;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application.Authorization;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Extensions;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     [TenantRateLimit]
     [Authorize(Policy = "ServerSidePolicy")]

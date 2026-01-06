@@ -1,8 +1,8 @@
-﻿using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Domain;
 using System;
 using System.Linq;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public class Estimate : Pricing
     {

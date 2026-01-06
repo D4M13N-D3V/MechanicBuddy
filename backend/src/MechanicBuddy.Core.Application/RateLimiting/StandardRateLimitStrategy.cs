@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     public class StandardRateLimitStrategy : IRateLimitStrategy
     {

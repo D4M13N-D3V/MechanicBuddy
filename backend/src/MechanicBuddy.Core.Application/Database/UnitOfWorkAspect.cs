@@ -8,7 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
 
     public class UnitOfWorkAspect : IAsyncActionFilter

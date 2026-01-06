@@ -4,13 +4,13 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Dapper;
 
 
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public class PageResultQuery<DTO>
     {

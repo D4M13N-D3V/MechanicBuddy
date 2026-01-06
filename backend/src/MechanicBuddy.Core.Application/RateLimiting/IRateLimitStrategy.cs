@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     public interface IRateLimitStrategy
     {

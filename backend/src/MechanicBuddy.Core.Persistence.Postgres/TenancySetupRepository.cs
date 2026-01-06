@@ -1,6 +1,6 @@
-﻿using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Services;
+﻿using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Threading.Tasks;

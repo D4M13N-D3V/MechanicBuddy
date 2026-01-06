@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Security.Claims;
-using Carmasters.Core.Application;
-using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Database;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Database;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NHibernate.Connection;
 
-namespace Carmasters.Core.Persistence.Postgres.NHibernate
+namespace MechanicBuddy.Core.Persistence.Postgres.NHibernate
 {
      
     public class MultiTenancyConnectionDriver : ConnectionProvider, IMultiTenancyConnectionDriver

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Http.Api.Models
+namespace MechanicBuddy.Http.Api.Models
 {
     public record VehiclePageDto(string Producer, string Model, string RegNr, string Vin, string Body, string Engine, DateTime? ProductionDate, string Region, string Series, string Transmission, Guid Id, string OwnerName, Guid? OwnerId)
     {

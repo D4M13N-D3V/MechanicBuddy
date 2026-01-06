@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Carmasters.Core.Application.Configuration
+namespace MechanicBuddy.Core.Application.Configuration
 {
 	public interface IWritableOptions<T> : IOptions<T> where T : class, new()
     {

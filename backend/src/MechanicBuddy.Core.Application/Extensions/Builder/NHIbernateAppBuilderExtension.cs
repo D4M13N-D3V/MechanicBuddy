@@ -1,4 +1,4 @@
-﻿using Carmasters.Core.Application.Database;
+﻿using MechanicBuddy.Core.Application.Database;
 using Microsoft.AspNetCore.Builder;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Extensions.Builder
+namespace MechanicBuddy.Core.Application.Extensions.Builder
 {
 	public static class NHIbernateAppBuilderExtension
 	{

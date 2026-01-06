@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 { 
     public  class Work : GuidIdentityEntity
     {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     public static class DistributedCachingExtensions
     {

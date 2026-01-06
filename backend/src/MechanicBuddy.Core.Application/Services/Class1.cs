@@ -1,12 +1,12 @@
-﻿using Carmasters.Core.Application.Services;
-using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Domain;
 using NHibernate;
 using NHibernate.Linq;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Persistence.Postgres.Repositories
+namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 {
     public class TenantConfigRepository : ITenantConfigRepository
     {

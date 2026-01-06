@@ -1,4 +1,4 @@
-﻿using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Domain;
 using FluentNHibernate;
 using FluentNHibernate.Mapping;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
     public class UserDbMapping : ClassMap<User>
     {

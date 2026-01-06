@@ -1,9 +1,9 @@
 ﻿using System;
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Domain;
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Carmasters.Core.Persistence.Postgres")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("MechanicBuddy.Core.Persistence.Postgres")]
 
-namespace Carmasters.Core
+namespace MechanicBuddy.Core
 {
      
     /// <summary>

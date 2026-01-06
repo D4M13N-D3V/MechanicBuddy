@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public abstract class Saleable : GuidIdentityEntity
     {

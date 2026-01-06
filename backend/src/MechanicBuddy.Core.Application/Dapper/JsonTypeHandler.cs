@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Carmasters.Core.Application.Dapper
+namespace MechanicBuddy.Core.Application.Dapper
 {
     
     public class JsonNodeTypeHandler : SqlMapper.TypeHandler<JsonNode>

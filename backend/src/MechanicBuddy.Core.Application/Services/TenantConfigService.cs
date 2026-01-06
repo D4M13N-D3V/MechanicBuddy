@@ -1,8 +1,8 @@
-﻿using Carmasters.Core.Application.Configuration;
+﻿using MechanicBuddy.Core.Application.Configuration;
 using System;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public class TenantConfigService : ITenantConfigService
     {

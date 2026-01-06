@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Core.Repository.Postgres
+namespace MechanicBuddy.Core.Repository.Postgres
 { 
     public class EntityNotFoundException : Exception
     {

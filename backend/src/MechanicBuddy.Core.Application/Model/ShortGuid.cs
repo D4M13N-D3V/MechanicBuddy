@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Model
+namespace MechanicBuddy.Core.Application.Model
 {
     /// <summary>
     /// A convenience wrapper struct for dealing with URL-safe Base64 encoded globally unique identifiers (GUID),

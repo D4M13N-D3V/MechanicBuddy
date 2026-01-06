@@ -1,11 +1,11 @@
-﻿using Carmasters.Core.Application;
-using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Domain;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using System.Security.Claims;
 
-namespace Carmasters.Core.Application.Extensions
+namespace MechanicBuddy.Core.Application.Extensions
 {
     public static class ControllerExtensions
     {

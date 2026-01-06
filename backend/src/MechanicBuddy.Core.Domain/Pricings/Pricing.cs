@@ -1,5 +1,5 @@
 ﻿
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Domain;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
     public abstract partial class Pricing : GuidIdentityEntity
     {

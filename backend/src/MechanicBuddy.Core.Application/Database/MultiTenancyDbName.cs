@@ -1,7 +1,7 @@
-﻿using Carmasters.Core.Application.Configuration;
+﻿using MechanicBuddy.Core.Application.Configuration;
 using System;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
     public class MultiTenancyDbName
     {

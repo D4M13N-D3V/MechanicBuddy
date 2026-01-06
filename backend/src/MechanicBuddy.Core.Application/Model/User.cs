@@ -1,16 +1,16 @@
 ﻿using AutoMapper;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Domain;
 using NHibernate.Bytecode;
 using System;
 using System.Collections.Generic;
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Carmasters.Core.Persistence.Postgres")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("MechanicBuddy.Core.Persistence.Postgres")]
 
-namespace Carmasters.Core.Application.Model
+namespace MechanicBuddy.Core.Application.Model
 {
 }
-namespace Carmasters.Core.Application
+namespace MechanicBuddy.Core.Application
 {
     public class User
     { 

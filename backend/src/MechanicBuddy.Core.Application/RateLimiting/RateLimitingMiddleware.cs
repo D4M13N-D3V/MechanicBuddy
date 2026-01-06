@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     public class RateLimitingMiddleware
     {

@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using Carmasters.Core.Application.Extensions;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Application.Services;
-using Carmasters.Core.Domain;
-using Carmasters.Core.Repository.Postgres;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application.Extensions;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Core.Repository.Postgres;
+using MechanicBuddy.Http.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NHibernate;
@@ -15,7 +15,7 @@ using System.Security.Cryptography.X509Certificates;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     [TenantRateLimit]
     [Authorize(Policy = "ServerSidePolicy")]

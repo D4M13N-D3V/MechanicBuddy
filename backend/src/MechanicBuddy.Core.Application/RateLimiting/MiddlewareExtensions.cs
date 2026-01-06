@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     public static class MiddlewareExtensions
     {

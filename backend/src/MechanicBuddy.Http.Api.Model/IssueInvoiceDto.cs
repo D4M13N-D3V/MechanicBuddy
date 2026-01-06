@@ -1,6 +1,6 @@
-﻿using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Domain;
 
-namespace Carmasters.Http.Api.Model
+namespace MechanicBuddy.Http.Api.Model
 {
     public record  IssueInvoiceDto(PaymentType PaymentType, short DueDays, bool SendClientEmail, string ClientEmail);
 }

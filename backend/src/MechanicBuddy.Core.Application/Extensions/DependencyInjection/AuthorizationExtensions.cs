@@ -6,7 +6,7 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Extensions.DependencyInjection
+namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
 {
 	public static class AuthorizationExtensions
     {

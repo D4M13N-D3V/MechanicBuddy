@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Http.Api.Models
+namespace MechanicBuddy.Http.Api.Models
 {
     public record ClientDto(Guid Id, AddressDto Address, string Phone, string[] EmailAddresses, string CurrentEmail, bool SsAsshole, string Description, DateTime IntroducedAt,bool IsPrivate) 
     {

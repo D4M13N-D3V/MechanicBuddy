@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -9,7 +9,7 @@ using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Carmasters.Http.Api.Controllers.Clients
+namespace MechanicBuddy.Http.Api.Controllers.Clients
 {
     [TenantRateLimit]
     [Authorize(Policy = "ServerSidePolicy")]

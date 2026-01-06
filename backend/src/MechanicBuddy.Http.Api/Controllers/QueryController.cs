@@ -1,13 +1,13 @@
 ﻿using System.Linq;
-using Carmasters.Core.Application;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Application.Services;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Application.Services;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NHibernate;
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     [TenantRateLimit]
     [Authorize(Policy = "ServerSidePolicy")]

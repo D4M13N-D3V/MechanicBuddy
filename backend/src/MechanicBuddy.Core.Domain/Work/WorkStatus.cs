@@ -1,4 +1,4 @@
-﻿namespace Carmasters.Core.Domain
+﻿namespace MechanicBuddy.Core.Domain
 {
     /// <summary>
     /// Work user state can be changed into

@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Carmasters.Core.Application.Extensions;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Application.Services;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application.Extensions;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +14,7 @@ using System.Reflection;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Carmasters.Http.Api.Controllers.Clients
+namespace MechanicBuddy.Http.Api.Controllers.Clients
 {
     [TenantRateLimit]
     [Route("api/[controller]")]

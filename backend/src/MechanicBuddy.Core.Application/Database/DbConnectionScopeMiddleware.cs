@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Database
+namespace MechanicBuddy.Core.Application.Database
 {
     public class DbConnectionScopeMiddleware
     {

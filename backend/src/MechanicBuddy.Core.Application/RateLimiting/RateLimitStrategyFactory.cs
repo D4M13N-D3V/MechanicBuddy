@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using System.Security.Claims;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     public class RateLimitStrategyFactory
     {

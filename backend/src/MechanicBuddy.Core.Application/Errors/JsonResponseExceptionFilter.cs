@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Carmasters.Core.Application.Errors
+namespace MechanicBuddy.Core.Application.Errors
 {
     public class JsonResponseExceptionFilter : IActionFilter
     {

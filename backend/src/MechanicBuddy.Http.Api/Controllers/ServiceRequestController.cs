@@ -1,5 +1,5 @@
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Domain;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +7,7 @@ using NHibernate;
 using System;
 using System.Linq;
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     [Route("api/[controller]")]
     public class ServiceRequestController : ControllerBase

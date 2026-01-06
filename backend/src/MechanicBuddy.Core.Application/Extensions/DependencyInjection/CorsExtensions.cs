@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace Carmasters.Core.Application.Extensions.DependencyInjection
+namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
 {
     public static class CorsExtensions
     {

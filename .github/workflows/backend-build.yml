@@ -68,13 +68,13 @@ jobs:
       #  Secrets -----------------------------------------------------------------
       - name: Create Secrets.json template
         run: |
-          mv src/Carmasters.Http.Api/appsettings.Secrets.json.multitenancy.example \
-             src/Carmasters.Http.Api/appsettings.Secrets.json
+          mv src/MechanicBuddy.Http.Api/appsettings.Secrets.json.multitenancy.example \
+             src/MechanicBuddy.Http.Api/appsettings.Secrets.json
 
       - name: Populate Secrets
         uses: microsoft/variable-substitution@v1
         with:
-          files: "backend/src/Carmasters.Http.Api/appsettings.Secrets.json"
+          files: "backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json"
         env:
           JwtOptions.Secret: "${{ inputs.jwt-secret }}"
           JwtOptions.ConsumerSecret: "${{ inputs.consumer-secret }}"
@@ -92,13 +92,13 @@ jobs:
       # ---------------------------------------------------------------------
       #  Build -------------------------------------------------------------------
       - name: Build API
-        run: dotnet build -c Release -o ../../dist/carcare
-        working-directory: backend/src/Carmasters.Http.Api
-        
+        run: dotnet build -c Release -o ../../dist/mechanicbuddy
+        working-directory: backend/src/MechanicBuddy.Http.Api
+
       - name: Copy Secrets to build output
-        working-directory: backend/src/Carmasters.Http.Api
+        working-directory: backend/src/MechanicBuddy.Http.Api
         run: |
-          cp appsettings.Secrets.json ../../dist/carcare/
+          cp appsettings.Secrets.json ../../dist/mechanicbuddy/
 
       - name: Build DbUp
         run: dotnet build -c Release -o ../../dist/dbup
@@ -119,13 +119,13 @@ jobs:
       - name: Deploy API with rsync
         uses: burnett01/rsync-deployments@7.0.2
         with:
-          switches: -avzr --delete --exclude="Carmasters.Http.Api.staticwebassets.runtime.json"
-          path: backend/dist/carcare
+          switches: -avzr --delete --exclude="MechanicBuddy.Http.Api.staticwebassets.runtime.json"
+          path: backend/dist/mechanicbuddy
           remote_path: ${{ inputs.application-path }}
           remote_host: ${{ inputs.application-host }}
           remote_user: ${{ inputs.application-host-user }}
           remote_key: ${{ inputs.ssh-key }}
-          
+
       - name: Run DbUp migrations and reload API
         uses: appleboy/ssh-action@v1.2.1
         with:
@@ -133,8 +133,8 @@ jobs:
           username: ${{ inputs.application-host-user }}
           key: ${{ inputs.ssh-key }}
           script: |
-            sudo service carcare stop
+            sudo service mechanicbuddy stop
             ${{ inputs.application-path }}dbup/DbUp
-            sudo service carcare start
-            sudo service carcare status
-            sudo journalctl --unit=carcare.service -n 20 --no-pager
+            sudo service mechanicbuddy start
+            sudo service mechanicbuddy status
+            sudo journalctl --unit=mechanicbuddy.service -n 20 --no-pager

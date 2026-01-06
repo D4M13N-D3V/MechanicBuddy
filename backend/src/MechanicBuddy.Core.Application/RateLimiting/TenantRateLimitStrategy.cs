@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     /// Counts requests per authenticated tenant (ClaimTypes.Spn).
     /// Falls back to IP key if the claim is missing.

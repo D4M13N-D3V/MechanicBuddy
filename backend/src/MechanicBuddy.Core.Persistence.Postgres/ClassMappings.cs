@@ -1,6 +1,6 @@
 ﻿using System; 
 using System.Data.Common; 
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Domain;
 using FluentNHibernate;
 using FluentNHibernate.Mapping;
 using NHibernate;
@@ -8,7 +8,7 @@ using NHibernate.Engine;
 using NHibernate.SqlTypes;
 using NHibernate.UserTypes; 
 
-namespace Carmasters.Core.Persistence.Postgres.Repositories
+namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 {
     public static class IdentityInsertExtensions
     {

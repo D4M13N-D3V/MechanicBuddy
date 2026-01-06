@@ -1,8 +1,8 @@
 ﻿using System;
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Domain;
 using Npgsql;
 
-namespace Carmasters.Core.Application.Errors
+namespace MechanicBuddy.Core.Application.Errors
 {
     public class JsonErrorDto
     {

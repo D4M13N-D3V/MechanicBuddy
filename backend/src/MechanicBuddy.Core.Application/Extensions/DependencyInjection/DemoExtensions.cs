@@ -1,8 +1,8 @@
 ﻿
-using Carmasters.Core.Application.Services;
+using MechanicBuddy.Core.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Carmasters.Core.Application.Extensions.DependencyInjection
+namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
 {
     public static class DemoExtensions
     {

@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Data;
 using System.Threading.Tasks;
-using Carmasters.Core.Application;
-using Carmasters.Core.Application.Authorization;
-using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Application.Services;
-using Carmasters.Core.Domain;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.Authorization;
+using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Http.Api.Models;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

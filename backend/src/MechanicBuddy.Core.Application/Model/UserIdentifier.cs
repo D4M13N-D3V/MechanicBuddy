@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Core.Application.Model
+namespace MechanicBuddy.Core.Application.Model
 {
     public class UserIdentifier
     {

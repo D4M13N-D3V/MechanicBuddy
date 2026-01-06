@@ -1,7 +1,7 @@
-﻿using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Domain;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public interface ITenantConfigRepository
     {

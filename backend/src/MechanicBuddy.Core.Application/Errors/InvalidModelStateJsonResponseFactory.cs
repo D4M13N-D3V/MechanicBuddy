@@ -4,7 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Carmasters.Core.Application.Errors
+namespace MechanicBuddy.Core.Application.Errors
 {
     public class InvalidModelStateJsonResponseFactory
     {

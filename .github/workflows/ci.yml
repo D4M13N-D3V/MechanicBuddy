@@ -15,7 +15,7 @@ jobs:
     with:
       db-host: localhost
       db-password: ${{ secrets.DB_PASSWORD }}
-      application-host: carcareco.app
+      application-host: ${{ vars.APPLICATION_HOST }}
       application-path: /opt/apps/
       ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
       jwt-secret: ${{ secrets.JWT_SECRET }}
@@ -25,15 +25,15 @@ jobs:
       smtp-port: 587
       smtp-password: ${{ secrets.SMTP_PASSWORD }}
       smtp-user: ${{ secrets.SMTP_USER }}
-      cors-apphost: carcareco.app
+      cors-apphost: ${{ vars.APPLICATION_HOST }}
 
   frontend:
     if: contains(github.event.head_commit.message, '[skip-frontend]') == false
     uses: ./.github/workflows/frontend-build.yml
     with:
       api-url: http://localhost:15567
-      public-api-url: https://api.carcareco.app
-      application-host: carcareco.app
+      public-api-url: ${{ vars.PUBLIC_API_URL }}
+      application-host: ${{ vars.APPLICATION_HOST }}
       application-path: /opt/apps/
       ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
       consumer-secret: ${{ secrets.CONSUMER_SECRET }}

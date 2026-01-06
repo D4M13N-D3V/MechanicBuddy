@@ -1,8 +1,8 @@
-﻿using Carmasters.Core.Application.Services;
-using Carmasters.Core.Persistence.Postgres.Repositories;
+﻿using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Persistence.Postgres.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Carmasters.Core.Application.Extensions.DependencyInjection
+namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
 {
     public static class TenantConfigurationExtensions
     {

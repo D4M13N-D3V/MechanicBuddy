@@ -1,5 +1,5 @@
-﻿using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static NHibernate.Engine.Query.CallableParser;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
 
     public class PricingPdfMailSender : IPricingSender

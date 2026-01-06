@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using Carmasters.Core.Application;
-using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Application.Printing;
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Application.Printing;
+using MechanicBuddy.Core.Domain;
 using FluentNHibernate.Conventions.Inspections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -20,7 +20,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using NHibernate.Criterion;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public interface IPdfGenerator
     {

@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using NHibernate.Mapping;
 
-namespace Carmasters.Core.Application.Authorization
+namespace MechanicBuddy.Core.Application.Authorization
 {
     public class ClaimsPrincipalBuilder 
     {

@@ -6,12 +6,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Carmasters.Core.Application;
-using Carmasters.Core.Application.Configuration;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Carmasters.Core.Persistence.Postgres
+namespace MechanicBuddy.Core.Persistence.Postgres
 {
 
    

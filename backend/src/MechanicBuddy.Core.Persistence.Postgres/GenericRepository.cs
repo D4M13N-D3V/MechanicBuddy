@@ -1,4 +1,4 @@
-﻿using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Domain;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,7 +7,7 @@ using NHibernate;
 using NHibernate.Criterion;
 using System;
 
-namespace Carmasters.Core.Repository.Postgres
+namespace MechanicBuddy.Core.Repository.Postgres
 {
     public class GenericRepository : IRepository
     {

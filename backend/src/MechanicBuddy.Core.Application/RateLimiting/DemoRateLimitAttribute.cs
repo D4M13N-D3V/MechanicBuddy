@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class DemoRateLimitAttribute : LimitRequests

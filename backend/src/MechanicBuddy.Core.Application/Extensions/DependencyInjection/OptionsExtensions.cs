@@ -1,10 +1,10 @@
-﻿using Carmasters.Core.Application.Configuration;
+﻿using MechanicBuddy.Core.Application.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
-namespace Carmasters.Core.Application.Extensions.DependencyInjection
+namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
 {
     public static class OptionsExtensions
     {

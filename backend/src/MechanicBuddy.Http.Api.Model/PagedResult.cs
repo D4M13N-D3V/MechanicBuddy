@@ -1,4 +1,4 @@
-﻿namespace Carmasters.Http.Api.Models
+﻿namespace MechanicBuddy.Http.Api.Models
 {
     public class PagedResult<T> {
         public bool HasMore { get; set; }

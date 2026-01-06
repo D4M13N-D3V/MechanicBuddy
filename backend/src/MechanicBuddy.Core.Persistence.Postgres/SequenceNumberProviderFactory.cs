@@ -1,10 +1,10 @@
-﻿using Carmasters.Core.Domain;
+﻿using MechanicBuddy.Core.Domain;
 using Microsoft.Extensions.DependencyInjection;
 using NHibernate;
 using NHibernate.Criterion;
 using System;
 
-namespace Carmasters.Core.Repository.Postgres
+namespace MechanicBuddy.Core.Repository.Postgres
 {
 
     public class SequenceNumberProviderFactory : ISequnceNumberProviderFactory

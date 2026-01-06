@@ -4,7 +4,7 @@ using System.Linq;
 
 
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public class WildcardTokens
     {

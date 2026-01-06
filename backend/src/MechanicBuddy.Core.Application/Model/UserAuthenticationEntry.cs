@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Carmasters.Core.Application.Model
+namespace MechanicBuddy.Core.Application.Model
 {
     public enum AuthenticationMethod
     {

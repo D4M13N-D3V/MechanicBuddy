@@ -3,7 +3,7 @@ using System.Data.Common;
 using System.Threading.Tasks;
 using Npgsql;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public interface ITenancyRepository
     {

@@ -1,6 +1,6 @@
-﻿using Carmasters.Core.Application.Authorization;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Errors;
+﻿using MechanicBuddy.Core.Application.Authorization;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Errors;
 using FluentNHibernate.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +17,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace Carmasters.Core.Application.Extensions.DependencyInjection
+namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
 {
     public static class ControllersExtensions
     {

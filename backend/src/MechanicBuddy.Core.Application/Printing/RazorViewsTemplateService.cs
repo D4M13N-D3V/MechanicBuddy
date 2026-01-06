@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 
-namespace Carmasters.Core.Application.Printing
+namespace MechanicBuddy.Core.Application.Printing
 {
    
     public interface ITemplateService

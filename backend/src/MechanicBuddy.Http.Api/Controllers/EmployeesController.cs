@@ -4,16 +4,16 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using AutoMapper;
-using Carmasters.Core.Application;
-using Carmasters.Core.Application.Authorization;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Extensions;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Application.RateLimiting;
-using Carmasters.Core.Application.Services;
-using Carmasters.Core.Domain;
-using Carmasters.Core.Repository.Postgres;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application;
+using MechanicBuddy.Core.Application.Authorization;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Extensions;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Application.RateLimiting;
+using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Core.Repository.Postgres;
+using MechanicBuddy.Http.Api.Models;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +22,7 @@ using NHibernate.Mapping;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Carmasters.Http.Api.Controllers
+namespace MechanicBuddy.Http.Api.Controllers
 {
     [TenantRateLimit]
     [Authorize(Policy = "ServerSidePolicy")]

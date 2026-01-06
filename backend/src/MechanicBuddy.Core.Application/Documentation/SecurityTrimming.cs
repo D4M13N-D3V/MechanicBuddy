@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Carmasters.Core.Application.Authorization;
-using Carmasters.Http.Api.Models;
+using MechanicBuddy.Core.Application.Authorization;
+using MechanicBuddy.Http.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +13,7 @@ using Microsoft.OpenApi.Models;
 using NHibernate.Criterion;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Carmasters.Core.Application.Documentation
+namespace MechanicBuddy.Core.Application.Documentation
 {
     public class SecurityTrimming : IDocumentFilter
     { 

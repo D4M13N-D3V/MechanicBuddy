@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Carmasters.Core.Application.Authorization;
-using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Model;
-using Carmasters.Core.Domain;
+using MechanicBuddy.Core.Application.Authorization;
+using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Model;
+using MechanicBuddy.Core.Domain;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public interface IDemoSetupService
     {

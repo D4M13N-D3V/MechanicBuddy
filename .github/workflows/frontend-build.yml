@@ -17,7 +17,7 @@ on:
         type: string
       public-api-url:
         required: true
-        type: string 
+        type: string
       ssh-key:
         required: true
         type: string
@@ -36,13 +36,13 @@ jobs:
         working-directory: frontend
     steps:
     - uses: actions/checkout@v4
-    
+
     - uses: actions/setup-node@v4
-      with: 
-        node-version: '22.x' 
+      with:
+        node-version: '22.x'
         cache: 'npm'
         cache-dependency-path: ./frontend/package-lock.json
-        
+
     - name: Restore cache
       uses: actions/cache@v4
       with:
@@ -52,10 +52,10 @@ jobs:
         key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
         restore-keys: |
           ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
-          
+
     - name: Install dependencies
       run: npm install
-      
+
     - name: 'Create env file'
       run: |
        touch .env
@@ -67,27 +67,27 @@ jobs:
        echo NEXT_PUBLIC_SESSION_DIALOG_TIMEOUT=120 >> .env
        echo NEXT_TELEMETRY_DISABLED=1 >> .env
        cat .env
-       
+
     - name: Running build
       run: npm run build
-      
+
     - name: Remove src folder
       run: rm -rf src
-      
+
     - name: Deploy with rsync
       uses: burnett01/rsync-deployments@7.0.2
-      with: 
+      with:
         switches: -avzr --delete  --exclude=".git" --exclude=".github" --exclude=".vscode" --exclude="node_modules"
         path: ./frontend/
-        remote_path: ${{ inputs.application-path }}carcare-app/
+        remote_path: ${{ inputs.application-path }}mechanicbuddy-app/
         remote_host: ${{ inputs.application-host }}
         remote_user: ${{ inputs.application-host-user }}
         remote_key: ${{ inputs.ssh-key }}
-        
-    - name: Reloading carcare-app pm2 process
+
+    - name: Reloading mechanicbuddy-app pm2 process
       uses: appleboy/ssh-action@v1.2.1
       with:
         host: ${{ inputs.application-host }}
         username: ${{ inputs.application-host-user }}
         key: ${{ inputs.ssh-key }}
-        script: "cd ${{ inputs.application-path }}carcare-app; pwd; npm install; pm2 reload carcare-app"
+        script: "cd ${{ inputs.application-path }}mechanicbuddy-app; pwd; npm install; pm2 reload mechanicbuddy-app"

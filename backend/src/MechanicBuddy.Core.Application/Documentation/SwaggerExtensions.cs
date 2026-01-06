@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Carmasters.Core.Application.Documentation
+namespace MechanicBuddy.Core.Application.Documentation
 {
 
     public static class SwaggerExtensions

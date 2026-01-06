@@ -1,6 +1,6 @@
 # Paths
-$AppSettingsExample = "backend/src/Carmasters.Http.Api/appsettings.Secrets.json.example"
-$AppSettingsTarget  = "backend/src/Carmasters.Http.Api/appsettings.Secrets.json"
+$AppSettingsExample = "backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json.example"
+$AppSettingsTarget  = "backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json"
 $EnvExample         = "frontend/.env.example"
 $EnvTarget          = "frontend/.env"
 

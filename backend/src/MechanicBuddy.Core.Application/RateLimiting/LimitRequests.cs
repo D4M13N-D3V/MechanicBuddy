@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Controllers;
 
-namespace Carmasters.Core.Application.RateLimiting
+namespace MechanicBuddy.Core.Application.RateLimiting
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class LimitRequests : Attribute

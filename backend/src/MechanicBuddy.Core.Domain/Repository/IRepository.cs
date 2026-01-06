@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {  
     public  interface IRepository {
          

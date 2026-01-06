@@ -1,10 +1,10 @@
-﻿using Carmasters.Core.Application.Configuration;
-using Carmasters.Core.Application.Database;
-using Carmasters.Core.Application.Services;
-using Carmasters.Core.Domain;
-using Carmasters.Core.Persistence.Postgres;
-using Carmasters.Core.Persistence.Postgres.NHibernate;
-using Carmasters.Core.Persistence.Postgres.Repositories;
+﻿using MechanicBuddy.Core.Application.Configuration;
+using MechanicBuddy.Core.Application.Database;
+using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Domain;
+using MechanicBuddy.Core.Persistence.Postgres;
+using MechanicBuddy.Core.Persistence.Postgres.NHibernate;
+using MechanicBuddy.Core.Persistence.Postgres.Repositories;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -13,7 +13,7 @@ using NHibernate.Mapping;
 using System.Data.Common;
 using System.Reflection;
 
-namespace Carmasters.Core.Repository.Postgres
+namespace MechanicBuddy.Core.Repository.Postgres
 {
     public static class DependencyInjectionExtensions
     {

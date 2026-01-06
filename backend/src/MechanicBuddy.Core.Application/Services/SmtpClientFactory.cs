@@ -1,8 +1,8 @@
-﻿using Carmasters.Core.Application.Configuration;
+﻿using MechanicBuddy.Core.Application.Configuration;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 
-namespace Carmasters.Core.Application.Services
+namespace MechanicBuddy.Core.Application.Services
 {
     public interface ISmtpClientFactory
     {

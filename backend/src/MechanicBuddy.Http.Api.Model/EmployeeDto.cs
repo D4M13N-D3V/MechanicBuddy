@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Http.Api.Models
+namespace MechanicBuddy.Http.Api.Models
 {
     public record EmployeeDto  (string FirstName, string LastName, string Phone, string Email, string Proffession, string Description, DateTime IntroducedAt,string UserName,string Password, Guid Id) 
     {

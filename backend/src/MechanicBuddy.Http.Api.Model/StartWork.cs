@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Carmasters.Http.Api.Models
+namespace MechanicBuddy.Http.Api.Models
 {
     public record SendPricingDto(string EmailAddress, string DisplayName);
     public record PutActivityDto(string Notes, bool IsVehicelLinesOnPricing);

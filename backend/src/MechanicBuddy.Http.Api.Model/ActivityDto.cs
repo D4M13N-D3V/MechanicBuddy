@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Carmasters.Http.Api.Model
+namespace MechanicBuddy.Http.Api.Model
 {
     public record ActivityDto(Guid Id, string Number,  DateTime StartedOn, string StartedBy, string Name,string Notes,bool IsVehicleLinesOnPricing,bool IsEmpty)  
     { 

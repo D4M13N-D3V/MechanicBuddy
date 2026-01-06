@@ -11,7 +11,7 @@ using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Carmasters.Core.Application.Errors
+namespace MechanicBuddy.Core.Application.Errors
 {
 
     public class JsonExceptionHandler : IExceptionHandler

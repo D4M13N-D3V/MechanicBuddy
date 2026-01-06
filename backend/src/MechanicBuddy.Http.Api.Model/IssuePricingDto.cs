@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Carmasters.Http.Api.Model
+namespace MechanicBuddy.Http.Api.Model
 {
     public record IssuePricingDto(bool ShowVehicleOnPricing,bool SendClientEmail,string ClientEmail)
     {

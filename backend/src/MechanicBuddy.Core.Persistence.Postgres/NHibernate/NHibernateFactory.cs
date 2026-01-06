@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Carmasters.Core.Persistence.Postgres.Repositories;
+using MechanicBuddy.Core.Persistence.Postgres.Repositories;
 using FluentNHibernate;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using NHibernate;
 using NHibernate.Cfg;
 
-namespace Carmasters.Core.Persistence.Postgres.NHibernate
+namespace MechanicBuddy.Core.Persistence.Postgres.NHibernate
 {
     public class NNhibernateFactory
     {   

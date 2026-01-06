@@ -28,7 +28,7 @@ namespace System
     }
 }
 
-namespace Carmasters.Core.Domain
+namespace MechanicBuddy.Core.Domain
 {
 
     public    abstract class Client : GuidIdentityEntity
