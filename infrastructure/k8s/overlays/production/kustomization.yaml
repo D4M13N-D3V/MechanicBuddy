@@ -31,13 +31,13 @@ patches:
         value: "REPLACE_WITH_SEALED_SECRET"
       - op: replace
         path: /stringData/stripe-secret-key
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "REDACTED_STRIPE_SK"
       - op: replace
         path: /stringData/stripe-webhook-secret
         value: "REPLACE_WITH_SEALED_SECRET"
       - op: replace
         path: /stringData/resend-api-key
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "REDACTED_RESEND_KEY"
   # Override portal secrets
   - target:
       kind: Secret
@@ -48,7 +48,7 @@ patches:
         value: "REPLACE_WITH_SEALED_SECRET"
       - op: replace
         path: /stringData/stripe-publishable-key
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "REDACTED_STRIPE_PK"
   # Override cronjob secrets
   - target:
       kind: Secret

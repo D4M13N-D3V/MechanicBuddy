@@ -87,4 +87,21 @@ public class BillingEventRepository : IBillingEventRepository
             EndDate = endDate
         });
     }
+
+    public async Task<IEnumerable<BillingEvent>> GetAllAsync(int skip = 0, int take = 50)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = @"SELECT * FROM billing_events
+                    ORDER BY created_at DESC
+                    OFFSET @Skip LIMIT @Take";
+
+        return await connection.QueryAsync<BillingEvent>(sql, new { Skip = skip, Take = take });
+    }
+
+    public async Task<int> GetTotalCountAsync()
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = "SELECT COUNT(*) FROM billing_events";
+        return await connection.ExecuteScalarAsync<int>(sql);
+    }
 }

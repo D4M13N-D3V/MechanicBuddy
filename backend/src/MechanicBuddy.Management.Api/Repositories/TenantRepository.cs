@@ -182,4 +182,11 @@ public class TenantRepository : ITenantRepository
         var results = await connection.QueryAsync<(string status, int count)>(sql);
         return results.ToDictionary(r => r.status, r => r.count);
     }
+
+    public async Task<int> GetCountCreatedBetweenAsync(DateTime start, DateTime end)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = "SELECT COUNT(*) FROM tenants WHERE created_at >= @Start AND created_at < @End";
+        return await connection.ExecuteScalarAsync<int>(sql, new { Start = start, End = end });
+    }
 }

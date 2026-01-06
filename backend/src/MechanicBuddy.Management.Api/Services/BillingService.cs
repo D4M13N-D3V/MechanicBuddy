@@ -531,6 +531,69 @@ public class BillingService
     }
 
     /// <summary>
+    /// Gets all billing transactions for the dashboard
+    /// </summary>
+    public async Task<IEnumerable<object>> GetAllTransactionsAsync(int skip = 0, int take = 50)
+    {
+        var events = await _billingEventRepository.GetAllAsync(skip, take);
+        var tenantIds = events.Select(e => e.TenantId).Distinct().ToList();
+        var tenants = new Dictionary<string, string>();
+
+        foreach (var tenantId in tenantIds)
+        {
+            var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
+            if (tenant != null)
+            {
+                tenants[tenantId] = tenant.CompanyName;
+            }
+        }
+
+        return events.Select(e => new
+        {
+            id = e.Id.ToString(),
+            tenantId = e.TenantId,
+            tenantName = tenants.GetValueOrDefault(e.TenantId, "Unknown"),
+            amount = e.Amount,
+            status = e.EventType.Contains("failed") ? "failed" : "completed",
+            type = e.EventType.Contains("subscription") ? "subscription" : "payment",
+            createdAt = e.CreatedAt.ToString("o"),
+            stripePaymentId = e.InvoiceId
+        });
+    }
+
+    /// <summary>
+    /// Gets total count of billing transactions
+    /// </summary>
+    public async Task<int> GetTransactionCountAsync()
+    {
+        return await _billingEventRepository.GetTotalCountAsync();
+    }
+
+    /// <summary>
+    /// Gets billing statistics for the dashboard
+    /// </summary>
+    public async Task<object> GetBillingStatsAsync()
+    {
+        var now = DateTime.UtcNow;
+        var monthStart = new DateTime(now.Year, now.Month, 1);
+
+        var totalRevenue = await _billingEventRepository.GetTotalRevenueAsync();
+        var monthlyRevenue = await _billingEventRepository.GetTotalRevenueAsync(monthStart, now);
+
+        var tenantCounts = await _tenantRepository.GetCountByTierAsync();
+        var activeCount = tenantCounts.Values.Sum();
+        var avgRevenue = activeCount > 0 ? monthlyRevenue / activeCount : 0;
+
+        return new
+        {
+            totalRevenue,
+            monthlyRecurringRevenue = monthlyRevenue,
+            averageRevenuePerTenant = avgRevenue,
+            activeSubscriptions = activeCount
+        };
+    }
+
+    /// <summary>
     /// Handles payment failed webhook events
     /// </summary>
     public async Task HandlePaymentFailedAsync(Invoice invoice)

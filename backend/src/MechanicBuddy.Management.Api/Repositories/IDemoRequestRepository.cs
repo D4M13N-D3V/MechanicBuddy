@@ -16,4 +16,6 @@ public interface IDemoRequestRepository
     Task<bool> UpdateAsync(DemoRequest demoRequest);
     Task<bool> DeleteAsync(int id);
     Task<int> GetPendingCountAsync();
+    Task<int> GetCountByStatusAsync(string status);
+    Task<int> GetTotalCountAsync();
 }

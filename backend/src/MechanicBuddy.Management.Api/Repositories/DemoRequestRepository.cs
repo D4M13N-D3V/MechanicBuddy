@@ -145,4 +145,18 @@ public class DemoRequestRepository : IDemoRequestRepository
         var threshold = DateTime.UtcNow.AddDays(-days);
         return await connection.ExecuteScalarAsync<int>(sql, new { IpAddress = ipAddress, Threshold = threshold });
     }
+
+    public async Task<int> GetCountByStatusAsync(string status)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = "SELECT COUNT(*) FROM demo_requests WHERE status = @Status";
+        return await connection.ExecuteScalarAsync<int>(sql, new { Status = status });
+    }
+
+    public async Task<int> GetTotalCountAsync()
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = "SELECT COUNT(*) FROM demo_requests";
+        return await connection.ExecuteScalarAsync<int>(sql);
+    }
 }

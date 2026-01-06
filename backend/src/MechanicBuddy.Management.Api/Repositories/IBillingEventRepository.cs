@@ -9,4 +9,6 @@ public interface IBillingEventRepository
     Task<IEnumerable<BillingEvent>> GetByEventTypeAsync(string eventType);
     Task<int> CreateAsync(BillingEvent billingEvent);
     Task<decimal> GetTotalRevenueAsync(DateTime? startDate = null, DateTime? endDate = null);
+    Task<IEnumerable<BillingEvent>> GetAllAsync(int skip = 0, int take = 50);
+    Task<int> GetTotalCountAsync();
 }

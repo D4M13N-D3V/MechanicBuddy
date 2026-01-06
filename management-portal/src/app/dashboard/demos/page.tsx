@@ -2,63 +2,46 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
 import { Button } from "@/_components/ui/Button";
-import { formatDate, formatRelativeTime } from "@/_lib/utils";
-
-// Mock data - replace with actual API calls
-const demoRequests = [
-  {
-    id: "1",
-    email: "john@garageplus.com",
-    companyName: "Garage Plus",
-    message: "Looking for a solution to manage our 3 mechanics and inventory tracking.",
-    status: "pending",
-    createdAt: "2026-01-06T08:30:00Z",
-  },
-  {
-    id: "2",
-    email: "sarah@speedyauto.com",
-    companyName: "Speedy Auto Repair",
-    message: "Interested in the premium plan. Need multi-location support.",
-    status: "contacted",
-    createdAt: "2026-01-05T14:20:00Z",
-    contactedAt: "2026-01-05T16:45:00Z",
-  },
-  {
-    id: "3",
-    email: "mike@cityservice.com",
-    companyName: "City Service Center",
-    message: "Want to see how the invoicing works. Currently using spreadsheets.",
-    status: "pending",
-    createdAt: "2026-01-05T11:00:00Z",
-  },
-  {
-    id: "4",
-    email: "lisa@elitemotors.com",
-    companyName: "Elite Motors",
-    message: "Need enterprise solution for 20+ mechanics across 3 locations.",
-    status: "converted",
-    createdAt: "2026-01-04T09:15:00Z",
-    contactedAt: "2026-01-04T10:30:00Z",
-  },
-  {
-    id: "5",
-    email: "tom@quickfix.com",
-    companyName: "Quick Fix Auto",
-    message: "Just starting out, checking options.",
-    status: "declined",
-    createdAt: "2026-01-03T16:45:00Z",
-    contactedAt: "2026-01-04T08:00:00Z",
-  },
-];
+import { formatRelativeTime } from "@/_lib/utils";
+import { getDemoRequests } from "@/_lib/api";
+import { AlertCircle } from "lucide-react";
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   pending: "warning",
-  contacted: "info",
+  approved: "info",
   converted: "success",
-  declined: "default",
+  rejected: "default",
+  expired: "danger",
 };
 
-export default function DemosPage() {
+export default async function DemosPage() {
+  const response = await getDemoRequests(1, 50);
+
+  if (!response.success || !response.data) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Demo Requests</h1>
+            <p className="text-gray-600 mt-1">Manage demo requests</p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+              <p>Unable to load demo requests. Please check that the Management API is running.</p>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Error: {response.error || "Connection failed"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const demoRequests = response.data.items;
   const pendingCount = demoRequests.filter(d => d.status === "pending").length;
 
   return (
@@ -67,7 +50,7 @@ export default function DemosPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Demo Requests</h1>
           <p className="text-gray-600 mt-1">
-            {pendingCount} pending request{pendingCount !== 1 ? "s" : ""} waiting for contact
+            {pendingCount} pending request{pendingCount !== 1 ? "s" : ""} waiting for review
           </p>
         </div>
       </div>
@@ -77,61 +60,68 @@ export default function DemosPage() {
           <CardTitle>All Demo Requests ({demoRequests.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Company</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Message</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {demoRequests.map((request) => (
-                <TableRow key={request.id}>
-                  <TableCell>
-                    <p className="font-medium text-gray-900">{request.companyName}</p>
-                  </TableCell>
-                  <TableCell>
-                    <a
-                      href={`mailto:${request.email}`}
-                      className="text-primary-600 hover:text-primary-700 text-sm"
-                    >
-                      {request.email}
-                    </a>
-                  </TableCell>
-                  <TableCell>
-                    <p className="text-sm text-gray-600 max-w-md truncate">
-                      {request.message}
-                    </p>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusColors[request.status]}>
-                      {request.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-gray-600">
-                      {formatRelativeTime(request.createdAt)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {request.status === "pending" && (
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Contact</Button>
-                        <Button variant="ghost" size="sm">Decline</Button>
-                      </div>
-                    )}
-                    {request.status === "contacted" && (
-                      <Button variant="outline" size="sm">Convert</Button>
-                    )}
-                  </TableCell>
+          {demoRequests.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Message</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {demoRequests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell>
+                      <p className="font-medium text-gray-900">{request.companyName}</p>
+                    </TableCell>
+                    <TableCell>
+                      <a
+                        href={`mailto:${request.email}`}
+                        className="text-primary-600 hover:text-primary-700 text-sm"
+                      >
+                        {request.email}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <p className="text-sm text-gray-600 max-w-md truncate">
+                        {request.message || "No message"}
+                      </p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={statusColors[request.status] || "default"}>
+                        {request.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-600">
+                        {formatRelativeTime(request.createdAt)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {request.status === "pending" && (
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">Approve</Button>
+                          <Button variant="ghost" size="sm">Reject</Button>
+                        </div>
+                      )}
+                      {request.status === "approved" && (
+                        <Button variant="outline" size="sm">Convert</Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>No demo requests yet</p>
+              <p className="text-sm mt-2">Demo requests will appear here once visitors submit the form.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

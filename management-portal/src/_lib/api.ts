@@ -8,23 +8,31 @@ import type {
   DashboardAnalytics,
   BillingTransaction,
 } from "@/types";
+import { getAuthToken } from "./auth";
 
 const API_URL = process.env.MANAGEMENT_API_URL || "http://localhost:15568";
 
 /**
- * Base fetch wrapper with error handling
+ * Base fetch wrapper with error handling and auth
  */
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<ApiResponse<T>> {
   try {
+    const token = await getAuthToken();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string>),
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -60,12 +68,24 @@ export async function getTenants(
   pageSize = 20,
   status?: string
 ): Promise<ApiResponse<PaginatedResponse<Tenant>>> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    pageSize: pageSize.toString(),
-    ...(status && { status }),
-  });
-  return fetchApi<PaginatedResponse<Tenant>>(`/api/tenants?${params}`);
+  const skip = (page - 1) * pageSize;
+  const response = await fetchApi<Tenant[]>(`/api/tenants?skip=${skip}&take=${pageSize}`);
+
+  if (!response.success || !response.data) {
+    return { success: false, error: response.error };
+  }
+
+  // Transform array response to paginated format
+  return {
+    success: true,
+    data: {
+      items: response.data,
+      total: response.data.length,
+      page,
+      pageSize,
+      totalPages: Math.ceil(response.data.length / pageSize) || 1,
+    },
+  };
 }
 
 export async function getTenant(id: string): Promise<ApiResponse<Tenant>> {
@@ -94,12 +114,23 @@ export async function getDemoRequests(
   pageSize = 20,
   status?: string
 ): Promise<ApiResponse<PaginatedResponse<DemoRequest>>> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    pageSize: pageSize.toString(),
-    ...(status && { status }),
-  });
-  return fetchApi<PaginatedResponse<DemoRequest>>(`/api/demos?${params}`);
+  const skip = (page - 1) * pageSize;
+  const response = await fetchApi<DemoRequest[]>(`/api/demorequests?skip=${skip}&take=${pageSize}`);
+
+  if (!response.success || !response.data) {
+    return { success: false, error: response.error };
+  }
+
+  return {
+    success: true,
+    data: {
+      items: response.data,
+      total: response.data.length,
+      page,
+      pageSize,
+      totalPages: Math.ceil(response.data.length / pageSize) || 1,
+    },
+  };
 }
 
 export async function createDemoRequest(
@@ -127,11 +158,17 @@ export async function getBillingTransactions(
   page = 1,
   pageSize = 20
 ): Promise<ApiResponse<PaginatedResponse<BillingTransaction>>> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    pageSize: pageSize.toString(),
-  });
-  return fetchApi<PaginatedResponse<BillingTransaction>>(`/api/billing/transactions?${params}`);
+  const skip = (page - 1) * pageSize;
+  return fetchApi<PaginatedResponse<BillingTransaction>>(`/api/billing/transactions?skip=${skip}&take=${pageSize}`);
+}
+
+export async function getBillingStats(): Promise<ApiResponse<{
+  totalRevenue: number;
+  monthlyRecurringRevenue: number;
+  averageRevenuePerTenant: number;
+  activeSubscriptions: number;
+}>> {
+  return fetchApi("/api/billing/stats");
 }
 
 // Health check

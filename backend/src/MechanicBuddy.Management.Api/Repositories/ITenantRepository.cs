@@ -16,4 +16,5 @@ public interface ITenantRepository
     Task<int> GetTotalCountAsync();
     Task<Dictionary<string, int>> GetCountByTierAsync();
     Task<Dictionary<string, int>> GetCountByStatusAsync();
+    Task<int> GetCountCreatedBetweenAsync(DateTime start, DateTime end);
 }

@@ -2,34 +2,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card"
 import { StatCard } from "@/_components/dashboard/StatCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
-import { Building2, Users, DollarSign, MessageSquare, TrendingUp } from "lucide-react";
+import { Building2, Users, DollarSign, MessageSquare, TrendingUp, AlertCircle } from "lucide-react";
 import { formatCurrency, formatDate } from "@/_lib/utils";
+import { getDashboardAnalytics } from "@/_lib/api";
 
-// Mock data - replace with actual API calls
-const stats = {
-  totalTenants: 247,
-  activeTenants: 189,
-  monthlyRecurringRevenue: 4780,
-  pendingDemos: 12,
-};
+export default async function DashboardPage() {
+  const response = await getDashboardAnalytics();
 
-const recentTenants = [
-  { id: "1", name: "Auto Express LLC", plan: "standard", status: "active", joinedAt: "2026-01-05" },
-  { id: "2", name: "Quick Fix Garage", plan: "premium", status: "trial", joinedAt: "2026-01-04" },
-  { id: "3", name: "City Motors", plan: "standard", status: "active", joinedAt: "2026-01-03" },
-  { id: "4", name: "Elite Auto Service", plan: "enterprise", status: "active", joinedAt: "2026-01-02" },
-  { id: "5", name: "Speedy Repairs", plan: "free", status: "active", joinedAt: "2026-01-01" },
-];
+  if (!response.success || !response.data) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+          <p className="text-gray-600 mt-1">Monitor your SaaS platform performance</p>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+              <p>Unable to load dashboard data. Please check that the Management API is running.</p>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Error: {response.error || "Connection failed"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-const revenueData = [
-  { month: "Aug", revenue: 3200 },
-  { month: "Sep", revenue: 3600 },
-  { month: "Oct", revenue: 4100 },
-  { month: "Nov", revenue: 4400 },
-  { month: "Dec", revenue: 4780 },
-];
+  const analytics = response.data;
 
-export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
@@ -41,25 +44,25 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Tenants"
-          value={stats.totalTenants}
+          value={analytics.totalTenants}
           icon={Building2}
-          trend={{ value: 12, isPositive: true }}
+          trend={analytics.totalTenants > 0 ? { value: 12, isPositive: true } : undefined}
         />
         <StatCard
           title="Active Tenants"
-          value={stats.activeTenants}
+          value={analytics.activeTenants}
           icon={Users}
-          trend={{ value: 8, isPositive: true }}
+          trend={analytics.activeTenants > 0 ? { value: 8, isPositive: true } : undefined}
         />
         <StatCard
           title="MRR"
-          value={formatCurrency(stats.monthlyRecurringRevenue)}
+          value={formatCurrency(analytics.monthlyRecurringRevenue)}
           icon={DollarSign}
-          trend={{ value: 15, isPositive: true }}
+          trend={analytics.monthlyRecurringRevenue > 0 ? { value: 15, isPositive: true } : undefined}
         />
         <StatCard
           title="Pending Demos"
-          value={stats.pendingDemos}
+          value={analytics.pendingDemoRequests}
           icon={MessageSquare}
         />
       </div>
@@ -74,24 +77,28 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {revenueData.map((data) => (
-                <div key={data.month} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">{data.month}</span>
-                  <div className="flex items-center gap-4 flex-1 ml-4">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary-600 h-2 rounded-full"
-                        style={{ width: `${(data.revenue / 5000) * 100}%` }}
-                      />
+            {analytics.revenueByMonth.length > 0 ? (
+              <div className="space-y-4">
+                {analytics.revenueByMonth.map((data) => (
+                  <div key={data.month} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">{data.month}</span>
+                    <div className="flex items-center gap-4 flex-1 ml-4">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-primary-600 h-2 rounded-full"
+                          style={{ width: `${Math.min((data.revenue / (Math.max(...analytics.revenueByMonth.map(d => d.revenue)) || 1)) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 w-20 text-right">
+                        {formatCurrency(data.revenue)}
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 w-20 text-right">
-                      {formatCurrency(data.revenue)}
-                    </span>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">No revenue data yet</p>
+            )}
           </CardContent>
         </Card>
 
@@ -101,43 +108,103 @@ export default function DashboardPage() {
             <CardTitle>Recent Tenants</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTenants.map((tenant) => (
-                  <TableRow key={tenant.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-gray-900">{tenant.name}</p>
-                        <p className="text-xs text-gray-500">{formatDate(tenant.joinedAt)}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm capitalize">{tenant.plan}</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          tenant.status === "active"
-                            ? "success"
-                            : tenant.status === "trial"
-                            ? "warning"
-                            : "default"
-                        }
-                      >
-                        {tenant.status}
-                      </Badge>
-                    </TableCell>
+            {analytics.recentTenants.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {analytics.recentTenants.map((tenant) => (
+                    <TableRow key={tenant.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-gray-900">{tenant.companyName}</p>
+                          <p className="text-xs text-gray-500">{formatDate(tenant.createdAt)}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm capitalize">{tenant.plan}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            tenant.status === "active"
+                              ? "success"
+                              : tenant.status === "trial"
+                              ? "warning"
+                              : "default"
+                          }
+                        >
+                          {tenant.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-gray-500 text-sm">No tenants yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Conversion & Distribution */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Demo Conversion Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Demo Conversion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Total Demo Requests</span>
+                <span className="font-semibold">{analytics.totalDemoRequests}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Pending</span>
+                <span className="font-semibold text-amber-600">{analytics.pendingDemoRequests}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Conversion Rate</span>
+                <span className="font-semibold text-green-600">{analytics.conversionRate}%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Avg Revenue per Tenant</span>
+                <span className="font-semibold">{formatCurrency(analytics.averageRevenuePerTenant)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Plan Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Tenants by Plan</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analytics.tenantsByPlan.length > 0 ? (
+              <div className="space-y-4">
+                {analytics.tenantsByPlan.map((plan) => (
+                  <div key={plan.plan} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700 capitalize">{plan.plan}</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-gray-500">{plan.count} tenants</span>
+                      <span className="text-sm font-semibold text-gray-900 w-20 text-right">
+                        {formatCurrency(plan.revenue)}
+                      </span>
+                    </div>
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">No plan data yet</p>
+            )}
           </CardContent>
         </Card>
       </div>

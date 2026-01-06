@@ -176,6 +176,28 @@ public class BillingController : ControllerBase
         }
     }
 
+    [HttpGet("transactions")]
+    public async Task<IActionResult> GetTransactions([FromQuery] int skip = 0, [FromQuery] int take = 50)
+    {
+        var transactions = await _billingService.GetAllTransactionsAsync(skip, take);
+        var total = await _billingService.GetTransactionCountAsync();
+        return Ok(new
+        {
+            items = transactions,
+            total,
+            page = (skip / take) + 1,
+            pageSize = take,
+            totalPages = (int)Math.Ceiling((double)total / take)
+        });
+    }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats()
+    {
+        var stats = await _billingService.GetBillingStatsAsync();
+        return Ok(stats);
+    }
+
     [HttpPost("webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> Webhook()

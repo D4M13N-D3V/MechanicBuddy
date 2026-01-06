@@ -9,20 +9,20 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+    const baseStyles = "inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
 
     const variants = {
-      primary: "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-600",
-      secondary: "bg-gray-600 text-white hover:bg-gray-700 focus-visible:ring-gray-600",
-      outline: "border border-gray-300 bg-transparent hover:bg-gray-50 focus-visible:ring-gray-600",
-      ghost: "hover:bg-gray-100 focus-visible:ring-gray-600",
-      danger: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
+      primary: "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-600 shadow-lg shadow-primary-600/25 hover:shadow-primary-600/40",
+      secondary: "bg-dark-900 text-white hover:bg-dark-800 focus-visible:ring-dark-600",
+      outline: "border-2 border-dark-300 bg-transparent text-dark-900 hover:bg-dark-100 hover:border-dark-400 focus-visible:ring-dark-600",
+      ghost: "text-dark-700 hover:bg-dark-100 focus-visible:ring-dark-600",
+      danger: "bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-600",
     };
 
     const sizes = {
-      sm: "h-8 px-3 text-sm",
-      md: "h-10 px-4 text-sm",
-      lg: "h-12 px-6 text-base",
+      sm: "h-9 px-4 text-sm",
+      md: "h-11 px-5 text-sm",
+      lg: "h-12 px-8 text-base",
     };
 
     return (
