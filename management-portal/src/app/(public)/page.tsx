@@ -28,9 +28,9 @@ export default function HomePage() {
   ];
 
   const pricingPreview = [
-    { name: "Free", price: "$0", mechanics: "1 mechanic" },
-    { name: "Standard", price: "$20", mechanics: "Per mechanic/month", popular: true },
-    { name: "Premium", price: "$50", mechanics: "Per mechanic/month" },
+    { name: "Free", price: "$0", mechanics: "1 user included" },
+    { name: "Standard", price: "$20", mechanics: "Per user/month (2-9 users)", popular: true },
+    { name: "Volume", price: "$10", mechanics: "Per user/month (10+ users)" },
   ];
 
   return (
