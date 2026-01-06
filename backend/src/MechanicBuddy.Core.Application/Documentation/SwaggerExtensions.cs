@@ -17,7 +17,7 @@ namespace MechanicBuddy.Core.Application.Documentation
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "CarCare Co. API", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "MechanicBuddy API", Version = "v1" });
                 c.DocumentFilter<SecurityTrimming>();
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {

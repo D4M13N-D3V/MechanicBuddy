@@ -1,13 +1,13 @@
-﻿@using Carmasters.Core.Application.Configuration
-@using Carmasters.Core.Application.Model
-@using Carmasters.Core.Domain
-@using Carmasters.Http.Api
+﻿@using MechanicBuddy.Core.Application.Configuration
+@using MechanicBuddy.Core.Application.Model
+@using MechanicBuddy.Core.Domain
+@using MechanicBuddy.Http.Api
 @model PricingPrintModel
 @{
     var pricing = (Pricing)Model.Pricing;
     var requisitesOptions = (RequisitesOptions)Model.RequisitesOptions;
     var pricingOptions = (PricingOptions)Model.PricingOptions;
-    var isInvoice = pricing is Carmasters.Core.Domain.Invoice;
+    var isInvoice = pricing is MechanicBuddy.Core.Domain.Invoice;
     var hasDiscounts = pricing.Lines.Any(x => x.Discount != 0);
 }
   
