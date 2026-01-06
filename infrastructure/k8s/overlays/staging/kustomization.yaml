@@ -17,7 +17,7 @@ patches:
     patch: |
       - op: replace
         path: /stringData/password
-        value: "${DB_PASSWORD}"
+        value: "StagingDBPassword123!"
   # Override API secrets
   - target:
       kind: Secret
@@ -25,19 +25,19 @@ patches:
     patch: |
       - op: replace
         path: /stringData/connection-string
-        value: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=${DB_PASSWORD}"
+        value: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=StagingDBPassword123!"
       - op: replace
         path: /stringData/jwt-secret
-        value: "${JWT_SECRET}"
+        value: "StagingJwtSecretKey32CharactersMinimum!"
       - op: replace
         path: /stringData/stripe-secret-key
-        value: "${STRIPE_SECRET_KEY}"
+        value: "REDACTED_STRIPE_SK"
       - op: replace
         path: /stringData/stripe-webhook-secret
-        value: "${STRIPE_WEBHOOK_SECRET}"
+        value: "whsec_STAGING_WEBHOOK_SECRET"
       - op: replace
         path: /stringData/resend-api-key
-        value: "${RESEND_API_KEY}"
+        value: "REDACTED_RESEND_KEY"
   # Override portal secrets
   - target:
       kind: Secret
@@ -45,10 +45,10 @@ patches:
     patch: |
       - op: replace
         path: /stringData/session-secret
-        value: "${SESSION_SECRET}"
+        value: "StagingSessionSecret32CharactersMin!"
       - op: replace
         path: /stringData/stripe-publishable-key
-        value: "${STRIPE_PUBLISHABLE_KEY}"
+        value: "REDACTED_STRIPE_PK"
   # Override cronjob secrets
   - target:
       kind: Secret
@@ -56,7 +56,7 @@ patches:
     patch: |
       - op: replace
         path: /stringData/api-token
-        value: "${CRONJOB_API_TOKEN}"
+        value: "staging-cronjob-api-token-123"
   # Reduce replicas for staging
   - target:
       kind: Deployment
