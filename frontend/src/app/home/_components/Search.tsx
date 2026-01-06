@@ -147,9 +147,9 @@ export default async function Search(
                         })
                       }
                       <td className="relative py-4 pr-4 pl-3 text-right text-sm font-medium whitespace-nowrap sm:pr-0">
-                        <a href={`/home/${pageName}/edit/${item[idField]}`} className="text-indigo-900 hover:text-indigo-500">
+                        <Link href={`/home/${pageName}/edit/${item[idField]}`} className="text-indigo-900 hover:text-indigo-500">
                           Edit
-                        </a>
+                        </Link>
                       </td>
                     </tr>
                   ))}

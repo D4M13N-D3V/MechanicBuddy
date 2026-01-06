@@ -1,8 +1,9 @@
 import { Fragment } from "react";
-import Search from "../_components/Search"; 
-import Main from "../_components/Main"; 
+import Search from "../_components/Search";
+import Main from "../_components/Main";
 import { SearchCardHeader } from "../_components/SearchCardHeader";
 import SimpleSearchBar from "../_components/SimpleSearchBar";
+import Link from "next/link";
 
  
 export default async function Page(
@@ -14,9 +15,9 @@ export default async function Page(
       headerText: 'Product code',
       dataFormatter: ({ code, id }: { code: string, id: string }) => {
         return (
-          <a href={'/home/inventory/' + id} >
+          <Link href={'/home/inventory/' + id} >
             <h5 className="mb-0 fs--1">{code} </h5>
-          </a>
+          </Link>
         );
       }
     },

@@ -10,10 +10,11 @@ import { EmailSentBadge, OverdueBadge } from "./_components/activity/badges/Issu
 import { SearchCardHeader } from "../_components/SearchCardHeader";
 import { Card } from "@/_components/Card";
 import SearchStatusFilter from "./_components/SearchStatusFilter";
-import SearchParams from "./_components/SearchParams"; 
+import SearchParams from "./_components/SearchParams";
 import PrimaryButton from "@/_components/PrimaryButton";
 import SearchInput from "../_components/SearchInput";
 import FormInput from "@/_components/FormInput";
+import Link from "next/link";
 
 export default async function Page(
   { searchParams }: { searchParams: Promise<Record<string, string>> }) {
@@ -86,11 +87,11 @@ export default async function Page(
       dataFormatter: ({ id, workNr, status }: { id: string, status: string, workNr: string }) => {
 
         return (
-          <a href={'/home/work/' + id}>
+          <Link href={'/home/work/' + id}>
             <h5 >Work nr. {workNr}
               {' '} {!isInvoiceView && <WorkStatusBadge status={status} ></WorkStatusBadge>}
             </h5>
-          </a>
+          </Link>
         );
       }
     },
@@ -110,9 +111,9 @@ export default async function Page(
       headerText: 'Client',
       dataFormatter: ({ clientName, clientId }: { clientName: string, clientId: string }) => {
         return (
-          <a href={'/home/clients/' + clientId} >
+          <Link href={'/home/clients/' + clientId} >
             <h5 >{clientName}</h5>
-          </a>
+          </Link>
         );
       }
     },
@@ -121,9 +122,9 @@ export default async function Page(
       headerText: 'Vehicle',
       dataFormatter: ({ regNr, vehicleId }: { regNr: string, vehicleId: string }) => {
         return (
-          <a href={'/home/vehicles/' + vehicleId} >
+          <Link href={'/home/vehicles/' + vehicleId} >
             <h5 className="mb-0 fs--1">{regNr}</h5>
-          </a>
+          </Link>
         );
       }
     },

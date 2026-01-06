@@ -4,6 +4,7 @@ import 'car-makes-icons/dist/style.css';
 import { SearchCardHeader } from "../_components/SearchCardHeader";
 import Main from "../_components/Main";
 import SimpleSearchBar from "../_components/SimpleSearchBar";
+import Link from "next/link";
 
 
 export default async function Page(
@@ -43,9 +44,9 @@ export default async function Page(
           headerText: 'RegNr',
           dataFormatter: ({ regNr, id }) => {
             return (
-              <a href={'/home/vehicles/' + id} >
+              <Link href={'/home/vehicles/' + id} >
                 <h5 className="font-semibold"> {regNr}</h5>
-              </a>
+              </Link>
             );
           }
         },
@@ -55,9 +56,9 @@ export default async function Page(
           dataFormatter: ({ ownerName, ownerId }) => {
             if (!ownerName) return <p className="font-italic text-gray-400">No owner</p>;
             return (
-              <a href={'/home/clients/' + ownerId} >
+              <Link href={'/home/clients/' + ownerId} >
                 <h5 >{ownerName}</h5>
-              </a>
+              </Link>
             );
           }
         },
@@ -66,9 +67,9 @@ export default async function Page(
           headerText: 'VIN',
           dataFormatter: ({ vin, id }) => {
             return (
-              <a href={'/home/vehicles/' + id} >
+              <Link href={'/home/vehicles/' + id} >
                 <h5  >{vin}</h5>
-              </a>
+              </Link>
             );
           }
         }
