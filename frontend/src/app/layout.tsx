@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     description: siteDescription,
     images: [
       {
-        url: '/3js-logo.png',
+        url: `${siteUrl}/3js-logo.png`,
         width: 636,
         height: 636,
         alt: `${siteName} Logo`,
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: `${siteName} | Auto Repair Greensboro NC`,
     description: siteDescription,
-    images: ['/3js-logo.png'],
+    images: [`${siteUrl}/3js-logo.png`],
   },
   icons: {
     icon: '/icon.ico',
