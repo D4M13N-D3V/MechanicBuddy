@@ -160,8 +160,8 @@ Build backend and database migration tools:
 
 ```bash
 cd backend/src/MechanicBuddy.Http.Api
-dotnet build -c Release -o /opt/apps/mechanicbuddy
-cp appsettings.Secrets.json /opt/apps/mechanicbuddy/
+dotnet build -c Release -o /opt/apps/carcare
+cp appsettings.Secrets.json /opt/apps/carcare/
 
 cd ../DbUp
 dotnet build -c Release -o /opt/apps/dbup
