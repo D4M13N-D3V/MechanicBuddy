@@ -46,20 +46,20 @@ interface MobileNavigationProps {
 
 function MobileNavigation({ onTryDemoClick }: MobileNavigationProps) {
   return (
-    <Popover>
+    <Popover className="relative">
       <PopoverButton
-        className="relative z-10 flex h-8 w-8 items-center justify-center focus:not-data-focus:outline-hidden"
+        className="relative z-10 flex h-8 w-8 items-center justify-center ui-focus-visible:outline-none"
         aria-label="Toggle Navigation"
       >
         {({ open }) => <MobileNavIcon open={open} />}
       </PopoverButton>
       <PopoverBackdrop
         transition
-        className="fixed inset-0 bg-slate-300/50 duration-150 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in"
+        className="fixed inset-0 z-40 bg-slate-300/50 duration-150 data-[closed]:opacity-0 data-[enter]:ease-out data-[leave]:ease-in"
       />
       <PopoverPanel
         transition
-        className="absolute inset-x-0 top-full mt-4 flex origin-top flex-col rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 ring-1 shadow-xl ring-slate-900/5 data-closed:scale-95 data-closed:opacity-0 data-enter:duration-150 data-enter:ease-out data-leave:duration-100 data-leave:ease-in"
+        className="absolute right-0 top-full z-50 mt-4 w-screen max-w-xs origin-top-right flex-col rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 ring-1 shadow-xl ring-slate-900/5 data-[closed]:scale-95 data-[closed]:opacity-0 data-[enter]:duration-150 data-[enter]:ease-out data-[leave]:duration-100 data-[leave]:ease-in"
       >
         <hr className="m-2 border-slate-300/40" />
         <Button
