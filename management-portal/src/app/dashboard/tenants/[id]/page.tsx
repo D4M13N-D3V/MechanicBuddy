@@ -150,14 +150,6 @@ export default async function TenantDetailPage({
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Plan</label>
-              <div className="mt-1">
-                <Badge variant={planColors[tenant.plan]}>
-                  {tenant.plan}
-                </Badge>
-              </div>
-            </div>
-            <div>
               <label className="text-sm font-medium text-gray-600">Status</label>
               <div className="mt-1">
                 <Badge variant={statusColors[tenant.status]}>
@@ -172,12 +164,6 @@ export default async function TenantDetailPage({
             <div>
               <label className="text-sm font-medium text-gray-600">Mechanics</label>
               <p className="text-gray-900 mt-1">{tenant.mechanicCount}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-600">Storage Used</label>
-              <p className="text-gray-900 mt-1">
-                {(tenant.storageUsedMb / 1024).toFixed(2)} GB
-              </p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">Created</label>
