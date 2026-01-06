@@ -1,6 +1,4 @@
-**/bin
-**/obj
-**/.vs
-**/node_modules
-*.user
-*.suo
+frontend/node_modules
+frontend/.next
+.git
+*.log

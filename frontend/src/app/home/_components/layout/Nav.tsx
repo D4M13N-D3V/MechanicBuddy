@@ -1,14 +1,14 @@
 'use client'
 import Image from "next/image"
 import ProfileMenu from "./ProfileMenu"
-import { 
+import { InboxIcon, 
     Cog6ToothIcon, 
     QueueListIcon,
     TruckIcon,
     UsersIcon, 
   } from '@heroicons/react/24/outline'
 import clsx from "clsx"; 
-import { usePathname } from 'next/navigation'
+import { usePathname } from "next/navigation"
  const navigationIconClass = "size-6 shrink-0";
 const navigation = [
     // { name: 'Dashboard', href: '/home', icon: <HomeIcon aria-hidden="true" className={navigationIconClass}></HomeIcon>},
@@ -16,6 +16,7 @@ const navigation = [
     { name: 'Clients', href: '/home/clients', icon: <UsersIcon aria-hidden="true" className={navigationIconClass}></UsersIcon>  },
     { name: 'Vehicles', href: '/home/vehicles', icon: <TruckIcon aria-hidden="true" className={navigationIconClass}></TruckIcon>  },
     { name: 'Inventory', href: '/home/inventory', icon: <Cog6ToothIcon aria-hidden="true" className={navigationIconClass}></Cog6ToothIcon>  },
+    { name: 'Requests', href: '/home/requests', icon: <InboxIcon aria-hidden="true" className={navigationIconClass}></InboxIcon>  },
     // { name: 'Services', href: '/home/services', icon: <WrenchScrewdriverIcon aria-hidden="true" className={navigationIconClass}></WrenchScrewdriverIcon>  },
 ]
  

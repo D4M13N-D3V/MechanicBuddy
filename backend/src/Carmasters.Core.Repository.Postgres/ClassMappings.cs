@@ -639,4 +639,28 @@ namespace Carmasters.Core.Persistence.Postgres.Repositories
 
         }
     } 
+
+    public class ServiceRequestMapping : ClassMap<ServiceRequest>
+    {
+        public ServiceRequestMapping()
+        {
+            Schema("domain");
+            Table("servicerequest");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.CustomerName).Column("customername").Access.BackingField();
+            Map(x => x.Phone).Column("phone").Access.BackingField();
+            Map(x => x.Email).Column("email").Access.BackingField();
+            Map(x => x.VehicleInfo).Column("vehicleinfo").Access.BackingField();
+            Map(x => x.ServiceType).Column("servicetype").Access.BackingField();
+            Map(x => x.Message).Column("message").Access.BackingField();
+            Map(x => x.Status).Column("status").Access.BackingField();
+            Map(x => x.SubmittedAt).Column("submittedat").Access.BackingField().CustomType<UtcDateType>();
+            Map(x => x.Notes).Column("notes").Access.BackingField();
+        }
+    }
 }

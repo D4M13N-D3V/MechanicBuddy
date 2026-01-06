@@ -46,7 +46,7 @@ services:
     depends_on:
       - api
     ports:
-      - "3000:3000"
+      - "3025:3000"
 
   mailhog:
     image: mailhog/mailhog

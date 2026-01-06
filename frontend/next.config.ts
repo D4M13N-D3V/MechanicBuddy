@@ -30,10 +30,6 @@ const patternsMap = new Map();
 const remotePatterns = [...patternsMap.values()];
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-module.exports = {
   images: {
     remotePatterns,
     formats: ['image/avif', 'image/webp'],
@@ -42,7 +38,21 @@ module.exports = {
     serverActions: {
       bodySizeLimit: '10mb',
     }, 
-  }, 
-}
+  },
+  // Prevent CDN caching of HTML pages
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+};
 
 export default nextConfig;

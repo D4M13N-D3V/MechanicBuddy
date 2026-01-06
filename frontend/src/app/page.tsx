@@ -1,296 +1,570 @@
-// src/app/page.tsx
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Button } from '@/_components/layout/Button'
-import { Container } from '@/_components/layout/Container' 
-import { Header } from '@/_components/layout/Header' 
-import Link from 'next/link' 
-import { WrenchScrewdriverIcon, UsersIcon, ArchiveBoxIcon } from '@heroicons/react/24/outline'
-import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react'
-import FormInput from '@/_components/FormInput'
+import { Container } from "@/_components/layout/Container"
+import Link from "next/link"
+import { useState } from "react"
+import {
+  WrenchScrewdriverIcon,
+  PhoneIcon,
+  MapPinIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  LightBulbIcon,
+  CogIcon,
+  BeakerIcon,
+  TruckIcon,
+} from "@heroicons/react/24/outline"
 
-// Interface for demo credentials
-interface DemoCredentials {
-  username: string;
-  password: string;
+// Joker color theme
+const PURPLE = "#7c3aed"
+const PURPLE_DARK = "#5b21b6"
+const PURPLE_LIGHT = "#ede9fe"
+const GREEN = "#22c55e"
+const GREEN_DARK = "#15803d"
+
+// Navigation component
+function Navigation() {
+  const navLinks = [
+    { name: "Services", href: "#services" },
+    { name: "About Us", href: "#about" },
+    { name: "Auto Tips", href: "#tips" },
+    { name: "Contact", href: "#contact" },
+  ]
+
+  return (
+    <header className="bg-slate-900 text-white">
+      <div style={{ backgroundColor: PURPLE }} className="py-2">
+        <Container>
+          <div className="flex flex-wrap justify-between items-center text-sm">
+            <div className="flex items-center gap-6">
+              <a href="tel:+13366898898" className="flex items-center gap-2 hover:text-slate-200 transition-colors">
+                <PhoneIcon className="h-4 w-4" />
+                <span>(336) 689-8898</span>
+              </a>
+              <span className="hidden sm:flex items-center gap-2">
+                <MapPinIcon className="h-4 w-4" />
+                <span>4610 West Gate City, Greensboro, NC</span>
+              </span>
+            </div>
+            <span className="hidden md:flex items-center gap-2">
+              <ClockIcon className="h-4 w-4" />
+              <span>Mon-Fri: 10:30am - 6pm | Sat: 10:30am - 5pm</span>
+            </span>
+          </div>
+        </Container>
+      </div>
+
+      <Container>
+        <nav className="flex justify-between items-center py-4">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="text-xl font-bold tracking-tight">3J&apos;s Auto Repairs</span>
+          </Link>
+          
+          <div className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-sm font-medium transition-colors hover:opacity-80 px-2"
+              >
+                {link.name}
+              </a>
+            ))}
+            <Link
+              href="/auth/login"
+              style={{ backgroundColor: GREEN }}
+              className="ml-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-lg hover:opacity-90"
+            >
+              Mechanic Portal
+            </Link>
+          </div>
+
+          <button className="md:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors">
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </nav>
+      </Container>
+    </header>
+  )
+}
+
+function HeroSection() {
+  return (
+    <section 
+      className="relative text-white py-20 lg:py-28"
+      style={{ background: `linear-gradient(135deg, #1a1a2e 0%, ${PURPLE_DARK} 50%, #1a1a2e 100%)` }}
+    >
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-15"
+        style={{ backgroundImage: "url(/charger-interior.jpg)" }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/70" />
+      
+      <Container className="relative z-10">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight tracking-tight">
+            Professional Auto Repair You Can Trust
+          </h1>
+          <p className="text-lg md:text-xl text-slate-300 mb-4 leading-relaxed max-w-3xl mx-auto">
+            Serving Greensboro with honest service, expert technicians, and reliable repairs. Your car deserves the best care at 3J&apos;s Auto Repairs.
+          </p>
+          <p className="text-base md:text-lg text-slate-400 mb-8 leading-relaxed max-w-2xl mx-auto">
+            <span style={{ color: GREEN }} className="font-semibold">Specializing in Chryslers, Chargers &amp; Challengers</span> — We know your Mopar inside and out!
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a
+              href="#services"
+              style={{ backgroundColor: PURPLE }}
+              className="px-6 py-3 rounded-lg text-base font-semibold transition-all shadow-xl inline-flex items-center gap-2 hover:opacity-90"
+            >
+              <WrenchScrewdriverIcon className="h-5 w-5" />
+              Our Services
+            </a>
+            <a
+              href="#contact"
+              style={{ backgroundColor: GREEN }}
+              className="px-6 py-3 rounded-lg text-base font-semibold transition-all shadow-xl inline-flex items-center gap-2 hover:opacity-90"
+            >
+              <PhoneIcon className="h-5 w-5" />
+              Contact Us
+            </a>
+          </div>
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function ServiceCard({ icon: Icon, title, description, isGreen }: { icon: React.ElementType; title: string; description: string; isGreen?: boolean }) {
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
+      <div 
+        style={{ backgroundColor: isGreen ? GREEN : PURPLE }}
+        className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform duration-300"
+      >
+        <Icon className="h-7 w-7 text-white" />
+      </div>
+      <h3 className="text-lg font-bold text-slate-900 mb-2">{title}</h3>
+      <p className="text-slate-600 text-sm leading-relaxed">{description}</p>
+    </div>
+  )
+}
+
+function ServicesSection() {
+  const services = [
+    { icon: CogIcon, title: "Chrysler/Dodge Specialists", description: "Expert service for Chryslers, Chargers, and Challengers. We know Mopar vehicles inside and out — trust the specialists.", isGreen: true },
+    { icon: CogIcon, title: "Oil Change", description: "Regular oil changes to keep your engine running smoothly. We use quality oils and filters for all makes and models.", isGreen: false },
+    { icon: WrenchScrewdriverIcon, title: "Brake Service", description: "Complete brake inspections, pad replacements, rotor resurfacing, and brake fluid flushes for your safety.", isGreen: true },
+    { icon: CogIcon, title: "Engine Repair", description: "From minor tune-ups to major engine overhauls, our certified technicians handle it all.", isGreen: false },
+    { icon: WrenchScrewdriverIcon, title: "Transmission", description: "Transmission fluid changes, repairs, and rebuilds. We keep your vehicle shifting smoothly.", isGreen: true },
+    { icon: BeakerIcon, title: "Tire Service", description: "Tire rotations, balancing, and new tire installations. Keep your ride smooth and safe. Note: We do not offer alignments.", isGreen: false },
+    { icon: BeakerIcon, title: "Diagnostics", description: "State-of-the-art diagnostic equipment to quickly identify and resolve any vehicle issues.", isGreen: false },
+    { icon: TruckIcon, title: "Towing Service", description: "Stranded? We offer reliable towing services to get your vehicle to our shop safely. Call us anytime!", isGreen: true },
+  ]
+
+  return (
+    <section id="services" className="py-16 bg-slate-100">
+      <Container>
+        <div className="text-center mb-12">
+          <span style={{ color: PURPLE }} className="text-sm font-bold uppercase tracking-wider mb-2 block">What We Offer</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Our Services</h2>
+          <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            We offer comprehensive auto repair and maintenance services to keep your vehicle running at its best. Specializing in Chryslers, Chargers, and Challengers.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {services.map((service, index) => (
+            <ServiceCard key={index} {...service} />
+          ))}
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function AboutSection() {
+  const features = [
+    "Chrysler/Charger/Challenger Experts",
+    "State-of-the-Art Equipment",
+    "Quality Parts & Materials",
+    "Transparent Pricing",
+    "Towing Available",
+    "Family Owned & Operated",
+  ]
+
+  return (
+    <section id="about" className="py-16 bg-slate-900 text-white">
+      <Container>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <span style={{ color: GREEN }} className="text-sm font-bold uppercase tracking-wider mb-2 block">About Us</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight">Your Mopar Specialists in Greensboro</h2>
+            <p className="text-slate-300 mb-4 text-base leading-relaxed">
+              3J&apos;s Auto Repairs is dedicated to providing honest, reliable service to our Greensboro community. We specialize in Chryslers, Chargers, and Challengers — if you drive a Mopar, you&apos;ve found the right shop.
+            </p>
+            <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+              Our technicians deliver skilled diagnostics, preventive maintenance, and quality repairs for all makes and models. We also offer towing services to get your vehicle to us safely. Your satisfaction and safety are our top priorities.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg">
+                  <CheckCircleIcon style={{ color: index % 2 === 0 ? PURPLE : GREEN }} className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-slate-200 text-sm font-medium">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="relative">
+            <div style={{ background: `linear-gradient(135deg, ${PURPLE} 0%, ${GREEN_DARK} 100%)` }} className="rounded-2xl p-8 text-center shadow-2xl">
+              <div className="text-6xl font-bold mb-2">22+</div>
+              <div className="text-lg font-medium opacity-90">Years Combined Experience</div>
+              <div className="mt-6 pt-6 border-t border-white/20">
+                <div className="text-4xl font-bold mb-2">20,000+</div>
+                <div className="text-base font-medium opacity-90">Satisfied Customers</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function TipsSection() {
+  const tips = [
+    { title: "Check Your Oil Regularly", description: "Check your oil level at least once a month. Low oil can cause serious engine damage." },
+    { title: "Monitor Tire Pressure", description: "Proper tire pressure improves fuel economy and extends tire life. Check monthly." },
+    { title: "Listen to Your Brakes", description: "Squealing or grinding sounds indicate worn brake pads. Don't ignore warning signs." },
+    { title: "Keep Up with Fluid Changes", description: "Transmission fluid, coolant, and brake fluid all need periodic replacement." },
+    { title: "Watch Your Warning Lights", description: "If your check engine light comes on, get it diagnosed promptly." },
+    { title: "Replace Wipers & Filters", description: "Change wiper blades every 6-12 months and air filters every 12,000-15,000 miles." },
+  ]
+
+  return (
+    <section id="tips" className="py-16 bg-white">
+      <Container>
+        <div className="text-center mb-12">
+          <div style={{ backgroundColor: PURPLE_LIGHT }} className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4">
+            <LightBulbIcon style={{ color: PURPLE }} className="h-7 w-7" />
+          </div>
+          <span style={{ color: GREEN }} className="text-sm font-bold uppercase tracking-wider mb-2 block">Expert Advice</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Auto Care Tips</h2>
+          <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Keep your vehicle in top shape with these helpful maintenance tips from our experts.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tips.map((tip, index) => (
+            <div key={index} className="bg-slate-50 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300">
+              <div style={{ backgroundColor: index % 2 === 0 ? PURPLE : GREEN }} className="w-10 h-10 rounded-full flex items-center justify-center mb-4 text-white font-bold text-sm">
+                {index + 1}
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-2">{tip.title}</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">{tip.description}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function ServiceRequestForm() {
+  const [formData, setFormData] = useState({
+    customerName: "",
+    phone: "",
+    email: "",
+    vehicleInfo: "",
+    serviceType: "",
+    message: ""
+  })
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus("loading")
+    setErrorMessage("")
+
+    try {
+      const response = await fetch("/api/servicerequest/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      })
+
+      if (response.ok) {
+        setStatus("success")
+        setFormData({ customerName: "", phone: "", email: "", vehicleInfo: "", serviceType: "", message: "" })
+      } else {
+        const data = await response.json()
+        setErrorMessage(data.message || "Something went wrong. Please try again.")
+        setStatus("error")
+      }
+    } catch {
+      setErrorMessage("Unable to submit. Please call us instead.")
+      setStatus("error")
+    }
+  }
+
+  if (status === "success") {
+    return (
+      <div className="bg-white rounded-2xl p-8 shadow-xl text-center">
+        <div style={{ backgroundColor: GREEN }} className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircleIcon className="h-8 w-8 text-white" />
+        </div>
+        <h3 className="text-xl font-bold text-slate-900 mb-2">Request Submitted!</h3>
+        <p className="text-slate-600">Thank you! We&apos;ll contact you soon to schedule your service.</p>
+        <button
+          onClick={() => setStatus("idle")}
+          style={{ backgroundColor: PURPLE }}
+          className="mt-6 px-6 py-2 rounded-lg text-white font-semibold hover:opacity-90 transition-all"
+        >
+          Submit Another Request
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-xl">
+      <h3 className="text-xl font-bold text-slate-900 mb-6">Request Service</h3>
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Your Name *</label>
+          <input
+            type="text"
+            required
+            value={formData.customerName}
+            onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+            placeholder="John Doe"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+              placeholder="(336) 555-0123"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+              placeholder="john@example.com"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Vehicle Info</label>
+          <input
+            type="text"
+            value={formData.vehicleInfo}
+            onChange={(e) => setFormData({ ...formData, vehicleInfo: e.target.value })}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+            placeholder="2020 Dodge Charger R/T"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Service Needed</label>
+          <select
+            value={formData.serviceType}
+            onChange={(e) => setFormData({ ...formData, serviceType: e.target.value })}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+          >
+            <option value="">Select a service...</option>
+            <option value="Oil Change">Oil Change</option>
+            <option value="Brake Service">Brake Service</option>
+            <option value="Engine Repair">Engine Repair</option>
+            <option value="Transmission">Transmission</option>
+            <option value="Tire Service">Tire Service</option>
+            <option value="Diagnostics">Diagnostics</option>
+            <option value="Towing">Towing</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
+          <textarea
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            rows={3}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all resize-none"
+            placeholder="Tell us more about what you need..."
+          />
+        </div>
+
+        {status === "error" && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {errorMessage}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          style={{ backgroundColor: PURPLE }}
+          className="w-full py-3 rounded-lg text-white font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+        >
+          {status === "loading" ? "Submitting..." : "Submit Request"}
+        </button>
+
+        <p className="text-xs text-slate-500 text-center">
+          Or call us directly at <a href="tel:+13366898898" className="font-semibold hover:underline">(336) 689-8898</a>
+        </p>
+      </div>
+    </form>
+  )
+}
+
+function ContactSection() {
+  return (
+    <section id="contact" className="py-16 bg-slate-100">
+      <Container>
+        <div className="text-center mb-12">
+          <span style={{ color: PURPLE }} className="text-sm font-bold uppercase tracking-wider mb-2 block">Get In Touch</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Contact Us</h2>
+          <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            Have questions or need to schedule service? Fill out the form or give us a call!
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <ServiceRequestForm />
+
+          <div className="bg-slate-900 text-white rounded-2xl p-8 shadow-xl">
+            <h3 className="text-xl font-bold mb-8">Contact Info</h3>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div style={{ backgroundColor: PURPLE }} className="p-3 rounded-xl">
+                  <MapPinIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Address</h4>
+                  <p className="text-slate-300 text-sm leading-relaxed">4610 West Gate City<br />Greensboro, NC</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div style={{ backgroundColor: GREEN }} className="p-3 rounded-xl">
+                  <PhoneIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Phone</h4>
+                  <a href="tel:+13366898898" className="text-slate-300 hover:text-white transition-colors">(336) 689-8898</a>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div style={{ backgroundColor: PURPLE }} className="p-3 rounded-xl">
+                  <TruckIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Towing</h4>
+                  <p className="text-slate-300 text-sm">Towing service available — call us!</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div style={{ backgroundColor: GREEN }} className="p-3 rounded-xl">
+                  <ClockIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-base mb-1">Hours</h4>
+                  <div className="text-slate-300 text-sm space-y-0.5">
+                    <p>Monday: 11:00am - 6:00pm</p>
+                    <p>Tuesday: 10:30am - 5:00pm</p>
+                    <p>Wednesday: 11:00am - 6:00pm</p>
+                    <p>Thursday: 10:30am - 5:00pm</p>
+                    <p>Friday: 11:00am - 6:00pm</p>
+                    <p>Saturday: 10:30am - 5:00pm</p>
+                    <p>Sunday: Closed</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+function Footer() {
+  return (
+    <footer className="bg-slate-900 text-white">
+      <Container>
+        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-lg font-bold tracking-tight">3J&apos;s Auto Repairs</span>
+            </div>
+            <p className="text-slate-400 text-sm leading-relaxed max-w-md">
+              Professional auto repair and maintenance services you can trust. Specializing in Chryslers, Chargers, and Challengers. Proudly serving Greensboro, NC.
+            </p>
+          </div>
+          <div>
+            <h4 className="font-bold text-base mb-4">Quick Links</h4>
+            <ul className="space-y-2 text-slate-400 text-sm">
+              <li><a href="#services" className="hover:text-white transition-colors">Services</a></li>
+              <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
+              <li><a href="#tips" className="hover:text-white transition-colors">Auto Tips</a></li>
+              <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
+              <li><Link href="/auth/login" className="hover:text-white transition-colors">Mechanic Portal</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-bold text-base mb-4">Contact Info</h4>
+            <ul className="space-y-2 text-slate-400 text-sm">
+              <li className="flex items-start gap-2">
+                <MapPinIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                <span>4610 West Gate City, Greensboro, NC</span>
+              </li>
+              <li>
+                <a href="tel:+13366898898" className="flex items-center gap-2 hover:text-white transition-colors">
+                  <PhoneIcon className="h-4 w-4 flex-shrink-0" />
+                  <span>(336) 689-8898</span>
+                </a>
+              </li>
+              <li className="flex items-center gap-2">
+                <TruckIcon className="h-4 w-4 flex-shrink-0" />
+                <span>Towing Available</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-slate-800 py-6 text-center text-slate-500 text-sm">
+          <p>© {new Date().getFullYear()} 3J&apos;s Auto Repairs. All rights reserved.</p>
+        </div>
+      </Container>
+    </footer>
+  )
 }
 
 export default function Home() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [companyName, setCompanyName] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [credentials, setCredentials] = useState<DemoCredentials | null>(null)
-  const [error, setError] = useState('')
-  
-  const handleOpenDialog = () => {
-    setIsDialogOpen(true)
-    setCredentials(null)
-    setError('')
-  }
-  
-  const handleCreateDemo = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    
-    if (!companyName.trim()) {
-      setError('Company name is required')
-      return
-    }
-    
-    setIsLoading(true)
-    setError('')
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/Demo/setup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ companyName }),
-      })
-      
-      // Handle rate limit error specifically
-      if (response.status === 429) {
-        const errorData = await response.json();
-        setError(errorData.message || 'Rate limit exceeded. Please try again later.');
-        setIsLoading(false);
-        return;
-      }
-     
-      if (!response.ok) {
-        const errorData = await response.text();
-        setError(errorData || 'Could not create demo account. Please try again later.');
-        setIsLoading(false);
-        return;
-      }
-      
-      const data = await response.json()
-      setCredentials(data)
-    } catch (err: any) {// eslint-disable-line @typescript-eslint/no-explicit-any
-      setError(err.message || 'Failed to create demo account. Please try again later.')
-      console.error(err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  
   return (
     <>
-      <Header onTryDemoClick={handleOpenDialog} />
-      <main className={isDialogOpen ? 'pointer-events-none' : ''}>
-        {/* Hero Section - Reduced vertical padding */}
-        <Container className="pt-6 pb-10 text-center lg:pt-10">
-          <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-            Modern repair shop 
-            <span className="relative whitespace-nowrap text-blue-600">
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 418 42"
-                className="absolute top-2/3 left-0 h-[0.58em] w-full fill-blue-300/70"
-                preserveAspectRatio="none"
-              >
-                <path d="M203.371.916c-26.013-2.078-76.686 1.963-124.73 9.946L67.3 12.749C35.421 18.062 18.2 21.766 6.004 25.934 1.244 27.561.828 27.778.874 28.61c.07 1.214.828 1.121 9.595-1.176 9.072-2.377 17.15-3.92 39.246-7.496C123.565 7.986 157.869 4.492 195.942 5.046c7.461.108 19.25 1.696 19.17 2.582-.107 1.183-7.874 4.31-25.75 10.366-21.992 7.45-35.43 12.534-36.701 13.884-2.173 2.308-.202 4.407 4.442 4.734 2.654.187 3.263.157 15.593-.78 35.401-2.686 57.944-3.488 88.365-3.143 46.327.526 75.721 2.23 130.788 7.584 19.787 1.924 20.814 1.98 24.557 1.332l.066-.011c1.201-.203 1.53-1.825.399-2.335-2.911-1.31-4.893-1.604-22.048-3.261-57.509-5.556-87.871-7.36-132.059-7.842-23.239-.254-33.617-.116-50.627.674-11.629.54-42.371 2.494-46.696 2.967-2.359.259 8.133-3.625 26.504-9.81 23.239-7.825 27.934-10.149 28.304-14.005.417-4.348-3.529-6-16.878-7.066Z" />
-              </svg>
-              <span className="relative"> software.</span>
-            </span>{' '}
-            Self-hosted. Free.
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base tracking-tight text-slate-700">
-            CarCare helps you manage repairs, vehicles, clients, parts, 
-            and invoices — all in one clean interface. Built by a coder 
-            who loves cars and clean systems.
-          </p>
-          <div className="mt-6 flex justify-center gap-x-6">
-            <button
-              onClick={handleOpenDialog}
-              className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Try the demo
-            </button>
-            <Button
-              href="https://github.com/rene98c/carcareco"
-              variant="outline"
-            >
-              View on GitHub
-            </Button>
-          </div>
-        </Container>
-
-        {/* Features Section - Reduced vertical margins */}
-        <Container className="mt-4 mb-6">
-          <div className="grid grid-cols-1 gap-y-10 md:gap-y-8 lg:grid-cols-3 lg:gap-x-6 lg:gap-y-0">
-            <div className="text-center">
-              <div className="flex justify-center">
-                <WrenchScrewdriverIcon className="h-16 w-16 text-blue-600 mx-auto mb-3" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Repair Jobs Made Simple</h3>
-              <p className="mt-2 text-gray-600">
-                Track job progress, parts, and labor. One-click invoicing.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="flex justify-center">
-                <UsersIcon className="h-16 w-16 text-blue-600 mx-auto mb-3" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">All Your Clients & Vehicles</h3>
-              <p className="mt-2 text-gray-600">
-                See full customer and car history instantly.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="flex justify-center">
-                <ArchiveBoxIcon className="h-16 w-16 text-blue-600 mx-auto mb-3" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Inventory and Parts</h3>
-              <p className="mt-2 text-gray-600">
-                Add, discount, and link parts to work orders. No spreadsheets needed.
-              </p>
-            </div>
-          </div>
-        </Container>
-
-        {/* Why CarCare Section - Reduced vertical padding */}
-        <div className="bg-slate-50 py-12">
-          <Container>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 text-center">Why CarCare?</h2>
-            <div className="mt-4 max-w-3xl mx-auto">
-              <p className="text-base text-slate-700 mb-3">
-                I&apos;ve owned many BMWs and/visited the same garage for years. Their 
-                system was... let&apos;s say, vintage. I helped fix it a few times. Then I thought—
-                why not build something better?
-              </p>
-              <p className="text-base text-slate-700">
-                CarCare started as a hobby, turned into a side project, and now it&apos;s open 
-                source. Use it, fork it, or just take ideas. It&apos;s here for you.
-              </p>
-            </div>
-            <div className="mt-8 flex flex-col items-center justify-center">
-              <div className="flex items-center gap-x-4 mb-4">
-                <Link href="https://github.com/rene98c/carcareco" className="text-slate-700 hover:text-slate-900 flex items-center">
-                  <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                  </svg>
-                  Star on GitHub
-                </Link>
-                <span className="text-slate-400">•</span>
-                <Link href="/docs" className="text-slate-700 hover:text-slate-900">Documentation</Link>
-                <span className="text-slate-400">•</span>
-                <Link href="/auth/login" className="text-slate-700 hover:text-slate-900">Login</Link>
-              </div>
-              <p className="text-sm text-slate-500">
-                AGPL 3.0 Licensed. Free and open source software.
-              </p>
-            </div>
-          </Container>
-        </div>
+      <Navigation />
+      <main>
+        <HeroSection />
+        <ServicesSection />
+        <AboutSection />
+        <TipsSection />
+        <ContactSection />
       </main>
-      
-      {/* Custom modal implementation with higher z-index */}
-      <Dialog 
-        open={isDialogOpen} 
-        onClose={() => setIsDialogOpen(false)} 
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black bg-opacity-50" aria-hidden="true" />
-        
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900">
-                {credentials ? "Demo Account Created" : "Create a Demo Account"}
-              </DialogTitle>
-              
-              {credentials ? (
-                <div className="mt-4">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                    <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  
-                  <p className="mt-4 text-sm text-gray-500">
-                    Your demo account has been created. Please use the following credentials to log in:
-                  </p>
-                  
-                  <div className="mt-4 rounded-md bg-gray-50 p-4 border border-gray-200">
-                    <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                      <span className="text-sm font-medium text-gray-500">Username:</span>
-                      <span className="font-mono text-sm font-bold text-gray-900 bg-gray-100 py-1 px-2 rounded select-all">{credentials.username}</span>
-                    </div>
-                    <div className="flex items-center justify-between pt-3">
-                      <span className="text-sm font-medium text-gray-500">Password:</span>
-                      <span className="font-mono text-sm font-bold text-gray-900 bg-gray-100 py-1 px-2 rounded select-all">{credentials.password}</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-gray-500 mt-4 text-center">
-                    Remember to save these credentials - you&apos;ll need them to log in!
-                  </p>
-                  
-                  <div className="mt-6">
-                    <button
-                      type="button"
-                      className="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      onClick={() => window.location.href = '/auth/login'}
-                    >
-                      Go to Login
-                    </button>
-                    <button
-                      type="button"
-                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      onClick={() => setIsDialogOpen(false)}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-500">
-                    Enter your company name to create a custom demo environment
-                  </p>
-                  
-                  <form onSubmit={handleCreateDemo} className="mt-4">
-                    <FormInput
-                      name="companyName"
-                      label="Company Name"
-                      placeholder="Enter your company name"
-                      defaultValue={companyName}
-                      onInputChange={(e) => setCompanyName(e.target.value)}
-                      inputError={error}
-                    />
-                    
-                    <div className="mt-6 flex gap-3">
-                      <button
-                        type="button"
-                        className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        onClick={() => setIsDialogOpen(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <span className="flex items-center">
-                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Creating...
-                          </span>
-                        ) : "Create Demo"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-            </DialogPanel>
-          </div>
-        </div>
-      </Dialog>
+      <Footer />
     </>
   )
 }

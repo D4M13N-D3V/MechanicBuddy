@@ -16,7 +16,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
-    "car-makes-icons": "github:dangnelson/car-makes-icons",
+    "car-makes-icons": "^1.0.0",
     "clsx": "^2.1.1",
     "cookies-next": "^5.1.0",
     "countries-and-timezones": "^3.7.2",

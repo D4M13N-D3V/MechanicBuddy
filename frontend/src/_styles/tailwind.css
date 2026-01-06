@@ -1,20 +1,48 @@
-@import 'tailwindcss';
- 
+@import "tailwindcss";
+
 @theme {
   --font-sans: Inter, sans-serif;
-  --font-sans--font-feature-settings: 'cv11';
+  --font-sans--font-feature-settings: "cv11";
   --breakpoint-3xl: 120rem;
+
+  /* Red color palette */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-300: #fca5a5;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+  --color-red-950: #450a0a;
 }
+
 @layer base {
   button,
-  [role='button'] {
+  [role="button"] {
     cursor: pointer;
   }
   button:disabled,
-  [role='button']:disabled {
+  [role="button"]:disabled {
     cursor: default;
   }
 }
+
+/* Custom utility classes as fallback */
+.bg-brand-red {
+  background-color: #dc2626 !important;
+}
+
+.text-brand-red {
+  color: #dc2626 !important;
+}
+
+.border-brand-red {
+  border-color: #dc2626 !important;
+}
+
 .menu-button {
   overflow: auto !important;
   padding-right: 0px !important;

@@ -11,7 +11,7 @@ import clsx from 'clsx'
 
 import { Button } from '@/_components/layout/Button'
 import { Container } from '@/_components/layout/Container'
-import { Logo } from '@/_components/layout/Logo' 
+ 
  
 function MobileNavIcon({ open }: { open: boolean }) {
   return (
@@ -99,7 +99,7 @@ export function  Header({ onTryDemoClick }: HeaderProps) {
         <nav className="relative z-50 flex justify-between">
           <div className="flex items-center md:gap-x-12">
             <Link href="#" aria-label="Home">
-              <Logo width={100} height={100} className="h-10 w-auto" /> 
+               
             </Link>
             <div className="hidden md:flex md:gap-x-6">
               {/* Add navigation links here if needed */}
