@@ -21,6 +21,7 @@ public class KubernetesClient : IKubernetesClient
     private readonly string _ingressClassName;
     private readonly string _clusterIssuer;
     private readonly string _apiImage;
+    private readonly string _frontendImage;
     private readonly string _jwtSecret;
     private readonly string _consumerSecret;
 
@@ -67,6 +68,7 @@ public class KubernetesClient : IKubernetesClient
         _wildcardSecretName = configuration["Kubernetes:WildcardSecretName"]
             ?? $"wildcard-{_baseDomain.Replace(".", "-")}-tls";
         _apiImage = configuration["Kubernetes:ApiImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest";
+        _frontendImage = configuration["Kubernetes:FrontendImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-frontend:latest";
         _jwtSecret = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is required");
         _consumerSecret = configuration["Jwt:ConsumerSecret"] ?? throw new InvalidOperationException("Jwt:ConsumerSecret is required");
     }
@@ -112,13 +114,20 @@ public class KubernetesClient : IKubernetesClient
     public async Task<string> DeployTenantInstanceAsync(string tenantId, string tier)
     {
         var namespaceName = $"mb-{tenantId}";
-        var deploymentName = $"api-{tenantId}";
-        var serviceName = $"api-{tenantId}";
-        var secretName = $"api-secrets-{tenantId}";
+        var apiDeploymentName = $"api-{tenantId}";
+        var apiServiceName = $"api-{tenantId}";
+        var frontendDeploymentName = $"frontend-{tenantId}";
+        var frontendServiceName = $"frontend-{tenantId}";
+        var apiSecretName = $"api-secrets-{tenantId}";
+        var frontendSecretName = $"frontend-secrets-{tenantId}";
         var schemaName = $"tenant_{tenantId.Replace("-", "_")}";
+        var imagePullSecretName = "ghcr-credentials";
 
         // Get resource limits based on tier
         var (cpuLimit, memoryLimit, replicas) = GetResourceLimitsForTier(tier);
+
+        // Copy GHCR credentials secret to tenant namespace
+        await CopyImagePullSecretAsync(namespaceName, imagePullSecretName);
 
         // Create appsettings.Secrets.json content for tenant
         var secretsJson = System.Text.Json.JsonSerializer.Serialize(new
@@ -154,12 +163,12 @@ public class KubernetesClient : IKubernetesClient
             }
         }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
-        // Create the secret
-        var secret = new V1Secret
+        // Create API secret
+        var apiSecret = new V1Secret
         {
             Metadata = new V1ObjectMeta
             {
-                Name = secretName,
+                Name = apiSecretName,
                 NamespaceProperty = namespaceName,
                 Labels = new Dictionary<string, string>
                 {
@@ -176,22 +185,56 @@ public class KubernetesClient : IKubernetesClient
 
         try
         {
-            await _client.CoreV1.CreateNamespacedSecretAsync(secret, namespaceName);
-            _logger.LogInformation("Created secret {Secret} in namespace {Namespace}", secretName, namespaceName);
+            await _client.CoreV1.CreateNamespacedSecretAsync(apiSecret, namespaceName);
+            _logger.LogInformation("Created API secret {Secret} in namespace {Namespace}", apiSecretName, namespaceName);
         }
         catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
-            // Secret already exists, update it
-            await _client.CoreV1.ReplaceNamespacedSecretAsync(secret, secretName, namespaceName);
-            _logger.LogInformation("Updated existing secret {Secret} in namespace {Namespace}", secretName, namespaceName);
+            await _client.CoreV1.ReplaceNamespacedSecretAsync(apiSecret, apiSecretName, namespaceName);
+            _logger.LogInformation("Updated existing API secret {Secret} in namespace {Namespace}", apiSecretName, namespaceName);
         }
 
-        // Create deployment
-        var deployment = new V1Deployment
+        // Create Frontend secret (environment variables)
+        var tenantDomain = $"{tenantId}.{_baseDomain}";
+        var frontendSecret = new V1Secret
         {
             Metadata = new V1ObjectMeta
             {
-                Name = deploymentName,
+                Name = frontendSecretName,
+                NamespaceProperty = namespaceName,
+                Labels = new Dictionary<string, string>
+                {
+                    ["app"] = "mechanicbuddy-frontend",
+                    ["tenant-id"] = tenantId
+                }
+            },
+            Type = "Opaque",
+            StringData = new Dictionary<string, string>
+            {
+                ["SERVER_SECRET"] = _consumerSecret,
+                ["SESSION_SECRET"] = Convert.ToBase64String(Guid.NewGuid().ToByteArray() + Guid.NewGuid().ToByteArray()),
+                ["API_URL"] = $"http://{apiServiceName}:80",
+                ["NEXT_PUBLIC_API_URL"] = $"https://{tenantDomain}/api"
+            }
+        };
+
+        try
+        {
+            await _client.CoreV1.CreateNamespacedSecretAsync(frontendSecret, namespaceName);
+            _logger.LogInformation("Created Frontend secret {Secret} in namespace {Namespace}", frontendSecretName, namespaceName);
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            await _client.CoreV1.ReplaceNamespacedSecretAsync(frontendSecret, frontendSecretName, namespaceName);
+            _logger.LogInformation("Updated existing Frontend secret {Secret} in namespace {Namespace}", frontendSecretName, namespaceName);
+        }
+
+        // Create API deployment
+        var apiDeployment = new V1Deployment
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = apiDeploymentName,
                 NamespaceProperty = namespaceName,
                 Labels = new Dictionary<string, string>
                 {
@@ -223,6 +266,10 @@ public class KubernetesClient : IKubernetesClient
                     },
                     Spec = new V1PodSpec
                     {
+                        ImagePullSecrets = new List<V1LocalObjectReference>
+                        {
+                            new V1LocalObjectReference { Name = imagePullSecretName }
+                        },
                         Volumes = new List<V1Volume>
                         {
                             new V1Volume
@@ -230,7 +277,7 @@ public class KubernetesClient : IKubernetesClient
                                 Name = "secrets-volume",
                                 Secret = new V1SecretVolumeSource
                                 {
-                                    SecretName = secretName
+                                    SecretName = apiSecretName
                                 }
                             }
                         },
@@ -279,15 +326,104 @@ public class KubernetesClient : IKubernetesClient
             }
         };
 
-        await _client.AppsV1.CreateNamespacedDeploymentAsync(deployment, namespaceName);
-        _logger.LogInformation("Created deployment {Deployment} in namespace {Namespace}", deploymentName, namespaceName);
+        await _client.AppsV1.CreateNamespacedDeploymentAsync(apiDeployment, namespaceName);
+        _logger.LogInformation("Created API deployment {Deployment} in namespace {Namespace}", apiDeploymentName, namespaceName);
 
-        // Create service
-        var service = new V1Service
+        // Create Frontend deployment
+        var frontendDeployment = new V1Deployment
         {
             Metadata = new V1ObjectMeta
             {
-                Name = serviceName,
+                Name = frontendDeploymentName,
+                NamespaceProperty = namespaceName,
+                Labels = new Dictionary<string, string>
+                {
+                    ["app"] = "mechanicbuddy-frontend",
+                    ["tenant-id"] = tenantId,
+                    ["tier"] = tier
+                }
+            },
+            Spec = new V1DeploymentSpec
+            {
+                Replicas = replicas,
+                Selector = new V1LabelSelector
+                {
+                    MatchLabels = new Dictionary<string, string>
+                    {
+                        ["app"] = "mechanicbuddy-frontend",
+                        ["tenant-id"] = tenantId
+                    }
+                },
+                Template = new V1PodTemplateSpec
+                {
+                    Metadata = new V1ObjectMeta
+                    {
+                        Labels = new Dictionary<string, string>
+                        {
+                            ["app"] = "mechanicbuddy-frontend",
+                            ["tenant-id"] = tenantId
+                        }
+                    },
+                    Spec = new V1PodSpec
+                    {
+                        ImagePullSecrets = new List<V1LocalObjectReference>
+                        {
+                            new V1LocalObjectReference { Name = imagePullSecretName }
+                        },
+                        Containers = new List<V1Container>
+                        {
+                            new V1Container
+                            {
+                                Name = "frontend",
+                                Image = _frontendImage,
+                                Ports = new List<V1ContainerPort>
+                                {
+                                    new V1ContainerPort { ContainerPort = 3000 }
+                                },
+                                Resources = new V1ResourceRequirements
+                                {
+                                    Limits = new Dictionary<string, ResourceQuantity>
+                                    {
+                                        ["cpu"] = new ResourceQuantity(cpuLimit),
+                                        ["memory"] = new ResourceQuantity(memoryLimit)
+                                    },
+                                    Requests = new Dictionary<string, ResourceQuantity>
+                                    {
+                                        ["cpu"] = new ResourceQuantity($"{int.Parse(cpuLimit.TrimEnd('m')) / 2}m"),
+                                        ["memory"] = new ResourceQuantity($"{int.Parse(memoryLimit.TrimEnd('i', 'M')) / 2}Mi")
+                                    }
+                                },
+                                EnvFrom = new List<V1EnvFromSource>
+                                {
+                                    new V1EnvFromSource
+                                    {
+                                        SecretRef = new V1SecretEnvSource
+                                        {
+                                            Name = frontendSecretName
+                                        }
+                                    }
+                                },
+                                Env = new List<V1EnvVar>
+                                {
+                                    new V1EnvVar { Name = "TENANT_ID", Value = tenantId },
+                                    new V1EnvVar { Name = "NODE_ENV", Value = "production" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        await _client.AppsV1.CreateNamespacedDeploymentAsync(frontendDeployment, namespaceName);
+        _logger.LogInformation("Created Frontend deployment {Deployment} in namespace {Namespace}", frontendDeploymentName, namespaceName);
+
+        // Create API service
+        var apiService = new V1Service
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = apiServiceName,
                 NamespaceProperty = namespaceName,
                 Labels = new Dictionary<string, string>
                 {
@@ -315,15 +451,50 @@ public class KubernetesClient : IKubernetesClient
             }
         };
 
-        await _client.CoreV1.CreateNamespacedServiceAsync(service, namespaceName);
-        _logger.LogInformation("Created service {Service} in namespace {Namespace}", serviceName, namespaceName);
+        await _client.CoreV1.CreateNamespacedServiceAsync(apiService, namespaceName);
+        _logger.LogInformation("Created API service {Service} in namespace {Namespace}", apiServiceName, namespaceName);
+
+        // Create Frontend service
+        var frontendService = new V1Service
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = frontendServiceName,
+                NamespaceProperty = namespaceName,
+                Labels = new Dictionary<string, string>
+                {
+                    ["app"] = "mechanicbuddy-frontend",
+                    ["tenant-id"] = tenantId
+                }
+            },
+            Spec = new V1ServiceSpec
+            {
+                Selector = new Dictionary<string, string>
+                {
+                    ["app"] = "mechanicbuddy-frontend",
+                    ["tenant-id"] = tenantId
+                },
+                Ports = new List<V1ServicePort>
+                {
+                    new V1ServicePort
+                    {
+                        Protocol = "TCP",
+                        Port = 80,
+                        TargetPort = 3000
+                    }
+                },
+                Type = "ClusterIP"
+            }
+        };
+
+        await _client.CoreV1.CreateNamespacedServiceAsync(frontendService, namespaceName);
+        _logger.LogInformation("Created Frontend service {Service} in namespace {Namespace}", frontendServiceName, namespaceName);
 
         // Copy wildcard TLS secret from cert-manager namespace to tenant namespace
         var tlsSecretName = $"tls-wildcard-{_baseDomain.Replace(".", "-")}";
         await CopyWildcardSecretAsync(namespaceName, tlsSecretName);
 
-        // Create Ingress for external access
-        var tenantDomain = $"{tenantId}.{_baseDomain}";
+        // Create Ingress for external access with path-based routing
         var ingressName = $"ingress-{tenantId}";
 
         var ingress = new V1Ingress
@@ -334,7 +505,7 @@ public class KubernetesClient : IKubernetesClient
                 NamespaceProperty = namespaceName,
                 Labels = new Dictionary<string, string>
                 {
-                    ["app"] = "mechanicbuddy-api",
+                    ["app"] = "mechanicbuddy",
                     ["tenant-id"] = tenantId
                 },
                 Annotations = new Dictionary<string, string>
@@ -344,7 +515,9 @@ public class KubernetesClient : IKubernetesClient
                     ["nginx.ingress.kubernetes.io/proxy-read-timeout"] = "300",
                     ["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300",
                     // Disable SSL redirect since Cloudflare/NPM handles SSL termination
-                    ["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
+                    ["nginx.ingress.kubernetes.io/ssl-redirect"] = "false",
+                    // Rewrite /api/* to /* for the API backend
+                    ["nginx.ingress.kubernetes.io/use-regex"] = "true"
                 }
             },
             Spec = new V1IngressSpec
@@ -367,6 +540,21 @@ public class KubernetesClient : IKubernetesClient
                         {
                             Paths = new List<V1HTTPIngressPath>
                             {
+                                // API routes - /api/* goes to API service
+                                new V1HTTPIngressPath
+                                {
+                                    Path = "/api",
+                                    PathType = "Prefix",
+                                    Backend = new V1IngressBackend
+                                    {
+                                        Service = new V1IngressServiceBackend
+                                        {
+                                            Name = apiServiceName,
+                                            Port = new V1ServiceBackendPort { Number = 80 }
+                                        }
+                                    }
+                                },
+                                // All other routes go to Frontend
                                 new V1HTTPIngressPath
                                 {
                                     Path = "/",
@@ -375,7 +563,7 @@ public class KubernetesClient : IKubernetesClient
                                     {
                                         Service = new V1IngressServiceBackend
                                         {
-                                            Name = serviceName,
+                                            Name = frontendServiceName,
                                             Port = new V1ServiceBackendPort { Number = 80 }
                                         }
                                     }
@@ -466,6 +654,57 @@ public class KubernetesClient : IKubernetesClient
         if (!proxyDeleted)
         {
             _logger.LogWarning("Failed to delete NPM proxy host for tenant {TenantId}", tenantId);
+        }
+    }
+
+    /// <summary>
+    /// Copies the GHCR image pull secret from mechanicbuddy-system namespace to the target namespace
+    /// </summary>
+    private async Task CopyImagePullSecretAsync(string targetNamespace, string secretName)
+    {
+        const string sourceNamespace = "mechanicbuddy-system";
+
+        try
+        {
+            // Check if secret already exists in target namespace
+            try
+            {
+                await _client.CoreV1.ReadNamespacedSecretAsync(secretName, targetNamespace);
+                _logger.LogInformation("Image pull secret {SecretName} already exists in namespace {Namespace}", secretName, targetNamespace);
+                return;
+            }
+            catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Secret doesn't exist, continue to copy
+            }
+
+            // Read the secret from mechanicbuddy-system namespace
+            var sourceSecret = await _client.CoreV1.ReadNamespacedSecretAsync(secretName, sourceNamespace);
+
+            // Create a copy in the target namespace
+            var targetSecret = new V1Secret
+            {
+                Metadata = new V1ObjectMeta
+                {
+                    Name = secretName,
+                    NamespaceProperty = targetNamespace,
+                    Labels = new Dictionary<string, string>
+                    {
+                        ["app"] = "mechanicbuddy",
+                        ["copied-from"] = $"{sourceNamespace}/{secretName}"
+                    }
+                },
+                Type = sourceSecret.Type,
+                Data = sourceSecret.Data
+            };
+
+            await _client.CoreV1.CreateNamespacedSecretAsync(targetSecret, targetNamespace);
+            _logger.LogInformation("Copied image pull secret {SecretName} to namespace {Namespace}", secretName, targetNamespace);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to copy image pull secret {SecretName} to namespace {Namespace}", secretName, targetNamespace);
+            throw;
         }
     }
 
