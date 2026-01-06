@@ -6,6 +6,7 @@ import { formatDate, formatRelativeTime } from "@/_lib/utils";
 import { getTenants } from "@/_lib/api";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
+import { AddTenantButton } from "@/_components/TenantsPageClient";
 
 const planColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   free: "default",
@@ -57,7 +58,7 @@ export default async function TenantsPage() {
           <h1 className="text-3xl font-bold text-dark-900">Tenants</h1>
           <p className="text-dark-500 mt-1">Manage all workshop tenants</p>
         </div>
-        <Button>Add Tenant</Button>
+        <AddTenantButton />
       </div>
 
       <Card>

@@ -108,6 +108,21 @@ export async function deleteTenant(id: string): Promise<ApiResponse<void>> {
   });
 }
 
+export interface CreateTenantData {
+  companyName: string;
+  ownerEmail: string;
+  ownerName: string;
+  tier?: "free" | "starter" | "professional" | "enterprise";
+  isDemo?: boolean;
+}
+
+export async function createTenant(data: CreateTenantData): Promise<ApiResponse<Tenant>> {
+  return fetchApi<Tenant>("/api/tenants", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 // Demo Requests API
 export async function getDemoRequests(
   page = 1,
