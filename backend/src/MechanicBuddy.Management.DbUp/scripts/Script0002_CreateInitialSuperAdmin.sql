@@ -9,14 +9,12 @@ INSERT INTO management.super_admins (
     password_hash,
     name,
     role,
-    is_active,
-    email_verified
+    is_active
 ) VALUES (
     'admin@mechanicbuddy.app',
     -- BCrypt hash of 'admin123' - CHANGE THIS PASSWORD AFTER FIRST LOGIN
     '$2a$11$rKkPO6qoNhWp0tLbLx.hS.0qYXpFqnAMfzJLEpSOvVBnR8YcFJ8Hy',
     'System Administrator',
     'owner',
-    true,
     true
 ) ON CONFLICT (email) DO NOTHING;
