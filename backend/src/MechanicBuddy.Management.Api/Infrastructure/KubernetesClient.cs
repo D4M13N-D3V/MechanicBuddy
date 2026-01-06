@@ -342,7 +342,9 @@ public class KubernetesClient : IKubernetesClient
                     // No cert-manager annotation needed - using wildcard cert
                     ["nginx.ingress.kubernetes.io/proxy-body-size"] = "50m",
                     ["nginx.ingress.kubernetes.io/proxy-read-timeout"] = "300",
-                    ["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300"
+                    ["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300",
+                    // Disable SSL redirect since Cloudflare/NPM handles SSL termination
+                    ["nginx.ingress.kubernetes.io/ssl-redirect"] = "false"
                 }
             },
             Spec = new V1IngressSpec
