@@ -115,13 +115,6 @@ spec:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 5
-          volumeMounts:
-            - name: helm-charts
-              mountPath: /app/charts
-      volumes:
-        - name: helm-charts
-          configMap:
-            name: helm-charts
 
 ---
 apiVersion: v1

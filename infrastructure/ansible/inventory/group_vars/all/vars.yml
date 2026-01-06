@@ -125,12 +125,30 @@ tenant_subdomain_pattern: "*.mechanicbuddy.app"
 # DNS records to create (will be auto-created via Cloudflare API)
 # These point to the external nginx proxy IP
 dns_records:
+  # Production
+  - name: "@"             # mechanicbuddy.app (root domain)
+    type: "A"
+    proxied: true
+  - name: "www"           # www.mechanicbuddy.app
+    type: "A"
+    proxied: true
   - name: "api"           # api.mechanicbuddy.app
     type: "A"
     proxied: true
   - name: "app"           # app.mechanicbuddy.app
     type: "A"
     proxied: true
+  # Staging
+  - name: "staging"       # staging.mechanicbuddy.app
+    type: "A"
+    proxied: true
+  - name: "www.staging"   # www.staging.mechanicbuddy.app
+    type: "A"
+    proxied: true
+  - name: "api.staging"   # api.staging.mechanicbuddy.app
+    type: "A"
+    proxied: true
+  # Wildcard for tenants
   - name: "*"             # *.mechanicbuddy.app (wildcard for tenants)
     type: "A"
     proxied: false        # Cloudflare doesn't proxy wildcard records on free plan
