@@ -8,18 +8,12 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { AddTenantButton } from "@/_components/TenantsPageClient";
 
-const planColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
-  free: "default",
-  starter: "info",
-  professional: "warning",
-  enterprise: "success",
-};
-
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   active: "success",
   trial: "warning",
   suspended: "danger",
-  cancelled: "default",
+  deleted: "default",
+  provisioning: "info",
 };
 
 export default async function TenantsPage() {
@@ -72,10 +66,8 @@ export default async function TenantsPage() {
                 <TableRow>
                   <TableHead>Company</TableHead>
                   <TableHead>Subdomain</TableHead>
-                  <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Mechanics</TableHead>
-                  <TableHead>Storage</TableHead>
                   <TableHead>Last Active</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -90,24 +82,21 @@ export default async function TenantsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <code className="text-sm bg-dark-100 text-dark-700 px-2 py-1 rounded font-mono">
-                        {tenant.subdomain}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={planColors[tenant.plan] || "default"}>
-                        {tenant.plan}
-                      </Badge>
+                      <a
+                        href={tenant.apiUrl || `https://${tenant.tenantId}.mechanicbuddy.app`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm bg-dark-100 text-dark-700 px-2 py-1 rounded font-mono hover:bg-dark-200 transition-colors"
+                      >
+                        {tenant.tenantId}.mechanicbuddy.app
+                      </a>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusColors[tenant.status] || "default"}>
                         {tenant.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-dark-700 font-medium">{tenant.mechanicCount}</TableCell>
-                    <TableCell className="text-dark-700">
-                      {(tenant.storageUsedMb / 1024).toFixed(1)} GB
-                    </TableCell>
+                    <TableCell className="text-dark-700 font-medium">{tenant.mechanicCount ?? "-"}</TableCell>
                     <TableCell>
                       <span className="text-sm text-dark-500">
                         {tenant.lastActivityAt ? formatRelativeTime(tenant.lastActivityAt) : "Never"}

@@ -7,10 +7,12 @@ namespace MechanicBuddy.Management.Api.Infrastructure;
 public class NoOpKubernetesClient : IKubernetesClient
 {
     private readonly ILogger<NoOpKubernetesClient> _logger;
+    private readonly string _baseDomain;
 
-    public NoOpKubernetesClient(ILogger<NoOpKubernetesClient> logger)
+    public NoOpKubernetesClient(ILogger<NoOpKubernetesClient> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _baseDomain = configuration["Cloudflare:BaseDomain"] ?? "mechanicbuddy.app";
     }
 
     public Task<string> CreateNamespaceAsync(string tenantId)
@@ -22,7 +24,8 @@ public class NoOpKubernetesClient : IKubernetesClient
     public Task<string> DeployTenantInstanceAsync(string tenantId, string tier)
     {
         _logger.LogWarning("Kubernetes not available. Skipping deployment for tenant {TenantId}", tenantId);
-        return Task.FromResult($"http://localhost:15567");
+        // Return the external URL format even in dev mode for consistency
+        return Task.FromResult($"https://{tenantId}.{_baseDomain}");
     }
 
     public Task<string> CreateTenantDatabaseAsync(string tenantId)

@@ -160,18 +160,37 @@ builder.Services.AddSingleton<IKubernetes>(sp =>
     }
 });
 
+// Register Cloudflare Client
+builder.Services.AddSingleton<ICloudflareClient>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var cloudflareEnabled = !string.IsNullOrEmpty(config["Cloudflare:ApiToken"]);
+
+    if (cloudflareEnabled)
+    {
+        return new CloudflareClient(
+            config,
+            sp.GetRequiredService<ILogger<CloudflareClient>>());
+    }
+    return new NoOpCloudflareClient(sp.GetRequiredService<ILogger<NoOpCloudflareClient>>());
+});
+
 // Register Infrastructure Clients
 builder.Services.AddSingleton<IKubernetesClient>(sp =>
 {
     var kubernetes = sp.GetService<IKubernetes>();
+    var cloudflareClient = sp.GetRequiredService<ICloudflareClient>();
+    var config = sp.GetRequiredService<IConfiguration>();
+
     if (kubernetes == null)
     {
         var logger = sp.GetRequiredService<ILogger<NoOpKubernetesClient>>();
-        return new NoOpKubernetesClient(logger);
+        return new NoOpKubernetesClient(logger, config);
     }
     return new KubernetesClient(
-        sp.GetRequiredService<IConfiguration>(),
+        config,
         sp.GetRequiredService<ILogger<KubernetesClient>>(),
+        cloudflareClient,
         kubernetes);
 });
 builder.Services.AddSingleton<IStripeClient, StripeClient>();

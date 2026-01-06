@@ -1,17 +1,22 @@
 // Tenant types
 export interface Tenant {
-  id: string;
+  id: number;
+  tenantId: string;
   companyName: string;
-  subdomain: string;
-  plan: 'free' | 'standard' | 'premium' | 'enterprise';
-  status: 'active' | 'suspended' | 'cancelled' | 'trial';
+  tier: string;
+  status: 'provisioning' | 'active' | 'suspended' | 'deleted' | 'trial';
+  ownerEmail: string;
+  ownerName?: string;
   createdAt: string;
-  updatedAt: string;
-  billingEmail: string;
-  mechanicCount: number;
-  storageUsedMb: number;
-  lastActivityAt: string;
   trialEndsAt?: string;
+  subscriptionEndsAt?: string;
+  lastBilledAt?: string;
+  maxMechanics: number;
+  maxStorage: number;
+  isDemo: boolean;
+  apiUrl?: string;
+  mechanicCount?: number;
+  lastActivityAt?: string;
 }
 
 export interface TenantStats {

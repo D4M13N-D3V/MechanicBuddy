@@ -8,7 +8,8 @@ public class KubernetesClient : IKubernetesClient
     private readonly IKubernetes _client;
     private readonly IConfiguration _configuration;
     private readonly ILogger<KubernetesClient> _logger;
-    private readonly string _baseApiUrl;
+    private readonly ICloudflareClient _cloudflareClient;
+    private readonly string _baseDomain;
     private readonly string _postgresHost;
     private readonly string _postgresUser;
     private readonly string _postgresPassword;
@@ -16,11 +17,18 @@ public class KubernetesClient : IKubernetesClient
     private readonly int _resendSmtpPort;
     private readonly string _resendSmtpUser;
     private readonly string _resendSmtpPassword;
+    private readonly string _ingressClassName;
+    private readonly string _clusterIssuer;
 
-    public KubernetesClient(IConfiguration configuration, ILogger<KubernetesClient> logger, IKubernetes? kubernetes = null)
+    public KubernetesClient(
+        IConfiguration configuration,
+        ILogger<KubernetesClient> logger,
+        ICloudflareClient cloudflareClient,
+        IKubernetes? kubernetes = null)
     {
         _configuration = configuration;
         _logger = logger;
+        _cloudflareClient = cloudflareClient;
 
         if (kubernetes != null)
         {
@@ -35,7 +43,7 @@ public class KubernetesClient : IKubernetesClient
             _client = new Kubernetes(config);
         }
 
-        _baseApiUrl = configuration["Kubernetes:BaseApiUrl"] ?? "http://mechanicbuddy-api.local";
+        _baseDomain = configuration["Cloudflare:BaseDomain"] ?? "mechanicbuddy.app";
         _postgresHost = configuration["Database:PostgresHost"] ?? "postgres";
         _postgresUser = configuration["Database:PostgresUser"] ?? "postgres";
         _postgresPassword = configuration["Database:PostgresPassword"] ?? "postgres";
@@ -45,6 +53,10 @@ public class KubernetesClient : IKubernetesClient
         _resendSmtpPort = int.TryParse(configuration["Email:SmtpPort"], out var port) ? port : 587;
         _resendSmtpUser = configuration["Email:SmtpUser"] ?? "resend";
         _resendSmtpPassword = configuration["Email:ResendApiKey"] ?? "";
+
+        // Ingress configuration
+        _ingressClassName = configuration["Kubernetes:IngressClassName"] ?? "nginx";
+        _clusterIssuer = configuration["Kubernetes:ClusterIssuer"] ?? "letsencrypt-prod";
     }
 
     public async Task<string> CreateNamespaceAsync(string tenantId)
@@ -207,8 +219,81 @@ public class KubernetesClient : IKubernetesClient
         await _client.CoreV1.CreateNamespacedServiceAsync(service, namespaceName);
         _logger.LogInformation("Created service {Service} in namespace {Namespace}", serviceName, namespaceName);
 
-        // Return API URL
-        var apiUrl = $"http://{serviceName}.{namespaceName}.svc.cluster.local";
+        // Create Ingress for external access
+        var tenantDomain = $"{tenantId}.{_baseDomain}";
+        var ingressName = $"ingress-{tenantId}";
+
+        var ingress = new V1Ingress
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = ingressName,
+                NamespaceProperty = namespaceName,
+                Labels = new Dictionary<string, string>
+                {
+                    ["app"] = "mechanicbuddy-api",
+                    ["tenant-id"] = tenantId
+                },
+                Annotations = new Dictionary<string, string>
+                {
+                    ["cert-manager.io/cluster-issuer"] = _clusterIssuer,
+                    ["nginx.ingress.kubernetes.io/proxy-body-size"] = "50m",
+                    ["nginx.ingress.kubernetes.io/proxy-read-timeout"] = "300",
+                    ["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300"
+                }
+            },
+            Spec = new V1IngressSpec
+            {
+                IngressClassName = _ingressClassName,
+                Tls = new List<V1IngressTLS>
+                {
+                    new V1IngressTLS
+                    {
+                        Hosts = new List<string> { tenantDomain },
+                        SecretName = $"tls-{tenantId}"
+                    }
+                },
+                Rules = new List<V1IngressRule>
+                {
+                    new V1IngressRule
+                    {
+                        Host = tenantDomain,
+                        Http = new V1HTTPIngressRuleValue
+                        {
+                            Paths = new List<V1HTTPIngressPath>
+                            {
+                                new V1HTTPIngressPath
+                                {
+                                    Path = "/",
+                                    PathType = "Prefix",
+                                    Backend = new V1IngressBackend
+                                    {
+                                        Service = new V1IngressServiceBackend
+                                        {
+                                            Name = serviceName,
+                                            Port = new V1ServiceBackendPort { Number = 80 }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        await _client.NetworkingV1.CreateNamespacedIngressAsync(ingress, namespaceName);
+        _logger.LogInformation("Created ingress {Ingress} for domain {Domain}", ingressName, tenantDomain);
+
+        // Create DNS record in Cloudflare
+        var dnsCreated = await _cloudflareClient.CreateTenantDnsRecordAsync(tenantId);
+        if (!dnsCreated)
+        {
+            _logger.LogWarning("Failed to create DNS record for {Domain}, tenant may not be accessible externally", tenantDomain);
+        }
+
+        // Return external URL
+        var apiUrl = $"https://{tenantDomain}";
         return apiUrl;
     }
 
@@ -255,6 +340,13 @@ public class KubernetesClient : IKubernetesClient
         catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             _logger.LogWarning("Namespace {Namespace} not found, already deleted", namespaceName);
+        }
+
+        // Delete DNS record from Cloudflare
+        var dnsDeleted = await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
+        if (!dnsDeleted)
+        {
+            _logger.LogWarning("Failed to delete DNS record for tenant {TenantId}", tenantId);
         }
     }
 
