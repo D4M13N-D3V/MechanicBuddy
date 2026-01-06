@@ -12,6 +12,9 @@ public class DemoRequestRepository : IDemoRequestRepository
     {
         _connectionString = configuration.GetConnectionString("Management")
             ?? throw new InvalidOperationException("Management connection string not found");
+
+        // Set up Dapper to use snake_case column mapping
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
     public async Task<DemoRequest?> GetByIdAsync(int id)

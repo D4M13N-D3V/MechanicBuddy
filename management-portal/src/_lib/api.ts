@@ -142,14 +142,23 @@ export async function createDemoRequest(
   });
 }
 
-export async function updateDemoRequestStatus(
+export async function approveDemoRequest(
   id: string,
-  status: DemoRequest["status"],
   notes?: string
 ): Promise<ApiResponse<DemoRequest>> {
-  return fetchApi<DemoRequest>(`/api/demos/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status, notes }),
+  return fetchApi<DemoRequest>(`/api/demorequests/${id}/approve`, {
+    method: "POST",
+    body: JSON.stringify({ notes }),
+  });
+}
+
+export async function rejectDemoRequest(
+  id: string,
+  reason: string
+): Promise<ApiResponse<DemoRequest>> {
+  return fetchApi<DemoRequest>(`/api/demorequests/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
   });
 }
 

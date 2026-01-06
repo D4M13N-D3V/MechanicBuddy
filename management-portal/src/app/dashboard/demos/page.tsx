@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
-import { Button } from "@/_components/ui/Button";
 import { formatRelativeTime } from "@/_lib/utils";
 import { getDemoRequests } from "@/_lib/api";
 import { AlertCircle } from "lucide-react";
+import { DemoActions } from "./DemoActions";
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   pending: "warning",
@@ -101,15 +101,7 @@ export default async function DemosPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {request.status === "pending" && (
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Contact</Button>
-                          <Button variant="ghost" size="sm">Decline</Button>
-                        </div>
-                      )}
-                      {request.status === "contacted" && (
-                        <Button variant="outline" size="sm">Convert</Button>
-                      )}
+                      <DemoActions id={String(request.id)} status={request.status} />
                     </TableCell>
                   </TableRow>
                 ))}
