@@ -2,13 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and project directories
-COPY MechanicBuddy.sln .
-COPY MechanicBuddy.Management.DbUp/ ./MechanicBuddy.Management.DbUp/
-
+# Copy project file and restore
+COPY backend/src/MechanicBuddy.Management.DbUp/*.csproj ./MechanicBuddy.Management.DbUp/
 RUN dotnet restore MechanicBuddy.Management.DbUp/MechanicBuddy.Management.DbUp.csproj
 
-# Publish DbUp
+# Copy source and publish
+COPY backend/src/MechanicBuddy.Management.DbUp/ ./MechanicBuddy.Management.DbUp/
 RUN dotnet publish MechanicBuddy.Management.DbUp/MechanicBuddy.Management.DbUp.csproj \
     -c Release -o /app/publish
 

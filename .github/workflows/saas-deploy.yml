@@ -130,7 +130,7 @@ jobs:
       - name: Build and push DbUp image
         uses: docker/build-push-action@v5
         with:
-          context: backend/src
+          context: .
           file: backend/src/DbUp/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -238,7 +238,7 @@ jobs:
       - name: Build and push Management DbUp image
         uses: docker/build-push-action@v5
         with:
-          context: backend/src
+          context: .
           file: backend/src/MechanicBuddy.Management.DbUp/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -17,6 +17,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Set dummy env vars for build time (actual values injected at runtime)
+ENV SESSION_SECRET=build-time-placeholder-secret-32chars
+ENV NEXT_PUBLIC_MANAGEMENT_API_URL=http://localhost:15568
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
+
 # Build the application
 RUN npm run build
 
