@@ -9,6 +9,14 @@ resources:
 
 # Production-specific patches
 patches:
+  # Override DB credentials
+  - target:
+      kind: Secret
+      name: management-db-credentials
+    patch: |
+      - op: replace
+        path: /stringData/password
+        value: "REPLACE_WITH_SEALED_SECRET"
   # Higher replicas for production
   - target:
       kind: Deployment

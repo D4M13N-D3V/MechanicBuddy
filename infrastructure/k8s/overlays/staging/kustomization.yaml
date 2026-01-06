@@ -9,6 +9,14 @@ resources:
 
 # Staging-specific patches
 patches:
+  # Override DB credentials
+  - target:
+      kind: Secret
+      name: management-db-credentials
+    patch: |
+      - op: replace
+        path: /stringData/password
+        value: "${DB_PASSWORD}"
   # Reduce replicas for staging
   - target:
       kind: Deployment
