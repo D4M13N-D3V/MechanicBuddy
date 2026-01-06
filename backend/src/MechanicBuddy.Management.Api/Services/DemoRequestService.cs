@@ -58,8 +58,15 @@ public class DemoRequestService
         var id = await _demoRequestRepository.CreateAsync(demoRequest);
         demoRequest.Id = id;
 
-        // Send confirmation email
-        await _emailClient.SendDemoRequestConfirmationAsync(email, companyName);
+        // Send confirmation email (non-blocking - don't fail the request if email fails)
+        try
+        {
+            await _emailClient.SendDemoRequestConfirmationAsync(email, companyName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send confirmation email to {Email}, but demo request was created", email);
+        }
 
         _logger.LogInformation("Created demo request {Id} for {Email}", id, email);
 
