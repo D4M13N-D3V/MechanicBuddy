@@ -39,7 +39,7 @@
 	  <None Include="..\MechanicBuddy.Http.Api\appsettings.Production.json" Link="appsettings.Production.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Include="..\MechanicBuddy.Http.Api\appsettings.Secrets.json" Link="appsettings.Secrets.json">
+	  <None Include="..\MechanicBuddy.Http.Api\appsettings.Secrets.json" Link="appsettings.Secrets.json" Condition="Exists('..\MechanicBuddy.Http.Api\appsettings.Secrets.json')">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

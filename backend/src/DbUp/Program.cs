@@ -100,7 +100,7 @@ public class AppConfiguration
 builder.AddJsonFile("appsettings.Production.json", optional: true, reloadOnChange: true);
 #endif
 
-        builder.AddJsonFile("appsettings.Secrets.json", optional: false, reloadOnChange: true);
+        builder.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
 
         IConfigurationRoot configuration = builder.Build();
