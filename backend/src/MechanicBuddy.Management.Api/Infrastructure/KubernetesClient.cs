@@ -68,9 +68,15 @@ public class KubernetesClient : IKubernetesClient
         _wildcardSecretName = configuration["Kubernetes:WildcardSecretName"]
             ?? $"wildcard-{_baseDomain.Replace(".", "-")}-tls";
         _apiImage = configuration["Kubernetes:ApiImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest";
-        _frontendImage = configuration["Kubernetes:FrontendImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-frontend:latest";
-        _jwtSecret = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is required");
-        _consumerSecret = configuration["Jwt:ConsumerSecret"] ?? throw new InvalidOperationException("Jwt:ConsumerSecret is required");
+        _frontendImage = configuration["Kubernetes:FrontendImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-web:latest";
+        // Use Jwt:SecretKey (Management API's JWT key) as the base for tenant secrets
+        // These will be passed to tenant instances for their JwtOptions configuration
+        _jwtSecret = configuration["Jwt:SecretKey"]
+            ?? configuration["TenantSecrets:JwtSecret"]
+            ?? throw new InvalidOperationException("Jwt:SecretKey or TenantSecrets:JwtSecret is required");
+        _consumerSecret = configuration["TenantSecrets:ConsumerSecret"]
+            ?? configuration["Jwt:SecretKey"]  // Fallback to same key if not separately configured
+            ?? throw new InvalidOperationException("TenantSecrets:ConsumerSecret or Jwt:SecretKey is required");
     }
 
     private readonly string _certManagerNamespace;
