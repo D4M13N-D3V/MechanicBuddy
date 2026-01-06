@@ -12,6 +12,10 @@ public class KubernetesClient : IKubernetesClient
     private readonly string _postgresHost;
     private readonly string _postgresUser;
     private readonly string _postgresPassword;
+    private readonly string _resendSmtpHost;
+    private readonly int _resendSmtpPort;
+    private readonly string _resendSmtpUser;
+    private readonly string _resendSmtpPassword;
 
     public KubernetesClient(IConfiguration configuration, ILogger<KubernetesClient> logger, IKubernetes? kubernetes = null)
     {
@@ -35,6 +39,12 @@ public class KubernetesClient : IKubernetesClient
         _postgresHost = configuration["Database:PostgresHost"] ?? "postgres";
         _postgresUser = configuration["Database:PostgresUser"] ?? "postgres";
         _postgresPassword = configuration["Database:PostgresPassword"] ?? "postgres";
+
+        // Resend SMTP configuration for tenant instances
+        _resendSmtpHost = configuration["Email:SmtpHost"] ?? "smtp.resend.com";
+        _resendSmtpPort = int.TryParse(configuration["Email:SmtpPort"], out var port) ? port : 587;
+        _resendSmtpUser = configuration["Email:SmtpUser"] ?? "resend";
+        _resendSmtpPassword = configuration["Email:ResendApiKey"] ?? "";
     }
 
     public async Task<string> CreateNamespaceAsync(string tenantId)
@@ -144,7 +154,12 @@ public class KubernetesClient : IKubernetesClient
                                 Env = new List<V1EnvVar>
                                 {
                                     new V1EnvVar { Name = "TENANT_ID", Value = tenantId },
-                                    new V1EnvVar { Name = "ASPNETCORE_ENVIRONMENT", Value = "Production" }
+                                    new V1EnvVar { Name = "ASPNETCORE_ENVIRONMENT", Value = "Production" },
+                                    // SMTP configuration for tenant email (via Resend)
+                                    new V1EnvVar { Name = "Smtp__Host", Value = _resendSmtpHost },
+                                    new V1EnvVar { Name = "Smtp__Port", Value = _resendSmtpPort.ToString() },
+                                    new V1EnvVar { Name = "Smtp__User", Value = _resendSmtpUser },
+                                    new V1EnvVar { Name = "Smtp__Password", Value = _resendSmtpPassword }
                                 }
                             }
                         }
