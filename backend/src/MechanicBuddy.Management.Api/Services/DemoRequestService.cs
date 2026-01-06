@@ -25,7 +25,7 @@ public class DemoRequestService
         _logger = logger;
     }
 
-    public async Task<DemoRequest> CreateRequestAsync(string email, string companyName, string? phoneNumber = null)
+    public async Task<DemoRequest> CreateRequestAsync(string email, string companyName, string? phoneNumber = null, string? message = null)
     {
         // Validate email format
         if (!new EmailAddressAttribute().IsValid(email))
@@ -51,6 +51,7 @@ public class DemoRequestService
             Email = email,
             CompanyName = companyName,
             PhoneNumber = phoneNumber,
+            Message = message,
             Status = "new",
             CreatedAt = DateTime.UtcNow
         };

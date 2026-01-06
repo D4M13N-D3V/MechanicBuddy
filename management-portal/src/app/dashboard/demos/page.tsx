@@ -48,7 +48,9 @@ export default async function DemosPage() {
     );
   }
 
-  const demoRequests = response.data.items;
+  const allRequests = response.data.items;
+  // Filter out completed and cancelled requests
+  const demoRequests = allRequests.filter(d => d.status !== "complete" && d.status !== "cancelled");
   const newCount = demoRequests.filter(d => d.status === "new").length;
 
   return (
@@ -64,7 +66,7 @@ export default async function DemosPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>All Demo Requests ({demoRequests.length})</CardTitle>
+          <CardTitle>Active Demo Requests ({demoRequests.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {demoRequests.length > 0 ? (

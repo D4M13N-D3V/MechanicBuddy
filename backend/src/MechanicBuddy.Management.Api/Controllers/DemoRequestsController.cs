@@ -26,7 +26,8 @@ public class DemoRequestsController : ControllerBase
             var demoRequest = await _demoRequestService.CreateRequestAsync(
                 request.Email,
                 request.CompanyName,
-                request.PhoneNumber
+                request.PhoneNumber,
+                request.Message
             );
 
             return CreatedAtAction(nameof(GetById), new { id = demoRequest.Id }, demoRequest);
@@ -150,7 +151,7 @@ public class DemoRequestsController : ControllerBase
     }
 }
 
-public record CreateDemoRequestRequest(string Email, string CompanyName, string? PhoneNumber);
+public record CreateDemoRequestRequest(string Email, string CompanyName, string? PhoneNumber, string? Message);
 public record ApproveDemoRequest(string? Notes);
 public record RejectDemoRequest(string Reason);
 public record ConvertDemoRequest(string Tier);
