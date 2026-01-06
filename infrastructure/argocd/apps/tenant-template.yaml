@@ -1,0 +1,108 @@
+# ApplicationSet for dynamic tenant deployments
+# ArgoCD will automatically create an Application for each tenant in the database
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: mechanicbuddy-tenants
+  namespace: argocd
+spec:
+  generators:
+    # Pull tenant list from Management API
+    - plugin:
+        configMapRef:
+          name: tenant-generator-plugin
+        input:
+          parameters:
+            apiUrl: "http://management-api.mechanicbuddy-system:15568/api/tenants/argocd-list"
+
+  template:
+    metadata:
+      name: 'tenant-{{tenant_id}}'
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: mechanicbuddy
+        app.kubernetes.io/component: tenant
+        tenant-id: '{{tenant_id}}'
+    spec:
+      project: mechanicbuddy
+
+      source:
+        repoURL: https://github.com/YOUR_ORG/mechanicbuddy.git
+        targetRevision: main
+        path: infrastructure/helm/charts/mechanicbuddy-tenant
+        helm:
+          valueFiles:
+            - values.yaml
+          parameters:
+            - name: tenant.id
+              value: '{{tenant_id}}'
+            - name: tenant.name
+              value: '{{company_name}}'
+            - name: tenant.tier
+              value: '{{tier}}'
+            - name: tenant.ownerEmail
+              value: '{{owner_email}}'
+            - name: domains.default
+              value: '{{tenant_id}}.mechanicbuddy.app'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'tenant-{{tenant_id}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+        retry:
+          limit: 3
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+
+---
+# Alternative: Use list generator with Git file
+# This approach stores tenant configs in git
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: mechanicbuddy-tenants-git
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/YOUR_ORG/mechanicbuddy.git
+        revision: main
+        files:
+          - path: "infrastructure/tenants/*/config.json"
+
+  template:
+    metadata:
+      name: 'tenant-{{tenant_id}}'
+      namespace: argocd
+    spec:
+      project: mechanicbuddy
+
+      source:
+        repoURL: https://github.com/YOUR_ORG/mechanicbuddy.git
+        targetRevision: main
+        path: infrastructure/helm/charts/mechanicbuddy-tenant
+        helm:
+          valueFiles:
+            - values.yaml
+            - '../../tenants/{{tenant_id}}/values.yaml'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'tenant-{{tenant_id}}'
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

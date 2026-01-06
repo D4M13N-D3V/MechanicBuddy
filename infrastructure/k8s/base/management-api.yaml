@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: management-api
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: management-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mechanicbuddy
+      app.kubernetes.io/component: management-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mechanicbuddy
+        app.kubernetes.io/component: management-api
+    spec:
+      serviceAccountName: management-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL..."
+              until nc -z mechanicbuddy-management-db-rw 5432; do
+                sleep 2
+              done
+              echo "PostgreSQL is ready"
+        - name: run-migrations
+          image: management-dbup
+          env:
+            - name: ConnectionStrings__Management
+              valueFrom:
+                secretKeyRef:
+                  name: management-api-secrets
+                  key: connection-string
+      containers:
+        - name: api
+          image: management-api
+          ports:
+            - name: http
+              containerPort: 15568
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ConnectionStrings__Management
+              valueFrom:
+                secretKeyRef:
+                  name: management-api-secrets
+                  key: connection-string
+            - name: Jwt__SecretKey
+              valueFrom:
+                secretKeyRef:
+                  name: management-api-secrets
+                  key: jwt-secret
+            - name: Stripe__SecretKey
+              valueFrom:
+                secretKeyRef:
+                  name: management-api-secrets
+                  key: stripe-secret-key
+            - name: Stripe__WebhookSecret
+              valueFrom:
+                secretKeyRef:
+                  name: management-api-secrets
+                  key: stripe-webhook-secret
+            - name: Email__ResendApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: management-api-secrets
+                  key: resend-api-key
+            - name: Provisioning__BaseDomain
+              valueFrom:
+                configMapKeyRef:
+                  name: mechanicbuddy-config
+                  key: BASE_DOMAIN
+            - name: Provisioning__NamespacePrefix
+              valueFrom:
+                configMapKeyRef:
+                  name: mechanicbuddy-config
+                  key: NAMESPACE_PREFIX
+            - name: Provisioning__ClusterIssuer
+              valueFrom:
+                configMapKeyRef:
+                  name: mechanicbuddy-config
+                  key: CLUSTER_ISSUER
+            - name: Provisioning__HelmChartPath
+              value: /app/charts/mechanicbuddy-tenant
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          volumeMounts:
+            - name: helm-charts
+              mountPath: /app/charts
+      volumes:
+        - name: helm-charts
+          configMap:
+            name: helm-charts
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: management-api
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: management-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 15568
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: management-api
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: management-api-secrets
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: management-api
+type: Opaque
+stringData:
+  connection-string: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=CHANGE_ME"
+  jwt-secret: "CHANGE_ME_MIN_32_CHARS_LONG_SECRET_KEY"
+  stripe-secret-key: "sk_test_CHANGE_ME"
+  stripe-webhook-secret: "whsec_CHANGE_ME"
+  resend-api-key: "re_CHANGE_ME"

@@ -1,5 +1,6 @@
 # MechanicBuddy
-
+ 
+kubectl apply -f infrastructure/argocd/apps/system-production.yaml
 > **Note:** This project is a fork of [CarCare](https://github.com/rene98c/carcareco) by rene98c. Full credit to the original author for the foundational work.
 
 **MechanicBuddy** is a modern, self-hosted workshop management system built for vehicle service centers, auto repair shops, and maintenance facilities. It helps streamline your operations from job tracking to invoicing — all in one intuitive interface.

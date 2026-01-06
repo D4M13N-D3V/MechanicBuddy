@@ -120,6 +120,83 @@ public class SuperAdminController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Generate access token to enter a tenant's dashboard for troubleshooting.
+    /// </summary>
+    [HttpPost("tenant-access/{tenantId}")]
+    public async Task<IActionResult> GenerateTenantAccess(string tenantId)
+    {
+        var adminId = GetCurrentAdminId();
+        if (adminId == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _superAdminService.GenerateTenantAccessAsync(adminId.Value, tenantId);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(new
+        {
+            tenantUrl = result.TenantUrl,
+            accessToken = result.AccessToken,
+            expiresAt = result.ExpiresAt,
+            tenantId = result.TenantId,
+            tenantName = result.TenantName
+        });
+    }
+
+    /// <summary>
+    /// Generate a one-time direct access URL for a tenant.
+    /// </summary>
+    [HttpPost("tenant-access/{tenantId}/direct")]
+    public async Task<IActionResult> GenerateDirectAccess(string tenantId)
+    {
+        var adminId = GetCurrentAdminId();
+        if (adminId == null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _superAdminService.GenerateDirectAccessUrlAsync(adminId.Value, tenantId);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(new
+        {
+            accessUrl = result.TenantUrl,
+            expiresAt = result.ExpiresAt,
+            tenantId = result.TenantId,
+            tenantName = result.TenantName
+        });
+    }
+
+    /// <summary>
+    /// Get audit log of tenant accesses.
+    /// </summary>
+    [HttpGet("access-logs")]
+    public async Task<IActionResult> GetAccessLogs([FromQuery] int? adminId, [FromQuery] string? tenantId, [FromQuery] int limit = 100)
+    {
+        var logs = await _superAdminService.GetAccessLogsAsync(adminId, tenantId, limit);
+        return Ok(logs);
+    }
+
+    private int? GetCurrentAdminId()
+    {
+        var claim = User.FindFirst("admin_id") ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+        if (claim != null && int.TryParse(claim.Value, out var id))
+        {
+            return id;
+        }
+        return null;
+    }
 }
 
 public record CreateAdminRequest(string Email, string Password, string Name, string? Role);

@@ -1,0 +1,49 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mechanicbuddy-management-db
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: database
+spec:
+  instances: 1
+
+  postgresql:
+    parameters:
+      max_connections: "100"
+      shared_buffers: "256MB"
+
+  bootstrap:
+    initdb:
+      database: mechanicbuddy_management
+      owner: management
+      secret:
+        name: management-db-credentials
+
+  storage:
+    size: 10Gi
+    storageClass: local-path
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  monitoring:
+    enablePodMonitor: false
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: management-db-credentials
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: database
+type: kubernetes.io/basic-auth
+stringData:
+  username: management
+  password: CHANGE_ME_IN_OVERLAY

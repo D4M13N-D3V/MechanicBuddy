@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mechanicbuddy-system
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: system
+    app.kubernetes.io/managed-by: argocd

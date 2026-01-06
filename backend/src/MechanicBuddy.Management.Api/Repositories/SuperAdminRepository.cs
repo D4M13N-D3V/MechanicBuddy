@@ -1,5 +1,6 @@
 using Dapper;
 using MechanicBuddy.Management.Api.Domain;
+using MechanicBuddy.Management.Api.Services;
 using Npgsql;
 
 namespace MechanicBuddy.Management.Api.Repositories;
@@ -12,6 +13,9 @@ public class SuperAdminRepository : ISuperAdminRepository
     {
         _connectionString = configuration.GetConnectionString("Management")
             ?? throw new InvalidOperationException("Management connection string not found");
+
+        // Set up Dapper to use snake_case column mapping
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
 
     public async Task<SuperAdmin?> GetByIdAsync(int id)
@@ -79,5 +83,76 @@ public class SuperAdminRepository : ISuperAdminRepository
         var sql = "DELETE FROM super_admins WHERE id = @Id";
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
         return rowsAffected > 0;
+    }
+
+    public async Task RecordTenantAccessAsync(int adminId, string tenantId, DateTime accessedAt)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = @"
+            INSERT INTO super_admin_access_logs (super_admin_id, tenant_id, accessed_at)
+            VALUES (@AdminId, @TenantId, @AccessedAt)";
+
+        await connection.ExecuteAsync(sql, new { AdminId = adminId, TenantId = tenantId, AccessedAt = accessedAt });
+    }
+
+    public async Task<IEnumerable<TenantAccessLog>> GetAccessLogsAsync(int? adminId = null, string? tenantId = null, int limit = 100)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = @"
+            SELECT
+                l.id,
+                l.super_admin_id,
+                a.email as super_admin_email,
+                l.tenant_id,
+                t.company_name as tenant_name,
+                l.accessed_at,
+                l.ip_address
+            FROM super_admin_access_logs l
+            JOIN super_admins a ON l.super_admin_id = a.id
+            LEFT JOIN tenants t ON l.tenant_id = t.tenant_id
+            WHERE (@AdminId IS NULL OR l.super_admin_id = @AdminId)
+              AND (@TenantId IS NULL OR l.tenant_id = @TenantId)
+            ORDER BY l.accessed_at DESC
+            LIMIT @Limit";
+
+        return await connection.QueryAsync<TenantAccessLog>(sql, new { AdminId = adminId, TenantId = tenantId, Limit = limit });
+    }
+
+    public async Task StoreOneTimeTokenAsync(string token, int adminId, string tenantId, DateTime expiresAt)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = @"
+            INSERT INTO super_admin_access_tokens (token, super_admin_id, tenant_id, expires_at, created_at)
+            VALUES (@Token, @AdminId, @TenantId, @ExpiresAt, @CreatedAt)";
+
+        await connection.ExecuteAsync(sql, new
+        {
+            Token = token,
+            AdminId = adminId,
+            TenantId = tenantId,
+            ExpiresAt = expiresAt,
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+
+    public async Task<(int AdminId, string TenantId)?> ValidateAndConsumeTokenAsync(string token)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+
+        // Get and delete the token in one operation
+        var sql = @"
+            DELETE FROM super_admin_access_tokens
+            WHERE token = @Token AND expires_at > @Now AND consumed_at IS NULL
+            RETURNING super_admin_id, tenant_id";
+
+        var result = await connection.QuerySingleOrDefaultAsync<(int super_admin_id, string tenant_id)?>(
+            sql, new { Token = token, Now = DateTime.UtcNow });
+
+        if (result.HasValue)
+        {
+            return (result.Value.super_admin_id, result.Value.tenant_id);
+        }
+
+        return null;
     }
 }

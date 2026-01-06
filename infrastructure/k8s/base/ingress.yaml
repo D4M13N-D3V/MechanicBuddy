@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mechanicbuddy-system
+  labels:
+    app.kubernetes.io/name: mechanicbuddy
+    app.kubernetes.io/component: ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - mechanicbuddy.app
+        - www.mechanicbuddy.app
+      secretName: mechanicbuddy-app-tls
+    - hosts:
+        - api.mechanicbuddy.app
+      secretName: mechanicbuddy-api-tls
+  rules:
+    # Main portal
+    - host: mechanicbuddy.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: management-portal
+                port:
+                  number: 3026
+    # WWW redirect (handled by portal)
+    - host: www.mechanicbuddy.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: management-portal
+                port:
+                  number: 3026
+    # API subdomain
+    - host: api.mechanicbuddy.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: management-api
+                port:
+                  number: 15568

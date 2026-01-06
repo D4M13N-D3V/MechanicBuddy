@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mechanicbuddy-system-production
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: mechanicbuddy
+
+  source:
+    repoURL: https://github.com/D4m13n-D3v/mechanicbuddy.git
+    targetRevision: main
+    path: infrastructure/k8s/overlays/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mechanicbuddy-system
+
+  syncPolicy:
+    # Manual sync for production - requires explicit approval
+    automated: null
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+  # Health checks
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ''
+      kind: Secret
+      jsonPointers:
+        - /data
+
+  info:
+    - name: Environment
+      value: production
+    - name: Team
+      value: platform
+    - name: SyncPolicy
+      value: manual

@@ -134,6 +134,9 @@ builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddScoped<SuperAdminService>();
 builder.Services.AddSingleton<JwtService>();
 
+// Register Background Services
+builder.Services.AddHostedService<DemoCleanupService>();
+
 // Register Provisioning Services
 builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
 builder.Services.AddScoped<IHelmService, HelmService>();

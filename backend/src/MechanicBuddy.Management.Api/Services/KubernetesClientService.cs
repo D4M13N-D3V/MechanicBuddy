@@ -533,6 +533,123 @@ public class KubernetesClientService : IKubernetesClientService
         }
     }
 
+    public async Task<V1Ingress?> GetIngressAsync(
+        string namespaceName,
+        string ingressName,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _kubernetesClient.NetworkingV1.ReadNamespacedIngressAsync(
+                ingressName,
+                namespaceName,
+                cancellationToken: cancellationToken);
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting ingress {IngressName} in namespace {Namespace}",
+                ingressName, namespaceName);
+            return null;
+        }
+    }
+
+    public async Task<bool> UpdateIngressDomainsAsync(
+        string namespaceName,
+        string ingressName,
+        List<string> domains,
+        string clusterIssuer = "letsencrypt-prod",
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _logger.LogInformation("Updating Ingress {IngressName} in namespace {Namespace} with domains: {Domains}",
+                ingressName, namespaceName, string.Join(", ", domains));
+
+            // Get the existing Ingress
+            var ingress = await GetIngressAsync(namespaceName, ingressName, cancellationToken);
+            if (ingress == null)
+            {
+                _logger.LogError("Ingress {IngressName} not found in namespace {Namespace}",
+                    ingressName, namespaceName);
+                return false;
+            }
+
+            // Update annotations for cert-manager
+            if (ingress.Metadata.Annotations == null)
+            {
+                ingress.Metadata.Annotations = new Dictionary<string, string>();
+            }
+
+            ingress.Metadata.Annotations["cert-manager.io/cluster-issuer"] = clusterIssuer;
+            ingress.Metadata.Annotations["cert-manager.io/acme-challenge-type"] = "http01";
+
+            // Update rules to include all domains
+            if (ingress.Spec.Rules == null)
+            {
+                ingress.Spec.Rules = new List<V1IngressRule>();
+            }
+
+            // Get the first rule as a template (assumes existing rule has correct backend config)
+            var templateRule = ingress.Spec.Rules.FirstOrDefault();
+            if (templateRule == null)
+            {
+                _logger.LogError("No existing rules found in Ingress {IngressName}", ingressName);
+                return false;
+            }
+
+            // Clear existing rules and rebuild with all domains
+            ingress.Spec.Rules.Clear();
+
+            foreach (var domain in domains)
+            {
+                var rule = new V1IngressRule
+                {
+                    Host = domain,
+                    Http = templateRule.Http // Reuse the same HTTP config
+                };
+                ingress.Spec.Rules.Add(rule);
+            }
+
+            // Update TLS configuration
+            if (ingress.Spec.Tls == null)
+            {
+                ingress.Spec.Tls = new List<V1IngressTLS>();
+            }
+
+            // Create TLS entries for each domain
+            ingress.Spec.Tls.Clear();
+            foreach (var domain in domains)
+            {
+                var tls = new V1IngressTLS
+                {
+                    Hosts = new List<string> { domain },
+                    SecretName = $"{domain.Replace(".", "-")}-tls"
+                };
+                ingress.Spec.Tls.Add(tls);
+            }
+
+            // Replace the Ingress
+            await _kubernetesClient.NetworkingV1.ReplaceNamespacedIngressAsync(
+                ingress,
+                ingressName,
+                namespaceName,
+                cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Successfully updated Ingress {IngressName} with custom domains", ingressName);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update Ingress {IngressName} in namespace {Namespace}",
+                ingressName, namespaceName);
+            return false;
+        }
+    }
+
     private bool IsPodReady(V1Pod pod)
     {
         // Check if pod is in Running phase

@@ -1,0 +1,48 @@
+# ArgoCD Ingress - Apply this after ArgoCD is installed
+# This exposes ArgoCD UI at argocd.mechanicbuddy.app
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-ingress
+  namespace: argocd
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - argocd.mechanicbuddy.app
+      secretName: argocd-server-tls
+  rules:
+    - host: argocd.mechanicbuddy.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 443
+
+---
+# Alternative: Use LoadBalancer service if you have MetalLB or cloud provider
+# Uncomment this if you prefer LoadBalancer over Ingress
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: argocd-server-lb
+#   namespace: argocd
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app.kubernetes.io/name: argocd-server
+#   ports:
+#     - name: https
+#       port: 443
+#       targetPort: 8080
+#       protocol: TCP

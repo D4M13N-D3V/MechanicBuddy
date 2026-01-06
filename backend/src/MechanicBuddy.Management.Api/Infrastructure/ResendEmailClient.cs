@@ -81,21 +81,57 @@ public class ResendEmailClient : IEmailClient
         await SendEmailAsync(email, subject, html);
     }
 
-    public async Task SendWelcomeEmailAsync(string email, string companyName, string apiUrl)
+    public async Task SendWelcomeEmailAsync(string email, string companyName, string tenantUrl, string adminUsername, string adminPassword, DateTime expiresAt)
     {
-        var subject = "Welcome to MechanicBuddy!";
+        var daysRemaining = (expiresAt - DateTime.UtcNow).Days;
+        var subject = "Welcome to MechanicBuddy - Your 7-Day Demo is Ready!";
         var html = $@"
             <h1>Welcome to MechanicBuddy, {companyName}!</h1>
-            <p>Your account has been successfully created.</p>
-            <h2>Getting Started:</h2>
+            <p>Your demo instance is now ready! You have <strong>{daysRemaining} days</strong> to explore all the features of MechanicBuddy.</p>
+
+            <h2>Access Your Demo:</h2>
+            <div style=""background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;"">
+                <p><strong>URL:</strong> <a href=""{tenantUrl}"" style=""color: #007bff; text-decoration: none;"">{tenantUrl}</a></p>
+                <p><strong>Username:</strong> {adminUsername}</p>
+                <p><strong>Password:</strong> {adminPassword}</p>
+                <p style=""color: #dc3545; margin-top: 10px;""><strong>Important:</strong> Please change your password after first login for security.</p>
+            </div>
+
+            <h2>Your Demo Includes:</h2>
             <ul>
-                <li>Access your instance at: {apiUrl}</li>
-                <li>Complete your profile setup</li>
-                <li>Add your team members</li>
-                <li>Start creating work orders</li>
+                <li>Full access to all features for 7 days</li>
+                <li>Sample data to help you get started</li>
+                <li>Work order management</li>
+                <li>Client and vehicle tracking</li>
+                <li>Inventory management</li>
+                <li>Invoice generation with PDF export</li>
             </ul>
-            <p>Need help? Check out our documentation or contact support.</p>
-            <p>Best regards,<br/>The MechanicBuddy Team</p>
+
+            <h2>Getting Started:</h2>
+            <ol>
+                <li>Log in with the credentials above</li>
+                <li>Explore the dashboard and sample data</li>
+                <li>Create a test work order</li>
+                <li>Try generating an invoice</li>
+                <li>Check out the inventory management</li>
+            </ol>
+
+            <h2>Demo Expiration:</h2>
+            <p>Your demo expires on <strong>{expiresAt:MMMM dd, yyyy}</strong>. You'll receive a reminder 2 days before expiration.</p>
+            <p>If you love MechanicBuddy and want to keep using it, you can upgrade to a paid plan at any time to keep all your data.</p>
+
+            <h2>Need Help?</h2>
+            <p>If you have any questions or need assistance, our support team is here to help:</p>
+            <ul>
+                <li>Email: support@mechanicbuddy.com</li>
+                <li>Documentation: <a href=""https://docs.mechanicbuddy.com"">docs.mechanicbuddy.com</a></li>
+            </ul>
+
+            <div style=""margin-top: 30px; padding: 20px; background: #e8f4f8; border-radius: 8px;"">
+                <p style=""margin: 0;""><strong>Ready to upgrade?</strong> Visit your demo instance and click on ""Upgrade"" in the settings menu.</p>
+            </div>
+
+            <p style=""margin-top: 30px;"">Best regards,<br/>The MechanicBuddy Team</p>
         ";
 
         await SendEmailAsync(email, subject, html);

@@ -1,0 +1,191 @@
+name: GitOps Build & Update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "management-portal/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to update'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/mechanicbuddy
+
+jobs:
+  # Build all images
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      sha_short: ${{ steps.vars.outputs.sha_short }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set variables
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build Main App API
+      - name: Build and push API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build Main App Frontend
+      - name: Build and push Web
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build DbUp Migrations
+      - name: Build and push DbUp
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/src
+          file: backend/src/DbUp/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dbup:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dbup:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build Management API
+      - name: Build and push Management API
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: backend/src/MechanicBuddy.Management.Api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-api:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build Management Portal
+      - name: Build and push Management Portal
+        uses: docker/build-push-action@v5
+        with:
+          context: management-portal
+          file: management-portal/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build Management DbUp
+      - name: Build and push Management DbUp
+        uses: docker/build-push-action@v5
+        with:
+          context: backend/src
+          file: backend/src/MechanicBuddy.Management.DbUp/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-dbup:${{ steps.vars.outputs.sha_short }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-dbup:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Update Kustomize manifests with new image tags (GitOps)
+  update-manifests:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update image tags in Kustomize overlay
+        run: |
+          cd infrastructure/k8s/overlays/${{ steps.env.outputs.environment }}
+
+          # Update image tags using kustomize edit
+          kustomize edit set image \
+            management-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-api:${{ needs.build.outputs.sha_short }} \
+            management-portal=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal:${{ needs.build.outputs.sha_short }} \
+            management-dbup=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-dbup:${{ needs.build.outputs.sha_short }}
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add infrastructure/k8s/overlays/
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update image tags to ${{ needs.build.outputs.sha_short }}
+
+            Environment: ${{ steps.env.outputs.environment }}
+            Triggered by: ${{ github.event_name }}
+            Commit: ${{ github.sha }}"
+
+            git push
+          fi
+
+  # Optional: Notify ArgoCD to sync (if not using auto-sync)
+  notify-argocd:
+    needs: [build, update-manifests]
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production'
+    steps:
+      - name: Trigger ArgoCD Sync (Production)
+        run: |
+          echo "Production deployment requires manual ArgoCD sync"
+          echo "Go to ArgoCD UI and sync 'mechanicbuddy-system-production'"
+          echo "Or run: argocd app sync mechanicbuddy-system-production"

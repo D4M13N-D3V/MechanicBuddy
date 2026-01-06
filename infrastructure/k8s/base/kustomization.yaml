@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mechanicbuddy-system
+
+resources:
+  - namespace.yaml
+  - postgresql.yaml
+  - management-api.yaml
+  - management-portal.yaml
+  - ingress.yaml
+  - rbac.yaml
+  - cronjobs.yaml
+
+configMapGenerator:
+  - name: mechanicbuddy-config
+    literals:
+      - BASE_DOMAIN=mechanicbuddy.app
+      - NAMESPACE_PREFIX=tenant-
+      - CLUSTER_ISSUER=letsencrypt-prod
+
+# Images will be overridden in overlays
+images:
+  - name: management-api
+    newName: ghcr.io/mechanicbuddy/management-api
+    newTag: latest
+  - name: management-portal
+    newName: ghcr.io/mechanicbuddy/management-portal
+    newTag: latest
+  - name: management-dbup
+    newName: ghcr.io/mechanicbuddy/management-dbup
+    newTag: latest

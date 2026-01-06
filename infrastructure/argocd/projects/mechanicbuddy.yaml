@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: mechanicbuddy
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: MechanicBuddy SaaS Platform
+
+  # Source repositories
+  sourceRepos:
+    - 'https://github.com/*/mechanicbuddy.git'
+    - 'ghcr.io/*/mechanicbuddy-*'
+
+  # Destination clusters and namespaces
+  destinations:
+    # Management system namespace
+    - namespace: mechanicbuddy-system
+      server: https://kubernetes.default.svc
+    # Tenant namespaces (wildcard)
+    - namespace: 'tenant-*'
+      server: https://kubernetes.default.svc
+    # ArgoCD namespace for app-of-apps
+    - namespace: argocd
+      server: https://kubernetes.default.svc
+
+  # Cluster resource whitelist
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+    - group: cert-manager.io
+      kind: ClusterIssuer
+    - group: postgresql.cnpg.io
+      kind: Cluster
+
+  # Namespace resource blacklist (security)
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange
+
+  # Roles for project members
+  roles:
+    - name: admin
+      description: Full access to MechanicBuddy project
+      policies:
+        - p, proj:mechanicbuddy:admin, applications, *, mechanicbuddy/*, allow
+        - p, proj:mechanicbuddy:admin, repositories, *, mechanicbuddy/*, allow
+      groups:
+        - mechanicbuddy-admins
+
+    - name: developer
+      description: Read-only access, can sync applications
+      policies:
+        - p, proj:mechanicbuddy:developer, applications, get, mechanicbuddy/*, allow
+        - p, proj:mechanicbuddy:developer, applications, sync, mechanicbuddy/*, allow
+      groups:
+        - mechanicbuddy-developers
+
+  # Sync windows (optional - prevent production deploys during business hours)
+  # syncWindows:
+  #   - kind: deny
+  #     schedule: '0 9-17 * * 1-5'
+  #     duration: 8h
+  #     applications:
+  #       - '*-production'
+  #     manualSync: true

@@ -197,6 +197,34 @@ public interface IKubernetesClientService
         int replicas,
         string? labelSelector = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets an Ingress resource from a namespace.
+    /// </summary>
+    /// <param name="namespaceName">Name of the namespace.</param>
+    /// <param name="ingressName">Name of the ingress.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Ingress object or null if not found.</returns>
+    Task<V1Ingress?> GetIngressAsync(
+        string namespaceName,
+        string ingressName,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates an Ingress resource to include custom domains.
+    /// </summary>
+    /// <param name="namespaceName">Name of the namespace.</param>
+    /// <param name="ingressName">Name of the ingress.</param>
+    /// <param name="domains">List of domains to add to the Ingress.</param>
+    /// <param name="clusterIssuer">TLS cluster issuer for cert-manager (default: letsencrypt-prod).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if Ingress was updated successfully.</returns>
+    Task<bool> UpdateIngressDomainsAsync(
+        string namespaceName,
+        string ingressName,
+        List<string> domains,
+        string clusterIssuer = "letsencrypt-prod",
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

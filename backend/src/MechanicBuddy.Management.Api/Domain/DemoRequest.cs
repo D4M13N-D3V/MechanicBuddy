@@ -8,7 +8,7 @@ public class DemoRequest
     public string? PhoneNumber { get; set; }
     public string? Message { get; set; }
     public string? IpAddress { get; set; }
-    public string Status { get; set; } = "pending"; // pending, approved, rejected, expired
+    public string Status { get; set; } = "pending"; // pending, approved, rejected, expired, converted
     public string? TenantId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ApprovedAt { get; set; }

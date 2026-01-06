@@ -97,6 +97,85 @@ public class BillingController : ControllerBase
         return Ok(new { revenue, startDate, endDate });
     }
 
+    [HttpPost("portal-session")]
+    public async Task<IActionResult> CreatePortalSession([FromBody] CreatePortalSessionRequest request)
+    {
+        try
+        {
+            var portalUrl = await _billingService.CreateBillingPortalSessionAsync(
+                request.TenantId,
+                request.ReturnUrl
+            );
+
+            return Ok(new { url = portalUrl });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create billing portal session for tenant {TenantId}", request.TenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("sync-mechanics")]
+    public async Task<IActionResult> SyncMechanics([FromBody] SyncMechanicsRequest request)
+    {
+        try
+        {
+            var success = await _billingService.UpdateMechanicCountAsync(
+                request.TenantId,
+                request.MechanicCount
+            );
+
+            if (!success)
+            {
+                return BadRequest(new { message = "Failed to sync mechanic count. Tenant may not exist or subscription not configured." });
+            }
+
+            return Ok(new { message = "Mechanic count synced successfully", mechanicCount = request.MechanicCount });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to sync mechanics for tenant {TenantId}", request.TenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("create-customer-and-subscription")]
+    public async Task<IActionResult> CreateCustomerAndSubscription([FromBody] CreateCustomerAndSubscriptionRequest request)
+    {
+        try
+        {
+            var (customerId, subscriptionId) = await _billingService.CreateCustomerAndSubscriptionAsync(
+                request.TenantId,
+                request.Email,
+                request.Name,
+                request.MechanicCount
+            );
+
+            return Ok(new { customerId, subscriptionId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create customer and subscription");
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("invoices/{tenantId}")]
+    public async Task<IActionResult> GetInvoices(string tenantId)
+    {
+        try
+        {
+            var invoices = await _billingService.GetBillingHistoryAsync(tenantId);
+            return Ok(invoices);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get invoices for tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> Webhook()
@@ -126,3 +205,6 @@ public class BillingController : ControllerBase
 public record CreateCustomerRequest(string TenantId, string Email, string Name);
 public record CreateSubscriptionRequest(string TenantId, string PriceId);
 public record CancelSubscriptionRequest(string TenantId);
+public record CreatePortalSessionRequest(string TenantId, string ReturnUrl);
+public record SyncMechanicsRequest(string TenantId, int MechanicCount);
+public record CreateCustomerAndSubscriptionRequest(string TenantId, string Email, string Name, int MechanicCount);

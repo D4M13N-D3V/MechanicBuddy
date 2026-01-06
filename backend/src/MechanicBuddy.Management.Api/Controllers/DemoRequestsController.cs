@@ -103,6 +103,29 @@ public class DemoRequestsController : ControllerBase
         return Ok(new { cleanedCount = count });
     }
 
+    [HttpPost("send-reminders")]
+    [Authorize]
+    public async Task<IActionResult> SendReminders()
+    {
+        var count = await _demoRequestService.SendExpiringDemoRemindersAsync();
+        return Ok(new { remindersSent = count });
+    }
+
+    [HttpPost("{id}/convert")]
+    [Authorize]
+    public async Task<IActionResult> ConvertToPaid(int id, [FromBody] ConvertDemoRequest request)
+    {
+        try
+        {
+            var demoRequest = await _demoRequestService.ConvertToPaidAsync(id, request.Tier);
+            return Ok(demoRequest);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("pending-count")]
     [Authorize]
     public async Task<IActionResult> GetPendingCount()
@@ -115,3 +138,4 @@ public class DemoRequestsController : ControllerBase
 public record CreateDemoRequestRequest(string Email, string CompanyName, string? PhoneNumber);
 public record ApproveDemoRequest(string? Notes);
 public record RejectDemoRequest(string Reason);
+public record ConvertDemoRequest(string Tier);

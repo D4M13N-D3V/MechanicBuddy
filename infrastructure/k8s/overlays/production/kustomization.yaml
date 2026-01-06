@@ -1,0 +1,99 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mechanicbuddy-system
+
+resources:
+  - ../../base
+  - secrets.yaml
+
+# Production-specific patches
+patches:
+  # Higher replicas for production
+  - target:
+      kind: Deployment
+      name: management-api
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  - target:
+      kind: Deployment
+      name: management-portal
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+
+  # Higher resource limits for production
+  - target:
+      kind: Deployment
+      name: management-api
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+
+  - target:
+      kind: Deployment
+      name: management-portal
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+  # HA PostgreSQL for production
+  - target:
+      kind: Cluster
+      name: mechanicbuddy-management-db
+    patch: |
+      - op: replace
+        path: /spec/instances
+        value: 3
+      - op: replace
+        path: /spec/storage/size
+        value: "50Gi"
+      - op: replace
+        path: /spec/resources
+        value:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+
+configMapGenerator:
+  - name: mechanicbuddy-config
+    behavior: merge
+    literals:
+      - BASE_DOMAIN=mechanicbuddy.app
+
+# Image tags - updated by CI/CD
+images:
+  - name: management-api
+    newName: ghcr.io/mechanicbuddy/management-api
+    newTag: latest  # CI updates this to specific SHA
+  - name: management-portal
+    newName: ghcr.io/mechanicbuddy/management-portal
+    newTag: latest  # CI updates this to specific SHA
+  - name: management-dbup
+    newName: ghcr.io/mechanicbuddy/management-dbup
+    newTag: latest  # CI updates this to specific SHA
+
+labels:
+  - pairs:
+      environment: production
+    includeSelectors: false
