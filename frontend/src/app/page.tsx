@@ -24,6 +24,8 @@ const GREEN_DARK = "#15803d"
 
 // Navigation component
 function Navigation() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   const navLinks = [
     { name: "Services", href: "#services" },
     { name: "About Us", href: "#about" },
@@ -55,11 +57,11 @@ function Navigation() {
       </div>
 
       <Container>
-        <nav className="flex justify-between items-center py-4">
+        <nav className="relative flex justify-between items-center py-4">
           <Link href="/" className="flex items-center gap-3">
             <span className="text-xl font-bold tracking-tight">3J&apos;s Auto Repairs</span>
           </Link>
-          
+
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <a
@@ -79,11 +81,56 @@ function Navigation() {
             </Link>
           </div>
 
-          <button className="md:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors">
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
+
+          {/* Mobile menu panel */}
+          {mobileMenuOpen && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-40 bg-black/50"
+                onClick={() => setMobileMenuOpen(false)}
+              />
+              {/* Menu */}
+              <div className="absolute top-full left-0 right-0 z-50 mt-2 mx-4 bg-slate-800 rounded-xl shadow-xl p-4">
+                <div className="flex flex-col gap-2">
+                  {navLinks.map((link) => (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-base font-medium py-3 px-4 rounded-lg hover:bg-slate-700 transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ))}
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ backgroundColor: GREEN }}
+                    className="mt-2 px-5 py-3 rounded-lg text-base font-semibold text-center transition-all shadow-lg hover:opacity-90"
+                  >
+                    Mechanic Portal
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
         </nav>
       </Container>
     </header>
