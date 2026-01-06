@@ -175,11 +175,27 @@ builder.Services.AddSingleton<ICloudflareClient>(sp =>
     return new NoOpCloudflareClient(sp.GetRequiredService<ILogger<NoOpCloudflareClient>>());
 });
 
+// Register NPM Client
+builder.Services.AddSingleton<INpmClient>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var npmEnabled = !string.IsNullOrEmpty(config["Npm:BaseUrl"]);
+
+    if (npmEnabled)
+    {
+        return new NpmClient(
+            config,
+            sp.GetRequiredService<ILogger<NpmClient>>());
+    }
+    return new NoOpNpmClient(sp.GetRequiredService<ILogger<NoOpNpmClient>>());
+});
+
 // Register Infrastructure Clients
 builder.Services.AddSingleton<IKubernetesClient>(sp =>
 {
     var kubernetes = sp.GetService<IKubernetes>();
     var cloudflareClient = sp.GetRequiredService<ICloudflareClient>();
+    var npmClient = sp.GetRequiredService<INpmClient>();
     var config = sp.GetRequiredService<IConfiguration>();
 
     if (kubernetes == null)
@@ -191,6 +207,7 @@ builder.Services.AddSingleton<IKubernetesClient>(sp =>
         config,
         sp.GetRequiredService<ILogger<KubernetesClient>>(),
         cloudflareClient,
+        npmClient,
         kubernetes);
 });
 builder.Services.AddSingleton<IStripeClient, StripeClient>();

@@ -9,6 +9,7 @@ public class KubernetesClient : IKubernetesClient
     private readonly IConfiguration _configuration;
     private readonly ILogger<KubernetesClient> _logger;
     private readonly ICloudflareClient _cloudflareClient;
+    private readonly INpmClient _npmClient;
     private readonly string _baseDomain;
     private readonly string _postgresHost;
     private readonly string _postgresUser;
@@ -27,11 +28,13 @@ public class KubernetesClient : IKubernetesClient
         IConfiguration configuration,
         ILogger<KubernetesClient> logger,
         ICloudflareClient cloudflareClient,
+        INpmClient npmClient,
         IKubernetes? kubernetes = null)
     {
         _configuration = configuration;
         _logger = logger;
         _cloudflareClient = cloudflareClient;
+        _npmClient = npmClient;
 
         if (kubernetes != null)
         {
@@ -392,6 +395,13 @@ public class KubernetesClient : IKubernetesClient
             _logger.LogWarning("Failed to create DNS record for {Domain}, tenant may not be accessible externally", tenantDomain);
         }
 
+        // Create proxy host in Nginx Proxy Manager
+        var proxyCreated = await _npmClient.CreateProxyHostAsync(tenantId);
+        if (!proxyCreated)
+        {
+            _logger.LogWarning("Failed to create NPM proxy host for {Domain}", tenantDomain);
+        }
+
         // Return external URL
         var apiUrl = $"https://{tenantDomain}";
         return apiUrl;
@@ -447,6 +457,13 @@ public class KubernetesClient : IKubernetesClient
         if (!dnsDeleted)
         {
             _logger.LogWarning("Failed to delete DNS record for tenant {TenantId}", tenantId);
+        }
+
+        // Delete proxy host from Nginx Proxy Manager
+        var proxyDeleted = await _npmClient.DeleteProxyHostAsync(tenantId);
+        if (!proxyDeleted)
+        {
+            _logger.LogWarning("Failed to delete NPM proxy host for tenant {TenantId}", tenantId);
         }
     }
 
