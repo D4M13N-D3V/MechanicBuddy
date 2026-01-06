@@ -18,7 +18,7 @@ ENV ASPNETCORE_URLS=http://+:15567
 WORKDIR /app
 COPY --from=build /app/publish .
 
-RUN mkdir -p /var/mechanicbuddy/pdf /opt/puppeteer
+RUN mkdir -p /var/carcare/pdf /opt/puppeteer
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     fonts-liberation \
