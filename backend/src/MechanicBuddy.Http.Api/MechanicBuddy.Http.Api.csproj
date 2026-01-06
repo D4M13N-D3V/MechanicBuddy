@@ -42,8 +42,8 @@
 		<UserSecretsId>acb785c9-bdb0-43c4-b14e-6b6a386a9788</UserSecretsId>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Carmasters.Core.Repository.Postgres\Carmasters.Core.Persistence.Postgres.csproj" />
-		<ProjectReference Include="..\Carmasters.Http.Api.Model\Carmasters.Http.Api.Model.csproj" />
+		<ProjectReference Include="..\MechanicBuddy.Core.Persistence.Postgres\MechanicBuddy.Core.Persistence.Postgres.csproj" />
+		<ProjectReference Include="..\MechanicBuddy.Http.Api.Model\MechanicBuddy.Http.Api.Model.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Update="wwwroot\tailwind.css">

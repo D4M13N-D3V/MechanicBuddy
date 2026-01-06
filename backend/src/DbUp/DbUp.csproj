@@ -19,27 +19,27 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Carmasters.Core.Application\Carmasters.Core.Application.csproj" />
+    <ProjectReference Include="..\MechanicBuddy.Core.Application\MechanicBuddy.Core.Application.csproj" />
   </ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="scripts/**/*.sql" />
 	</ItemGroup>
 	<ItemGroup>
-	  <None Include="..\Carmasters.Http.Api\resources\default_admin.png" Link="resources\default_admin.png">
+	  <None Include="..\MechanicBuddy.Http.Api\resources\default_admin.png" Link="resources\default_admin.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
 	<ItemGroup>
-	  <None Include="..\Carmasters.Http.Api\appsettings.Development.json" Link="appsettings.Development.json">
+	  <None Include="..\MechanicBuddy.Http.Api\appsettings.Development.json" Link="appsettings.Development.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Include="..\Carmasters.Http.Api\appsettings.json" Link="appsettings.json">
+	  <None Include="..\MechanicBuddy.Http.Api\appsettings.json" Link="appsettings.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Include="..\Carmasters.Http.Api\appsettings.Production.json" Link="appsettings.Production.json">
+	  <None Include="..\MechanicBuddy.Http.Api\appsettings.Production.json" Link="appsettings.Production.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
-	  <None Include="..\Carmasters.Http.Api\appsettings.Secrets.json" Link="appsettings.Secrets.json">
+	  <None Include="..\MechanicBuddy.Http.Api\appsettings.Secrets.json" Link="appsettings.Secrets.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>

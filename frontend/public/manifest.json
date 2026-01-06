@@ -1,0 +1,26 @@
+{
+  "name": "3J's Auto Repairs",
+  "short_name": "3J's Auto",
+  "description": "Professional auto repair and maintenance in Greensboro, NC. Specializing in Chryslers, Chargers & Challengers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

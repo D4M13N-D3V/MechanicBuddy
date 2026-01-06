@@ -27,8 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Carmasters.Domain\Carmasters.Core.Domain.csproj" />
-    <ProjectReference Include="..\Carmasters.Http.Api.Model\Carmasters.Http.Api.Model.csproj" />
+    <ProjectReference Include="..\MechanicBuddy.Core.Domain\MechanicBuddy.Core.Domain.csproj" />
+    <ProjectReference Include="..\MechanicBuddy.Http.Api.Model\MechanicBuddy.Http.Api.Model.csproj" />
   </ItemGroup>
 
   <ItemGroup>

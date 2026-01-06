@@ -1,8 +1,10 @@
-# CarCare
+# MechanicBuddy
 
-**CarCare** is a modern, self-hosted workshop management system built for vehicle service centers, auto repair shops, and maintenance facilities. It helps streamline your operations from job tracking to invoicing — all in one intuitive interface.
+> **Note:** This project is a fork of [CarCare](https://github.com/rene98c/carcareco) by rene98c. Full credit to the original author for the foundational work.
 
-![CarCare Work Details Screenshot](docs/screenshots/workdisplay.png)
+**MechanicBuddy** is a modern, self-hosted workshop management system built for vehicle service centers, auto repair shops, and maintenance facilities. It helps streamline your operations from job tracking to invoicing — all in one intuitive interface.
+
+![MechanicBuddy Work Details Screenshot](docs/screenshots/workdisplay.png)
 
 ## ✨ Features
 
@@ -14,21 +16,11 @@
 - 🤪 CI/CD ready (Github Actions, Docker-based)
 - 🌐 Clean modern UI (Next.js + Tailwind)
 
-## 🌍 Live Demo
-
-You can try the full-featured hosted version here:
-
-️ [https://carcareco.app](https://carcareco.app)
-
-Click **"Try the demo"** on the landing page and enter a company name to spin up your own sandbox environment.
-
-> Each demo company gets a private tenant database — feel free to explore!
-
 ## 🚀 Getting Started (Local Docker)
 
 ```bash
-git clone https://github.com/rene98c/carcareco
-cd carcareco
+git clone https://github.com/yourusername/mechanicbuddy
+cd mechanicbuddy
 
 # Generate random secrets and config (on windows)
 powershell -ExecutionPolicy Bypass -File scripts/setup-secrets.ps1
@@ -37,7 +29,7 @@ chmod +x scripts/setup-secrets.sh
 ./scripts/setup-secrets.sh
 
 # edit secrets if you need to
-# backend/src/Carmasters.Http.Api/appsettings.Secrets.json
+# backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json
 # frontend/.env
 # Important! If you want to access UI remotely, let's say docker runs on host 192.168.1.228. NEXT_PUBLIC_API_URL .env variable must be for example NEXT_PUBLIC_API_URL=http://192.168.1.226:15567 , otherwise calls from browser wont't reach backend
 
@@ -51,11 +43,11 @@ docker compose up --build -d
 - Mail preview: [http://localhost:8025](http://localhost:8025)
 
 ### 🔐 Default Login
-When running CarCare locally, a default user is created for convenience:
+When running MechanicBuddy locally, a default user is created for convenience:
 
 ```txt
-Username: admin  
-Password: carcare
+Username: admin
+Password: mechanicbuddy
 ```
 
 ## 📸 Screenshots
@@ -73,7 +65,7 @@ Password: carcare
 
 ## 🚀 Deploying on Linux (Debian 12)
 
-Follow these instructions to deploy **CarCare** on Debian 12
+Follow these instructions to deploy **MechanicBuddy** on Debian 12
 
 ### 1. Install System Dependencies
 ```bash
@@ -141,21 +133,21 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com -d api.yourdomain.c
 ### 6. Prepare Application Directories
 
 ```bash
-sudo mkdir -p /opt/apps/carcare-app
+sudo mkdir -p /opt/apps/mechanicbuddy-app
 sudo mkdir -p /opt/apps/dbup
-sudo mkdir -p /opt/apps/carcare
+sudo mkdir -p /opt/apps/mechanicbuddy
 sudo mkdir -p /opt/puppeteer
-sudo mkdir -p /var/carcare/pdf
-sudo chown -R $USER /opt/apps /opt/puppeteer /var/carcare
+sudo mkdir -p /var/mechanicbuddy/pdf
+sudo chown -R $USER /opt/apps /opt/puppeteer /var/mechanicbuddy
 ```
 
 ### 7. Application Deployment
 
-Clone CarCare repository:
+Clone MechanicBuddy repository:
 
 ```bash
-git clone https://github.com/rene98c/carcareco.git /opt/apps/carcare
-cd /opt/apps/carcare
+git clone https://github.com/yourusername/mechanicbuddy.git /opt/apps/mechanicbuddy
+cd /opt/apps/mechanicbuddy
 
 # Generate secrets
 chmod +x scripts/setup-secrets.sh
@@ -167,9 +159,9 @@ Ensure `.env` (frontend) and `appsettings.Secrets.json` (backend) are properly c
 Build backend and database migration tools:
 
 ```bash
-cd backend/src/Carmasters.Http.Api
-dotnet build -c Release -o /opt/apps/carcare
-cp appsettings.Secrets.json /opt/apps/carcare/
+cd backend/src/MechanicBuddy.Http.Api
+dotnet build -c Release -o /opt/apps/mechanicbuddy
+cp appsettings.Secrets.json /opt/apps/mechanicbuddy/
 
 cd ../DbUp
 dotnet build -c Release -o /opt/apps/dbup
@@ -182,11 +174,11 @@ cd ../../../frontend
 npm install
 npm run build
 rm -rf src
-rsync -avzr --delete --exclude=".git" --exclude="node_modules" ./ /opt/apps/carcare-app/
+rsync -avzr --delete --exclude=".git" --exclude="node_modules" ./ /opt/apps/mechanicbuddy-app/
 
-cd /opt/apps/carcare-app
+cd /opt/apps/mechanicbuddy-app
 npm install -g pm2
-pm2 start npm --name "carcare-app" -- start
+pm2 start npm --name "mechanicbuddy-app" -- start
 pm2 startup
 pm2 save
 ```
@@ -194,23 +186,23 @@ pm2 save
 Configure backend as a system service:
 
 ```bash
-sudo nano /etc/systemd/system/carcare.service
+sudo nano /etc/systemd/system/mechanicbuddy.service
 ```
 
-Example `carcare.service` file:
+Example `mechanicbuddy.service` file:
 
 ```ini
 [Unit]
-Description=CarCare Backend Service
+Description=MechanicBuddy Backend Service
 After=network.target
 
 [Service]
-WorkingDirectory=/opt/apps/carcare
-ExecStart=/usr/bin/dotnet Carmasters.Http.Api.dll
+WorkingDirectory=/opt/apps/mechanicbuddy
+ExecStart=/usr/bin/dotnet MechanicBuddy.Http.Api.dll
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
-SyslogIdentifier=carcare
+SyslogIdentifier=mechanicbuddy
 User=debian
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
@@ -222,8 +214,8 @@ Enable and start the backend service:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable carcare.service
-sudo systemctl start carcare.service
+sudo systemctl enable mechanicbuddy.service
+sudo systemctl start mechanicbuddy.service
 ```
 
 Run database migrations:
@@ -236,14 +228,14 @@ sudo /opt/apps/dbup/DbUp
 
 Create Nginx configurations for API and frontend:
 
-- [Download API Nginx configuration](docs/nginx/carcareapi.nginx.example)
-- [Download Frontend Nginx configuration](docs/nginx/carcareui.nginx.example)
+- [Download API Nginx configuration](docs/nginx/mechanicbuddyapi.nginx.example)
+- [Download Frontend Nginx configuration](docs/nginx/mechanicbuddyui.nginx.example)
 
 Copy these files to `/etc/nginx/sites-available/`, then enable sites and restart Nginx:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/carcareapi /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/carcareui /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/mechanicbuddyapi /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/mechanicbuddyui /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -257,7 +249,7 @@ sudo systemctl reload nginx
 
 ```
 Username: admin
-Password: carcare
+Password: mechanicbuddy
 ```
 
 All set!
@@ -271,6 +263,6 @@ All set!
 
 ## 🤝 Contributing (coming soon)
 
-Want to help? Contributions, ideas, and feedback welcome!  
+Want to help? Contributions, ideas, and feedback welcome!
 I am working on a CONTRIBUTING.md and roadmap.
 
