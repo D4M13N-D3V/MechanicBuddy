@@ -26,6 +26,7 @@ export interface DemoRequest {
   id: string;
   email: string;
   companyName: string;
+  phoneNumber?: string;
   message: string;
   status: 'pending' | 'contacted' | 'converted' | 'declined';
   createdAt: string;
@@ -111,6 +112,7 @@ export interface AuthSession {
 export interface DemoFormData {
   email: string;
   companyName: string;
+  phoneNumber?: string;
   message: string;
 }
 

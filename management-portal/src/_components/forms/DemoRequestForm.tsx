@@ -11,6 +11,7 @@ export function DemoRequestForm() {
   const [formData, setFormData] = useState({
     email: "",
     companyName: "",
+    phoneNumber: "",
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,7 +51,7 @@ export function DemoRequestForm() {
 
       if (result.success) {
         setIsSuccess(true);
-        setFormData({ email: "", companyName: "", message: "" });
+        setFormData({ email: "", companyName: "", phoneNumber: "", message: "" });
         setTimeout(() => setIsSuccess(false), 5000);
       } else {
         setErrors({ submit: result.error || "Failed to submit request" });
@@ -98,6 +99,15 @@ export function DemoRequestForm() {
         onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
         error={errors.companyName}
         required
+      />
+
+      <Input
+        label="Phone Number (Optional)"
+        type="tel"
+        placeholder="+1 (555) 123-4567"
+        value={formData.phoneNumber}
+        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+        error={errors.phoneNumber}
       />
 
       <Textarea

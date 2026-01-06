@@ -134,9 +134,9 @@ export async function getDemoRequests(
 }
 
 export async function createDemoRequest(
-  data: Pick<DemoRequest, "email" | "companyName" | "message">
+  data: Pick<DemoRequest, "email" | "companyName" | "phoneNumber" | "message">
 ): Promise<ApiResponse<DemoRequest>> {
-  return fetchApi<DemoRequest>("/api/demos", {
+  return fetchApi<DemoRequest>("/api/demorequests", {
     method: "POST",
     body: JSON.stringify(data),
   });
