@@ -6,7 +6,7 @@ public class Tenant
     public string TenantId { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     public string Tier { get; set; } = "free"; // free, starter, professional, enterprise
-    public string Status { get; set; } = "active"; // active, suspended, cancelled, demo
+    public string Status { get; set; } = "active"; // provisioning, active, suspended, deleted, trial
     public string OwnerEmail { get; set; } = string.Empty;
     public string? OwnerName { get; set; }
     public string? StripeCustomerId { get; set; }

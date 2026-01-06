@@ -109,7 +109,7 @@ public class BillingService
 
         tenant.StripeSubscriptionId = null;
         tenant.SubscriptionEndsAt = DateTime.UtcNow;
-        tenant.Status = "cancelled";
+        tenant.Status = "suspended";
         await _tenantRepository.UpdateAsync(tenant);
 
         await _billingEventRepository.CreateAsync(new BillingEvent
@@ -173,7 +173,7 @@ public class BillingService
         var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
         if (tenant == null) return;
 
-        tenant.Status = "cancelled";
+        tenant.Status = "suspended";
         tenant.StripeSubscriptionId = null;
         await _tenantRepository.UpdateAsync(tenant);
 
