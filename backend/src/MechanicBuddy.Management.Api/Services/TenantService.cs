@@ -8,15 +8,21 @@ public class TenantService
 {
     private readonly ITenantRepository _tenantRepository;
     private readonly IKubernetesClient _k8sClient;
+    private readonly IEmailClient _emailClient;
     private readonly ILogger<TenantService> _logger;
+
+    private const string DefaultAdminUsername = "admin";
+    private const string DefaultAdminPassword = "carcare";
 
     public TenantService(
         ITenantRepository tenantRepository,
         IKubernetesClient k8sClient,
+        IEmailClient emailClient,
         ILogger<TenantService> logger)
     {
         _tenantRepository = tenantRepository;
         _k8sClient = k8sClient;
+        _emailClient = emailClient;
         _logger = logger;
     }
 
@@ -81,6 +87,23 @@ public class TenantService
             tenant.Id = id;
 
             _logger.LogInformation("Created new tenant {TenantId} for {OwnerEmail}", tenantId, ownerEmail);
+
+            // Send welcome email with credentials (non-blocking)
+            try
+            {
+                await _emailClient.SendWelcomeEmailAsync(
+                    ownerEmail,
+                    companyName,
+                    tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.com",
+                    DefaultAdminUsername,
+                    DefaultAdminPassword,
+                    tenant.TrialEndsAt ?? DateTime.UtcNow.AddDays(30)
+                );
+            }
+            catch (Exception emailEx)
+            {
+                _logger.LogWarning(emailEx, "Failed to send welcome email to {OwnerEmail}, but tenant was created", ownerEmail);
+            }
 
             return tenant;
         }
