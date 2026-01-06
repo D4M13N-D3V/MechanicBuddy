@@ -142,17 +142,38 @@ builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService
 builder.Services.AddScoped<IHelmService, HelmService>();
 builder.Services.AddScoped<IKubernetesClientService, KubernetesClientService>();
 
-// Register Kubernetes Client for KubernetesClientService
+// Register Kubernetes Client for KubernetesClientService (only if in cluster or kubeconfig exists)
 builder.Services.AddSingleton<IKubernetes>(sp =>
 {
-    var config = KubernetesClientConfiguration.IsInCluster()
-        ? KubernetesClientConfiguration.InClusterConfig()
-        : KubernetesClientConfiguration.BuildConfigFromConfigFile();
-    return new Kubernetes(config);
+    try
+    {
+        var config = KubernetesClientConfiguration.IsInCluster()
+            ? KubernetesClientConfiguration.InClusterConfig()
+            : KubernetesClientConfiguration.BuildConfigFromConfigFile();
+        return new Kubernetes(config);
+    }
+    catch (Exception ex)
+    {
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("KubernetesClient");
+        logger.LogWarning(ex, "Kubernetes client initialization failed. Running in non-Kubernetes mode.");
+        return null!;
+    }
 });
 
 // Register Infrastructure Clients
-builder.Services.AddSingleton<IKubernetesClient, KubernetesClient>();
+builder.Services.AddSingleton<IKubernetesClient>(sp =>
+{
+    var kubernetes = sp.GetService<IKubernetes>();
+    if (kubernetes == null)
+    {
+        var logger = sp.GetRequiredService<ILogger<NoOpKubernetesClient>>();
+        return new NoOpKubernetesClient(logger);
+    }
+    return new KubernetesClient(
+        sp.GetRequiredService<IConfiguration>(),
+        sp.GetRequiredService<ILogger<KubernetesClient>>(),
+        kubernetes);
+});
 builder.Services.AddSingleton<IStripeClient, StripeClient>();
 builder.Services.AddSingleton<IEmailClient, ResendEmailClient>();
 
@@ -195,6 +216,10 @@ app.MapControllers();
 
 // Health check endpoints
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // Liveness probe should not check dependencies
+});
 app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")

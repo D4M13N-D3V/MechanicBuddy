@@ -50,7 +50,7 @@ export default function LoginPage() {
           <Input
             label="Email"
             type="email"
-            placeholder="admin@mechanicbuddy.com"
+            placeholder="admin@mechanicbuddy.app"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
@@ -78,10 +78,10 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>Demo credentials:</p>
+        <div className="mt-6 text-center text-sm text-dark-500">
+          <p>Default credentials:</p>
           <p className="font-mono text-xs mt-1">
-            admin@mechanicbuddy.com / admin123
+            admin@mechanicbuddy.app / admin123
           </p>
         </div>
       </CardContent>

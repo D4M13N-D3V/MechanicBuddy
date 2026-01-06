@@ -13,16 +13,23 @@ public class KubernetesClient : IKubernetesClient
     private readonly string _postgresUser;
     private readonly string _postgresPassword;
 
-    public KubernetesClient(IConfiguration configuration, ILogger<KubernetesClient> logger)
+    public KubernetesClient(IConfiguration configuration, ILogger<KubernetesClient> logger, IKubernetes? kubernetes = null)
     {
         _configuration = configuration;
         _logger = logger;
 
-        var config = KubernetesClientConfiguration.IsInCluster()
-            ? KubernetesClientConfiguration.InClusterConfig()
-            : KubernetesClientConfiguration.BuildConfigFromConfigFile();
+        if (kubernetes != null)
+        {
+            _client = kubernetes;
+        }
+        else
+        {
+            var config = KubernetesClientConfiguration.IsInCluster()
+                ? KubernetesClientConfiguration.InClusterConfig()
+                : KubernetesClientConfiguration.BuildConfigFromConfigFile();
 
-        _client = new Kubernetes(config);
+            _client = new Kubernetes(config);
+        }
 
         _baseApiUrl = configuration["Kubernetes:BaseApiUrl"] ?? "http://mechanicbuddy-api.local";
         _postgresHost = configuration["Database:PostgresHost"] ?? "postgres";
