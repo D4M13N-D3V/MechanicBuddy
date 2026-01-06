@@ -1,9 +1,8 @@
 -- =============================================================================
 -- Create Initial Super Admin
 -- =============================================================================
--- Note: The password will be set by the application on first run using
--- the SUPER_ADMIN_INITIAL_PASSWORD environment variable.
--- This just creates a placeholder that must be activated.
+-- Note: The password is pre-hashed using BCrypt.
+-- Default password: admin123 (should be changed on first login)
 
 INSERT INTO management.super_admins (
     email,
@@ -13,10 +12,9 @@ INSERT INTO management.super_admins (
     is_active,
     email_verified
 ) VALUES (
-    -- Email from environment: SUPER_ADMIN_EMAIL
-    '${SUPER_ADMIN_EMAIL}',
-    -- Password hash will be set by application
-    '$PLACEHOLDER$',
+    'admin@mechanicbuddy.app',
+    -- BCrypt hash of 'admin123' - CHANGE THIS PASSWORD AFTER FIRST LOGIN
+    '$2a$11$rKkPO6qoNhWp0tLbLx.hS.0qYXpFqnAMfzJLEpSOvVBnR8YcFJ8Hy',
     'System Administrator',
     'owner',
     true,

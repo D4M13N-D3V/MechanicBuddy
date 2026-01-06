@@ -1,5 +1,7 @@
 using System.Reflection;
 using DbUp;
+using DbUp.Engine;
+using DbUp.Helpers;
 
 var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__Management")
     ?? throw new InvalidOperationException("ConnectionStrings__Management environment variable not set");
@@ -9,6 +11,7 @@ Console.WriteLine("Starting MechanicBuddy Management database migrations...");
 var upgrader = DeployChanges.To
     .PostgresqlDatabase(connectionString)
     .WithScriptsEmbeddedInAssembly(Assembly.GetExecutingAssembly())
+    .WithVariablesDisabled()
     .LogToConsole()
     .Build();
 
