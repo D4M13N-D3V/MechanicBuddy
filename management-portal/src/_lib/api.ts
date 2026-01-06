@@ -112,7 +112,6 @@ export interface CreateTenantData {
   companyName: string;
   ownerEmail: string;
   ownerName: string;
-  tier?: "free" | "starter" | "professional" | "enterprise";
   isDemo?: boolean;
 }
 

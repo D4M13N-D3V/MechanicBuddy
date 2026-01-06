@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter } from "@/_components/ui/Dialog";
 import { Button } from "@/_components/ui/Button";
 import { Input } from "@/_components/ui/Input";
-import { Select } from "@/_components/ui/Select";
 import { createTenant, type CreateTenantData } from "@/_lib/api";
 
 interface AddTenantDialogProps {
@@ -21,7 +20,6 @@ export function AddTenantDialog({ open, onClose }: AddTenantDialogProps) {
     companyName: "",
     ownerEmail: "",
     ownerName: "",
-    tier: "free",
     isDemo: false,
   });
 
@@ -39,7 +37,6 @@ export function AddTenantDialog({ open, onClose }: AddTenantDialogProps) {
           companyName: "",
           ownerEmail: "",
           ownerName: "",
-          tier: "free",
           isDemo: false,
         });
         router.refresh();
@@ -93,17 +90,6 @@ export function AddTenantDialog({ open, onClose }: AddTenantDialogProps) {
               placeholder="john@acmeauto.com"
               required
             />
-
-            <Select
-              label="Plan"
-              value={formData.tier}
-              onChange={(e) => handleChange("tier", e.target.value)}
-            >
-              <option value="free">Free</option>
-              <option value="starter">Starter</option>
-              <option value="professional">Professional</option>
-              <option value="enterprise">Enterprise</option>
-            </Select>
 
             <div className="flex items-center gap-2">
               <input
