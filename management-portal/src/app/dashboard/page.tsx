@@ -163,20 +163,20 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Total Demo Requests</span>
-                <span className="font-semibold">{analytics.totalDemoRequests}</span>
+                <span className="text-sm text-dark-500">Total Demo Requests</span>
+                <span className="font-bold text-dark-900">{analytics.totalDemoRequests}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Pending</span>
-                <span className="font-semibold text-amber-600">{analytics.pendingDemoRequests}</span>
+                <span className="text-sm text-dark-500">Pending</span>
+                <span className="font-bold text-amber-600">{analytics.pendingDemoRequests}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Conversion Rate</span>
-                <span className="font-semibold text-green-600">{analytics.conversionRate}%</span>
+                <span className="text-sm text-dark-500">Conversion Rate</span>
+                <span className="font-bold text-emerald-600">{analytics.conversionRate}%</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Avg Revenue per Tenant</span>
-                <span className="font-semibold">{formatCurrency(analytics.averageRevenuePerTenant)}</span>
+                <span className="text-sm text-dark-500">Avg Revenue per Tenant</span>
+                <span className="font-bold text-dark-900">{formatCurrency(analytics.averageRevenuePerTenant)}</span>
               </div>
             </div>
           </CardContent>
@@ -192,10 +192,10 @@ export default async function DashboardPage() {
               <div className="space-y-4">
                 {analytics.tenantsByPlan.map((plan) => (
                   <div key={plan.plan} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 capitalize">{plan.plan}</span>
+                    <span className="text-sm font-semibold text-dark-700 capitalize">{plan.plan}</span>
                     <div className="flex items-center gap-4">
-                      <span className="text-sm text-gray-500">{plan.count} tenants</span>
-                      <span className="text-sm font-semibold text-gray-900 w-20 text-right">
+                      <span className="text-sm text-dark-500">{plan.count} tenants</span>
+                      <span className="text-sm font-bold text-dark-900 w-20 text-right">
                         {formatCurrency(plan.revenue)}
                       </span>
                     </div>
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No plan data yet</p>
+              <p className="text-dark-500 text-sm">No plan data yet</p>
             )}
           </CardContent>
         </Card>
