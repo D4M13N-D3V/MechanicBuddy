@@ -1,25 +1,26 @@
 ---
 # Cloudflare API token secret for DNS-01 challenge
+# NOTE: Replace YOUR_CLOUDFLARE_API_TOKEN with actual token before applying
 apiVersion: v1
 kind: Secret
 metadata:
   name: cloudflare-api-token-secret
-  namespace: {{ cert_manager_namespace }}
+  namespace: cert-manager
 type: Opaque
 stringData:
-  api-token: {{ cloudflare_api_token }}
+  api-token: YOUR_CLOUDFLARE_API_TOKEN
 ---
 # Production issuer with DNS-01 challenge (supports wildcard certs)
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: {{ cluster_issuer_name }}
+  name: letsencrypt-prod
 spec:
   acme:
-    email: {{ letsencrypt_email }}
-    server: {{ letsencrypt_server }}
+    email: ssl@mechanicbuddy.app
+    server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: {{ cluster_issuer_name }}-account-key
+      name: letsencrypt-prod-account-key
     solvers:
       - dns01:
           cloudflare:
@@ -28,7 +29,7 @@ spec:
               key: api-token
         selector:
           dnsZones:
-            - "{{ cloudflare_zone_name }}"
+            - "mechanicbuddy.app"
 ---
 # Staging issuer for testing (higher rate limits)
 apiVersion: cert-manager.io/v1
@@ -37,7 +38,7 @@ metadata:
   name: letsencrypt-staging
 spec:
   acme:
-    email: {{ letsencrypt_email }}
+    email: ssl@mechanicbuddy.app
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-staging-account-key
@@ -49,20 +50,20 @@ spec:
               key: api-token
         selector:
           dnsZones:
-            - "{{ cloudflare_zone_name }}"
+            - "mechanicbuddy.app"
 ---
 # Wildcard certificate for all tenant subdomains
 # This covers *.mechanicbuddy.app so individual tenant ingresses don't need separate certs
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-{{ cloudflare_zone_name | replace('.', '-') }}
-  namespace: {{ cert_manager_namespace }}
+  name: wildcard-mechanicbuddy-app
+  namespace: cert-manager
 spec:
-  secretName: wildcard-{{ cloudflare_zone_name | replace('.', '-') }}-tls
+  secretName: wildcard-mechanicbuddy-app-tls
   issuerRef:
-    name: {{ cluster_issuer_name }}
+    name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-    - "{{ cloudflare_zone_name }}"
-    - "*.{{ cloudflare_zone_name }}"
+    - "mechanicbuddy.app"
+    - "*.mechanicbuddy.app"

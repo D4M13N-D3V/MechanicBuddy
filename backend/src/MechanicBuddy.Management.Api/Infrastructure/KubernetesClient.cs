@@ -57,7 +57,13 @@ public class KubernetesClient : IKubernetesClient
         // Ingress configuration
         _ingressClassName = configuration["Kubernetes:IngressClassName"] ?? "nginx";
         _clusterIssuer = configuration["Kubernetes:ClusterIssuer"] ?? "letsencrypt-prod";
+        _certManagerNamespace = configuration["Kubernetes:CertManagerNamespace"] ?? "cert-manager";
+        _wildcardSecretName = configuration["Kubernetes:WildcardSecretName"]
+            ?? $"wildcard-{_baseDomain.Replace(".", "-")}-tls";
     }
+
+    private readonly string _certManagerNamespace;
+    private readonly string _wildcardSecretName;
 
     public async Task<string> CreateNamespaceAsync(string tenantId)
     {
@@ -219,6 +225,10 @@ public class KubernetesClient : IKubernetesClient
         await _client.CoreV1.CreateNamespacedServiceAsync(service, namespaceName);
         _logger.LogInformation("Created service {Service} in namespace {Namespace}", serviceName, namespaceName);
 
+        // Copy wildcard TLS secret from cert-manager namespace to tenant namespace
+        var tlsSecretName = $"tls-wildcard-{_baseDomain.Replace(".", "-")}";
+        await CopyWildcardSecretAsync(namespaceName, tlsSecretName);
+
         // Create Ingress for external access
         var tenantDomain = $"{tenantId}.{_baseDomain}";
         var ingressName = $"ingress-{tenantId}";
@@ -236,7 +246,7 @@ public class KubernetesClient : IKubernetesClient
                 },
                 Annotations = new Dictionary<string, string>
                 {
-                    ["cert-manager.io/cluster-issuer"] = _clusterIssuer,
+                    // No cert-manager annotation needed - using wildcard cert
                     ["nginx.ingress.kubernetes.io/proxy-body-size"] = "50m",
                     ["nginx.ingress.kubernetes.io/proxy-read-timeout"] = "300",
                     ["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300"
@@ -250,7 +260,7 @@ public class KubernetesClient : IKubernetesClient
                     new V1IngressTLS
                     {
                         Hosts = new List<string> { tenantDomain },
-                        SecretName = $"tls-{tenantId}"
+                        SecretName = tlsSecretName  // Use copied wildcard secret
                     }
                 },
                 Rules = new List<V1IngressRule>
@@ -347,6 +357,55 @@ public class KubernetesClient : IKubernetesClient
         if (!dnsDeleted)
         {
             _logger.LogWarning("Failed to delete DNS record for tenant {TenantId}", tenantId);
+        }
+    }
+
+    /// <summary>
+    /// Copies the wildcard TLS secret from cert-manager namespace to the target namespace
+    /// </summary>
+    private async Task CopyWildcardSecretAsync(string targetNamespace, string targetSecretName)
+    {
+        try
+        {
+            // Check if secret already exists in target namespace
+            try
+            {
+                await _client.CoreV1.ReadNamespacedSecretAsync(targetSecretName, targetNamespace);
+                _logger.LogInformation("TLS secret {SecretName} already exists in namespace {Namespace}", targetSecretName, targetNamespace);
+                return;
+            }
+            catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Secret doesn't exist, continue to copy
+            }
+
+            // Read the wildcard secret from cert-manager namespace
+            var sourceSecret = await _client.CoreV1.ReadNamespacedSecretAsync(_wildcardSecretName, _certManagerNamespace);
+
+            // Create a copy in the target namespace
+            var targetSecret = new V1Secret
+            {
+                Metadata = new V1ObjectMeta
+                {
+                    Name = targetSecretName,
+                    NamespaceProperty = targetNamespace,
+                    Labels = new Dictionary<string, string>
+                    {
+                        ["app"] = "mechanicbuddy",
+                        ["copied-from"] = _wildcardSecretName
+                    }
+                },
+                Type = sourceSecret.Type,
+                Data = sourceSecret.Data
+            };
+
+            await _client.CoreV1.CreateNamespacedSecretAsync(targetSecret, targetNamespace);
+            _logger.LogInformation("Copied wildcard TLS secret to namespace {Namespace}", targetNamespace);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to copy wildcard TLS secret to namespace {Namespace}", targetNamespace);
+            throw;
         }
     }
 
