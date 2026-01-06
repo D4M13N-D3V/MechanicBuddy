@@ -60,7 +60,7 @@ public class TenantService
             OwnerEmail = ownerEmail,
             OwnerName = ownerName,
             Tier = tier,
-            Status = isDemo ? "demo" : "active",
+            Status = isDemo ? "trial" : "active",
             IsDemo = isDemo,
             CreatedAt = DateTime.UtcNow,
             TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(14) : DateTime.UtcNow.AddDays(30),
