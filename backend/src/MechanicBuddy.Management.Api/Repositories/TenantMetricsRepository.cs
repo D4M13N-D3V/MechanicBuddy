@@ -17,7 +17,7 @@ public class TenantMetricsRepository : ITenantMetricsRepository
     public async Task<IEnumerable<TenantMetrics>> GetByTenantIdAsync(string tenantId, DateTime? startDate = null, DateTime? endDate = null)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = @"SELECT * FROM tenant_metrics
+        var sql = @"SELECT * FROM management.tenant_metrics
                     WHERE tenant_id = @TenantId
                     AND (@StartDate IS NULL OR recorded_at >= @StartDate)
                     AND (@EndDate IS NULL OR recorded_at <= @EndDate)
@@ -34,7 +34,7 @@ public class TenantMetricsRepository : ITenantMetricsRepository
     public async Task<TenantMetrics?> GetLatestByTenantIdAsync(string tenantId)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = @"SELECT * FROM tenant_metrics
+        var sql = @"SELECT * FROM management.tenant_metrics
                     WHERE tenant_id = @TenantId
                     ORDER BY recorded_at DESC
                     LIMIT 1";
@@ -46,7 +46,7 @@ public class TenantMetricsRepository : ITenantMetricsRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            INSERT INTO tenant_metrics (
+            INSERT INTO management.tenant_metrics (
                 tenant_id, active_mechanics, work_orders_count, clients_count,
                 vehicles_count, storage_used, api_calls_count, recorded_at
             ) VALUES (
@@ -70,7 +70,7 @@ public class TenantMetricsRepository : ITenantMetricsRepository
                     vehicles_count,
                     storage_used,
                     api_calls_count
-                FROM tenant_metrics
+                FROM management.tenant_metrics
                 ORDER BY tenant_id, recorded_at DESC
             )
             SELECT

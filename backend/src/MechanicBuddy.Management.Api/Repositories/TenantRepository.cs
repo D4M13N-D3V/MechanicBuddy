@@ -18,7 +18,7 @@ public class TenantRepository : ITenantRepository
     public async Task<Tenant?> GetByIdAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM tenants WHERE id = @Id";
+        var sql = "SELECT * FROM management.tenants WHERE id = @Id";
         var tenant = await connection.QuerySingleOrDefaultAsync<Tenant>(sql, new { Id = id });
         return tenant;
     }
@@ -26,28 +26,28 @@ public class TenantRepository : ITenantRepository
     public async Task<Tenant?> GetByTenantIdAsync(string tenantId)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM tenants WHERE tenant_id = @TenantId";
+        var sql = "SELECT * FROM management.tenants WHERE tenant_id = @TenantId";
         return await connection.QuerySingleOrDefaultAsync<Tenant>(sql, new { TenantId = tenantId });
     }
 
     public async Task<Tenant?> GetByEmailAsync(string email)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM tenants WHERE owner_email = @Email";
+        var sql = "SELECT * FROM management.tenants WHERE owner_email = @Email";
         return await connection.QuerySingleOrDefaultAsync<Tenant>(sql, new { Email = email });
     }
 
     public async Task<Tenant?> GetByCustomDomainAsync(string domain)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM tenants WHERE custom_domain = @Domain";
+        var sql = "SELECT * FROM management.tenants WHERE custom_domain = @Domain";
         return await connection.QuerySingleOrDefaultAsync<Tenant>(sql, new { Domain = domain });
     }
 
     public async Task<IEnumerable<Tenant>> GetAllAsync(int skip = 0, int take = 50)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = @"SELECT * FROM tenants
+        var sql = @"SELECT * FROM management.tenants
                     ORDER BY created_at DESC
                     OFFSET @Skip LIMIT @Take";
         return await connection.QueryAsync<Tenant>(sql, new { Skip = skip, Take = take });
@@ -56,7 +56,7 @@ public class TenantRepository : ITenantRepository
     public async Task<IEnumerable<Tenant>> GetByStatusAsync(string status)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM tenants WHERE status = @Status ORDER BY created_at DESC";
+        var sql = "SELECT * FROM management.tenants WHERE status = @Status ORDER BY created_at DESC";
         return await connection.QueryAsync<Tenant>(sql, new { Status = status });
     }
 
@@ -64,7 +64,7 @@ public class TenantRepository : ITenantRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            INSERT INTO tenants (
+            INSERT INTO management.tenants (
                 tenant_id, company_name, tier, status, owner_email, owner_name,
                 stripe_customer_id, stripe_subscription_id, custom_domain, domain_verified,
                 created_at, trial_ends_at, subscription_ends_at, max_mechanics, max_storage,
@@ -105,7 +105,7 @@ public class TenantRepository : ITenantRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            UPDATE tenants SET
+            UPDATE management.tenants SET
                 company_name = @CompanyName,
                 tier = @Tier,
                 status = @Status,
@@ -155,7 +155,7 @@ public class TenantRepository : ITenantRepository
     public async Task<bool> DeleteAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "DELETE FROM tenants WHERE id = @Id";
+        var sql = "DELETE FROM management.tenants WHERE id = @Id";
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
         return rowsAffected > 0;
     }
@@ -163,14 +163,14 @@ public class TenantRepository : ITenantRepository
     public async Task<int> GetTotalCountAsync()
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT COUNT(*) FROM tenants";
+        var sql = "SELECT COUNT(*) FROM management.tenants";
         return await connection.ExecuteScalarAsync<int>(sql);
     }
 
     public async Task<Dictionary<string, int>> GetCountByTierAsync()
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT tier, COUNT(*)::int as count FROM tenants GROUP BY tier";
+        var sql = "SELECT tier, COUNT(*)::int as count FROM management.tenants GROUP BY tier";
         var results = await connection.QueryAsync<(string tier, int count)>(sql);
         return results.ToDictionary(r => r.tier, r => r.count);
     }
@@ -178,7 +178,7 @@ public class TenantRepository : ITenantRepository
     public async Task<Dictionary<string, int>> GetCountByStatusAsync()
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT status, COUNT(*)::int as count FROM tenants GROUP BY status";
+        var sql = "SELECT status, COUNT(*)::int as count FROM management.tenants GROUP BY status";
         var results = await connection.QueryAsync<(string status, int count)>(sql);
         return results.ToDictionary(r => r.status, r => r.count);
     }
@@ -186,7 +186,7 @@ public class TenantRepository : ITenantRepository
     public async Task<int> GetCountCreatedBetweenAsync(DateTime start, DateTime end)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT COUNT(*) FROM tenants WHERE created_at >= @Start AND created_at < @End";
+        var sql = "SELECT COUNT(*) FROM management.tenants WHERE created_at >= @Start AND created_at < @End";
         return await connection.ExecuteScalarAsync<int>(sql, new { Start = start, End = end });
     }
 }

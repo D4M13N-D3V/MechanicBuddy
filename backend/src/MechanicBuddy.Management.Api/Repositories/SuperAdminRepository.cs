@@ -21,21 +21,21 @@ public class SuperAdminRepository : ISuperAdminRepository
     public async Task<SuperAdmin?> GetByIdAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM super_admins WHERE id = @Id";
+        var sql = "SELECT * FROM management.super_admins WHERE id = @Id";
         return await connection.QuerySingleOrDefaultAsync<SuperAdmin>(sql, new { Id = id });
     }
 
     public async Task<SuperAdmin?> GetByEmailAsync(string email)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM super_admins WHERE email = @Email";
+        var sql = "SELECT * FROM management.super_admins WHERE email = @Email";
         return await connection.QuerySingleOrDefaultAsync<SuperAdmin>(sql, new { Email = email });
     }
 
     public async Task<IEnumerable<SuperAdmin>> GetAllAsync()
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM super_admins ORDER BY created_at DESC";
+        var sql = "SELECT * FROM management.super_admins ORDER BY created_at DESC";
         return await connection.QueryAsync<SuperAdmin>(sql);
     }
 
@@ -43,7 +43,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            INSERT INTO super_admins (
+            INSERT INTO management.super_admins (
                 email, password_hash, name, role, is_active, created_at, last_login_at
             ) VALUES (
                 @Email, @PasswordHash, @Name, @Role, @IsActive, @CreatedAt, @LastLoginAt
@@ -56,7 +56,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            UPDATE super_admins SET
+            UPDATE management.super_admins SET
                 email = @Email,
                 password_hash = @PasswordHash,
                 name = @Name,
@@ -72,7 +72,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     public async Task<bool> UpdateLastLoginAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "UPDATE super_admins SET last_login_at = @Now WHERE id = @Id";
+        var sql = "UPDATE management.super_admins SET last_login_at = @Now WHERE id = @Id";
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id, Now = DateTime.UtcNow });
         return rowsAffected > 0;
     }
@@ -80,7 +80,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     public async Task<bool> DeleteAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "DELETE FROM super_admins WHERE id = @Id";
+        var sql = "DELETE FROM management.super_admins WHERE id = @Id";
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
         return rowsAffected > 0;
     }
@@ -89,7 +89,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            INSERT INTO super_admin_access_logs (super_admin_id, tenant_id, accessed_at)
+            INSERT INTO management.super_admin_access_logs (super_admin_id, tenant_id, accessed_at)
             VALUES (@AdminId, @TenantId, @AccessedAt)";
 
         await connection.ExecuteAsync(sql, new { AdminId = adminId, TenantId = tenantId, AccessedAt = accessedAt });
@@ -107,9 +107,9 @@ public class SuperAdminRepository : ISuperAdminRepository
                 t.company_name as tenant_name,
                 l.accessed_at,
                 l.ip_address
-            FROM super_admin_access_logs l
-            JOIN super_admins a ON l.super_admin_id = a.id
-            LEFT JOIN tenants t ON l.tenant_id = t.tenant_id
+            FROM management.super_admin_access_logs l
+            JOIN management.super_admins a ON l.super_admin_id = a.id
+            LEFT JOIN management.tenants t ON l.tenant_id = t.tenant_id
             WHERE (@AdminId IS NULL OR l.super_admin_id = @AdminId)
               AND (@TenantId IS NULL OR l.tenant_id = @TenantId)
             ORDER BY l.accessed_at DESC
@@ -122,7 +122,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            INSERT INTO super_admin_access_tokens (token, super_admin_id, tenant_id, expires_at, created_at)
+            INSERT INTO management.super_admin_access_tokens (token, super_admin_id, tenant_id, expires_at, created_at)
             VALUES (@Token, @AdminId, @TenantId, @ExpiresAt, @CreatedAt)";
 
         await connection.ExecuteAsync(sql, new
@@ -141,7 +141,7 @@ public class SuperAdminRepository : ISuperAdminRepository
 
         // Get and delete the token in one operation
         var sql = @"
-            DELETE FROM super_admin_access_tokens
+            DELETE FROM management.super_admin_access_tokens
             WHERE token = @Token AND expires_at > @Now AND consumed_at IS NULL
             RETURNING super_admin_id, tenant_id";
 

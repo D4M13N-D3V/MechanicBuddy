@@ -17,28 +17,28 @@ public class DemoRequestRepository : IDemoRequestRepository
     public async Task<DemoRequest?> GetByIdAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM demo_requests WHERE id = @Id";
+        var sql = "SELECT * FROM management.demo_requests WHERE id = @Id";
         return await connection.QuerySingleOrDefaultAsync<DemoRequest>(sql, new { Id = id });
     }
 
     public async Task<DemoRequest?> GetByEmailAsync(string email)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM demo_requests WHERE email = @Email ORDER BY created_at DESC LIMIT 1";
+        var sql = "SELECT * FROM management.demo_requests WHERE email = @Email ORDER BY created_at DESC LIMIT 1";
         return await connection.QuerySingleOrDefaultAsync<DemoRequest>(sql, new { Email = email });
     }
 
     public async Task<DemoRequest?> GetByTenantIdAsync(string tenantId)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM demo_requests WHERE tenant_id = @TenantId";
+        var sql = "SELECT * FROM management.demo_requests WHERE tenant_id = @TenantId";
         return await connection.QuerySingleOrDefaultAsync<DemoRequest>(sql, new { TenantId = tenantId });
     }
 
     public async Task<IEnumerable<DemoRequest>> GetAllAsync(int skip = 0, int take = 50)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = @"SELECT * FROM demo_requests
+        var sql = @"SELECT * FROM management.demo_requests
                     ORDER BY created_at DESC
                     OFFSET @Skip LIMIT @Take";
         return await connection.QueryAsync<DemoRequest>(sql, new { Skip = skip, Take = take });
@@ -47,7 +47,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     public async Task<IEnumerable<DemoRequest>> GetByStatusAsync(string status)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT * FROM demo_requests WHERE status = @Status ORDER BY created_at DESC";
+        var sql = "SELECT * FROM management.demo_requests WHERE status = @Status ORDER BY created_at DESC";
         return await connection.QueryAsync<DemoRequest>(sql, new { Status = status });
     }
 
@@ -55,7 +55,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            INSERT INTO demo_requests (
+            INSERT INTO management.demo_requests (
                 email, company_name, phone_number, message, ip_address, status, tenant_id,
                 created_at, approved_at, expires_at, expiring_soon_email_sent_at, notes, rejection_reason
             ) VALUES (
@@ -70,7 +70,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            UPDATE demo_requests SET
+            UPDATE management.demo_requests SET
                 email = @Email,
                 company_name = @CompanyName,
                 phone_number = @PhoneNumber,
@@ -92,7 +92,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     public async Task<bool> DeleteAsync(int id)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "DELETE FROM demo_requests WHERE id = @Id";
+        var sql = "DELETE FROM management.demo_requests WHERE id = @Id";
         var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
         return rowsAffected > 0;
     }
@@ -100,7 +100,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     public async Task<int> GetPendingCountAsync()
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT COUNT(*) FROM demo_requests WHERE status = 'pending'";
+        var sql = "SELECT COUNT(*) FROM management.demo_requests WHERE status = 'pending'";
         return await connection.ExecuteScalarAsync<int>(sql);
     }
 
@@ -108,7 +108,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            SELECT * FROM demo_requests
+            SELECT * FROM management.demo_requests
             WHERE status = 'approved'
               AND expires_at IS NOT NULL
               AND expires_at BETWEEN @Now AND @ExpiryThreshold
@@ -125,7 +125,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            SELECT * FROM demo_requests
+            SELECT * FROM management.demo_requests
             WHERE status = 'approved'
               AND expires_at IS NOT NULL
               AND expires_at < @Now
@@ -138,7 +138,7 @@ public class DemoRequestRepository : IDemoRequestRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"
-            SELECT COUNT(*) FROM demo_requests
+            SELECT COUNT(*) FROM management.demo_requests
             WHERE ip_address = @IpAddress
               AND created_at > @Threshold";
 
@@ -149,14 +149,14 @@ public class DemoRequestRepository : IDemoRequestRepository
     public async Task<int> GetCountByStatusAsync(string status)
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT COUNT(*) FROM demo_requests WHERE status = @Status";
+        var sql = "SELECT COUNT(*) FROM management.demo_requests WHERE status = @Status";
         return await connection.ExecuteScalarAsync<int>(sql, new { Status = status });
     }
 
     public async Task<int> GetTotalCountAsync()
     {
         using var connection = new NpgsqlConnection(_connectionString);
-        var sql = "SELECT COUNT(*) FROM demo_requests";
+        var sql = "SELECT COUNT(*) FROM management.demo_requests";
         return await connection.ExecuteScalarAsync<int>(sql);
     }
 }
