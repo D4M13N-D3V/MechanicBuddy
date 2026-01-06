@@ -5,7 +5,8 @@ namespace: mechanicbuddy-system
 
 resources:
   - ../../base
-  - secrets.yaml
+  # NOTE: All secrets are defined in base and overridden via patches below
+  # Do NOT add secrets.yaml here to avoid ID conflicts
 
 # Staging-specific patches
 patches:
@@ -17,6 +18,45 @@ patches:
       - op: replace
         path: /stringData/password
         value: "${DB_PASSWORD}"
+  # Override API secrets
+  - target:
+      kind: Secret
+      name: management-api-secrets
+    patch: |
+      - op: replace
+        path: /stringData/connection-string
+        value: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=${DB_PASSWORD}"
+      - op: replace
+        path: /stringData/jwt-secret
+        value: "${JWT_SECRET}"
+      - op: replace
+        path: /stringData/stripe-secret-key
+        value: "${STRIPE_SECRET_KEY}"
+      - op: replace
+        path: /stringData/stripe-webhook-secret
+        value: "${STRIPE_WEBHOOK_SECRET}"
+      - op: replace
+        path: /stringData/resend-api-key
+        value: "${RESEND_API_KEY}"
+  # Override portal secrets
+  - target:
+      kind: Secret
+      name: management-portal-secrets
+    patch: |
+      - op: replace
+        path: /stringData/session-secret
+        value: "${SESSION_SECRET}"
+      - op: replace
+        path: /stringData/stripe-publishable-key
+        value: "${STRIPE_PUBLISHABLE_KEY}"
+  # Override cronjob secrets
+  - target:
+      kind: Secret
+      name: cronjob-secrets
+    patch: |
+      - op: replace
+        path: /stringData/api-token
+        value: "${CRONJOB_API_TOKEN}"
   # Reduce replicas for staging
   - target:
       kind: Deployment
