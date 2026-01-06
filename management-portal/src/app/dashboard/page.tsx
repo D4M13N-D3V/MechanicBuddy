@@ -13,8 +13,8 @@ export default async function DashboardPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-600 mt-1">Monitor your SaaS platform performance</p>
+          <h1 className="text-3xl font-bold text-dark-900">Dashboard Overview</h1>
+          <p className="text-dark-500 mt-1">Monitor your SaaS platform performance</p>
         </div>
         <Card>
           <CardContent className="pt-6">
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
               <AlertCircle className="h-5 w-5" />
               <p>Unable to load dashboard data. Please check that the Management API is running.</p>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-dark-500 mt-2">
               Error: {response.error || "Connection failed"}
             </p>
           </CardContent>
@@ -36,8 +36,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-600 mt-1">Monitor your SaaS platform performance</p>
+        <h1 className="text-3xl font-bold text-dark-900">Dashboard Overview</h1>
+        <p className="text-dark-500 mt-1">Monitor your SaaS platform performance</p>
       </div>
 
       {/* Stats Grid */}
@@ -81,15 +81,15 @@ export default async function DashboardPage() {
               <div className="space-y-4">
                 {analytics.revenueByMonth.map((data) => (
                   <div key={data.month} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">{data.month}</span>
+                    <span className="text-sm font-medium text-dark-600">{data.month}</span>
                     <div className="flex items-center gap-4 flex-1 ml-4">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div className="flex-1 bg-dark-100 rounded-full h-2.5">
                         <div
-                          className="bg-primary-600 h-2 rounded-full"
+                          className="bg-primary-600 h-2.5 rounded-full"
                           style={{ width: `${Math.min((data.revenue / (Math.max(...analytics.revenueByMonth.map(d => d.revenue)) || 1)) * 100, 100)}%` }}
                         />
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 w-20 text-right">
+                      <span className="text-sm font-bold text-dark-900 w-20 text-right">
                         {formatCurrency(data.revenue)}
                       </span>
                     </div>
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No revenue data yet</p>
+              <p className="text-dark-500 text-sm">No revenue data yet</p>
             )}
           </CardContent>
         </Card>
@@ -122,12 +122,12 @@ export default async function DashboardPage() {
                     <TableRow key={tenant.id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-gray-900">{tenant.companyName}</p>
-                          <p className="text-xs text-gray-500">{formatDate(tenant.createdAt)}</p>
+                          <p className="font-semibold text-dark-900">{tenant.companyName}</p>
+                          <p className="text-xs text-dark-500">{formatDate(tenant.createdAt)}</p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm capitalize">{tenant.plan}</span>
+                        <span className="text-sm capitalize text-dark-700">{tenant.plan}</span>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
                 </TableBody>
               </Table>
             ) : (
-              <p className="text-gray-500 text-sm">No tenants yet</p>
+              <p className="text-dark-500 text-sm">No tenants yet</p>
             )}
           </CardContent>
         </Card>
