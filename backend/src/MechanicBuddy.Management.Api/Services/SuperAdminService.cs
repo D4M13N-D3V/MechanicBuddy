@@ -163,8 +163,12 @@ public class SuperAdminService
         try
         {
             // Get the tenant's API internal URL from Kubernetes
-            var namespace_ = $"tenant-{tenantId}";
-            var apiServiceUrl = $"http://{tenantId}-api.{namespace_}.svc.cluster.local:15567";
+            var namespace_ = tenant.K8sNamespace ?? $"tenant-{tenantId}";
+            
+            // Determine service name based on namespace convention
+            // mb-{tenantId} uses api-{tenantId}, tenant-{tenantId} uses {tenantId}-api
+            var serviceName = namespace_.StartsWith("mb-") ? $"api-{tenantId}" : $"{tenantId}-api";
+            var apiServiceUrl = $"http://{serviceName}.{namespace_}.svc.cluster.local:15567";
 
             // Call the tenant API's super-admin login endpoint
             // This endpoint accepts a signed request from the management API
@@ -218,10 +222,16 @@ public class SuperAdminService
 
             await RecordTenantAccessAsync(admin.Id, tenantId);
 
+            var finalTenantUrl = tenant.ApiUrl;
+            if (string.IsNullOrEmpty(finalTenantUrl) || finalTenantUrl.Contains(".svc.cluster.local"))
+            {
+                finalTenantUrl = $"https://{tenantId}.mechanicbuddy.app";
+            }
+
             return new TenantAccessResult
             {
                 Success = true,
-                TenantUrl = tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.app",
+                TenantUrl = finalTenantUrl,
                 AccessToken = tokenResponse?.Token ?? string.Empty,
                 ExpiresAt = DateTime.UtcNow.AddHours(1), // 1-hour session
                 TenantId = tenantId,
@@ -259,7 +269,11 @@ public class SuperAdminService
         // Store the token for validation (expires in 5 minutes)
         await StoreOneTimeTokenAsync(accessToken, admin.Id, tenantId, TimeSpan.FromMinutes(5));
 
-        var tenantUrl = tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.app";
+        var tenantUrl = tenant.ApiUrl;
+        if (string.IsNullOrEmpty(tenantUrl) || tenantUrl.Contains(".svc.cluster.local"))
+        {
+            tenantUrl = $"https://{tenantId}.mechanicbuddy.app";
+        }
         var accessUrl = $"{tenantUrl}/auth/super-admin?token={accessToken}";
 
         _logger.LogInformation(
