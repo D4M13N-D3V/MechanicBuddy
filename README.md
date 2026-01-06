@@ -186,10 +186,10 @@ pm2 save
 Configure backend as a system service:
 
 ```bash
-sudo nano /etc/systemd/system/mechanicbuddy.service
+sudo nano /etc/systemd/system/carcare.service
 ```
 
-Example `mechanicbuddy.service` file:
+Example `carcare.service` file:
 
 ```ini
 [Unit]
@@ -197,12 +197,12 @@ Description=MechanicBuddy Backend Service
 After=network.target
 
 [Service]
-WorkingDirectory=/opt/apps/mechanicbuddy
+WorkingDirectory=/opt/apps/carcare
 ExecStart=/usr/bin/dotnet MechanicBuddy.Http.Api.dll
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
-SyslogIdentifier=mechanicbuddy
+SyslogIdentifier=carcare
 User=debian
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
@@ -214,8 +214,8 @@ Enable and start the backend service:
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable mechanicbuddy.service
-sudo systemctl start mechanicbuddy.service
+sudo systemctl enable carcare.service
+sudo systemctl start carcare.service
 ```
 
 Run database migrations:
@@ -249,7 +249,7 @@ sudo systemctl reload nginx
 
 ```
 Username: admin
-Password: mechanicbuddy
+Password: carcare
 ```
 
 All set!
