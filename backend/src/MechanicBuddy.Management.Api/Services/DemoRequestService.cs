@@ -39,9 +39,9 @@ public class DemoRequestService
             throw new InvalidOperationException("Company name must be at least 2 characters long");
         }
 
-        // Check for existing pending or active requests
+        // Check for existing new or pending_trial requests
         var existingRequest = await _demoRequestRepository.GetByEmailAsync(email);
-        if (existingRequest != null && (existingRequest.Status == "pending" || existingRequest.Status == "approved"))
+        if (existingRequest != null && (existingRequest.Status == "new" || existingRequest.Status == "pending_trial"))
         {
             throw new InvalidOperationException("A demo request already exists for this email");
         }
@@ -51,7 +51,7 @@ public class DemoRequestService
             Email = email,
             CompanyName = companyName,
             PhoneNumber = phoneNumber,
-            Status = "pending",
+            Status = "new",
             CreatedAt = DateTime.UtcNow
         };
 
@@ -323,5 +323,28 @@ public class DemoRequestService
     public async Task<int> GetPendingCountAsync()
     {
         return await _demoRequestRepository.GetPendingCountAsync();
+    }
+
+    public async Task<DemoRequest> UpdateStatusAsync(int id, string status)
+    {
+        // Validate status
+        var validStatuses = new[] { "new", "pending_trial", "complete", "cancelled" };
+        if (!validStatuses.Contains(status))
+        {
+            throw new InvalidOperationException($"Invalid status '{status}'. Must be one of: {string.Join(", ", validStatuses)}");
+        }
+
+        var demoRequest = await _demoRequestRepository.GetByIdAsync(id);
+        if (demoRequest == null)
+        {
+            throw new InvalidOperationException("Demo request not found");
+        }
+
+        demoRequest.Status = status;
+        await _demoRequestRepository.UpdateAsync(demoRequest);
+
+        _logger.LogInformation("Updated demo request {Id} status to {Status}", id, status);
+
+        return demoRequest;
     }
 }
