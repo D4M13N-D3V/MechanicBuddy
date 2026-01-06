@@ -26,6 +26,7 @@ spec:
       containers:
         - name: portal
           image: management-portal
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 3026

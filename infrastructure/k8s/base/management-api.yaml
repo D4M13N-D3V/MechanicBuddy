@@ -38,6 +38,7 @@ spec:
               echo "PostgreSQL is ready"
         - name: run-migrations
           image: management-dbup
+          imagePullPolicy: Always
           env:
             - name: ConnectionStrings__Management
               valueFrom:
@@ -47,6 +48,7 @@ spec:
       containers:
         - name: api
           image: management-api
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 15568
