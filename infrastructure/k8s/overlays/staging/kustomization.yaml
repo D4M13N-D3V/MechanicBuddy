@@ -106,13 +106,13 @@ configMapGenerator:
 # Image tags - updated by CI/CD
 images:
   - name: management-api
-    newName: ghcr.io/mechanicbuddy/management-api
+    newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-api
     newTag: latest  # CI updates this
   - name: management-portal
-    newName: ghcr.io/mechanicbuddy/management-portal
+    newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-portal
     newTag: latest  # CI updates this
   - name: management-dbup
-    newName: ghcr.io/mechanicbuddy/management-dbup
+    newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-dbup
     newTag: latest  # CI updates this
 
 labels:
