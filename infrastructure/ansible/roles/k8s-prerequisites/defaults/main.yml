@@ -1,0 +1,24 @@
+---
+# Kubernetes version
+k8s_version: "1.29"
+k8s_apt_version: "1.29.*"
+
+# Containerd version
+containerd_version: "1.7.*"
+
+# Disable swap
+disable_swap: true
+
+# Kernel modules required for Kubernetes
+k8s_kernel_modules:
+  - overlay
+  - br_netfilter
+
+# Sysctl parameters for Kubernetes
+k8s_sysctl_params:
+  - name: net.bridge.bridge-nf-call-iptables
+    value: 1
+  - name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+  - name: net.ipv4.ip_forward
+    value: 1

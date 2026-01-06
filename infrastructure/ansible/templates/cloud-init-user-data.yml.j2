@@ -1,0 +1,51 @@
+#cloud-config
+hostname: {{ item.name }}
+fqdn: {{ item.name }}.{{ dns_search_domain }}
+manage_etc_hosts: true
+
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo, docker
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - {{ ssh_public_key }}
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - qemu-guest-agent
+  - curl
+  - wget
+  - vim
+  - htop
+  - net-tools
+  - gnupg
+  - ca-certificates
+  - apt-transport-https
+  - software-properties-common
+
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+
+write_files:
+  - path: /etc/sysctl.d/99-kubernetes.conf
+    content: |
+      net.bridge.bridge-nf-call-iptables = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.ipv4.ip_forward = 1
+    permissions: '0644'
+
+  - path: /etc/modules-load.d/kubernetes.conf
+    content: |
+      overlay
+      br_netfilter
+    permissions: '0644'
+
+power_state:
+  mode: reboot
+  timeout: 30
+  condition: true

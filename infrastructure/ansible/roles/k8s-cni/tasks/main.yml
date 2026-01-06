@@ -1,0 +1,63 @@
+---
+- name: Check if Calico is already installed
+  ansible.builtin.command: kubectl get namespace {{ calico_operator_namespace }}
+  register: calico_ns_check
+  failed_when: false
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install Calico operator
+  ansible.builtin.command: >
+    kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/tigera-operator.yaml
+  when: calico_ns_check.rc != 0
+  changed_when: true
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for Calico operator to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=available deployment/tigera-operator
+    -n {{ calico_operator_namespace }}
+    --timeout=300s
+  when: calico_ns_check.rc != 0
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Create Calico custom resource
+  ansible.builtin.template:
+    src: calico-installation.yml.j2
+    dest: /tmp/calico-installation.yml
+    mode: '0644'
+
+- name: Apply Calico custom resource
+  ansible.builtin.command: kubectl apply -f /tmp/calico-installation.yml
+  register: calico_cr_result
+  changed_when: "'created' in calico_cr_result.stdout or 'configured' in calico_cr_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for Calico pods to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=ready pod -l k8s-app=calico-node
+    -n calico-system
+    --timeout=300s
+  register: calico_pods_ready
+  retries: 10
+  delay: 30
+  until: calico_pods_ready.rc == 0
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Verify CNI is working
+  ansible.builtin.command: kubectl get nodes -o wide
+  register: nodes_status
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display nodes status
+  ansible.builtin.debug:
+    var: nodes_status.stdout_lines

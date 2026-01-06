@@ -1,0 +1,18 @@
+---
+# Main playbook to deploy complete Kubernetes cluster
+# This runs all playbooks in sequence
+
+- name: Run prerequisites check
+  ansible.builtin.import_playbook: playbooks/00-prerequisites.yml
+
+- name: Create VMs on Proxmox
+  ansible.builtin.import_playbook: playbooks/01-create-vms.yml
+
+- name: Prepare all nodes
+  ansible.builtin.import_playbook: playbooks/02-prepare-nodes.yml
+
+- name: Install Kubernetes cluster
+  ansible.builtin.import_playbook: playbooks/03-install-k8s.yml
+
+- name: Install Kubernetes addons
+  ansible.builtin.import_playbook: playbooks/04-install-addons.yml

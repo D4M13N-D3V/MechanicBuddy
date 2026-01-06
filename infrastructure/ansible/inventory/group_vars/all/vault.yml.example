@@ -1,0 +1,16 @@
+---
+# =============================================================================
+# Ansible Vault Encrypted Variables
+# =============================================================================
+# Copy this file to vault.yml and encrypt with:
+#   ansible-vault encrypt inventory/group_vars/vault.yml
+#
+# To edit:
+#   ansible-vault edit inventory/group_vars/vault.yml
+# =============================================================================
+
+# Proxmox API Token Secret
+vault_proxmox_api_token_secret: "your-proxmox-api-token-secret-here"
+
+# Default password for VM user (will be disabled after SSH key setup)
+vault_vm_default_password: "changeme123!"

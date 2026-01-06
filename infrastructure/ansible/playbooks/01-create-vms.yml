@@ -1,0 +1,54 @@
+---
+# Playbook to create VMs on Proxmox for Kubernetes cluster
+# Prerequisites:
+#   - Ubuntu 22.04 cloud image template created on Proxmox
+#   - Proxmox API token configured in vault.yml
+
+- name: Create Kubernetes cluster VMs on Proxmox
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: true
+
+  pre_tasks:
+    - name: Verify Proxmox credentials are set
+      ansible.builtin.assert:
+        that:
+          - proxmox_api_token_secret is defined
+          - proxmox_api_token_secret | length > 0
+        fail_msg: |
+          Proxmox API token secret not configured!
+          Please set vault_proxmox_api_token_secret in inventory/group_vars/vault.yml
+
+  roles:
+    - role: proxmox-vm
+
+  post_tasks:
+    - name: Add new VMs to in-memory inventory
+      ansible.builtin.add_host:
+        name: "{{ item.name }}"
+        groups:
+          - "{{ 'k8s_control_plane' if item in control_plane_nodes else 'k8s_workers' }}"
+        ansible_host: "{{ item.ip }}"
+        ansible_user: ubuntu
+        node_ip: "{{ item.ip }}"
+      loop: "{{ control_plane_nodes + worker_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Display VM creation summary
+      ansible.builtin.debug:
+        msg: |
+          VMs created successfully!
+
+          Control Plane Nodes:
+          {% for node in control_plane_nodes %}
+            - {{ node.name }}: {{ node.ip }}
+          {% endfor %}
+
+          Worker Nodes:
+          {% for node in worker_nodes %}
+            - {{ node.name }}: {{ node.ip }}
+          {% endfor %}
+
+          Next step: Run ansible-playbook playbooks/02-prepare-nodes.yml

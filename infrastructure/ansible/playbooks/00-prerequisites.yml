@@ -1,0 +1,63 @@
+---
+# Playbook to install prerequisites on the control node (localhost)
+# Run this first to ensure all required tools and collections are installed
+
+- name: Install prerequisites on control node
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: true
+  vars:
+    # Override interpreter for this playbook - use system Python to bootstrap venv
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    - name: Check Python version
+      ansible.builtin.debug:
+        msg: "Python version: {{ ansible_python_version }}"
+
+    - name: Create virtual environment for Ansible dependencies
+      ansible.builtin.command:
+        cmd: python -m venv {{ playbook_dir }}/../venv
+        creates: "{{ playbook_dir }}/../venv/bin/python"
+
+    - name: Install required Python packages in venv
+      ansible.builtin.pip:
+        name:
+          - proxmoxer
+          - requests
+        state: present
+        virtualenv: "{{ playbook_dir }}/../venv"
+
+    - name: Install required Ansible collections
+      ansible.builtin.command: >
+        ansible-galaxy collection install
+        community.general
+        ansible.posix
+        kubernetes.core
+        --force
+      changed_when: true
+
+    - name: Verify SSH key exists
+      ansible.builtin.stat:
+        path: "{{ ssh_private_key_path | expanduser }}"
+      register: ssh_key_stat
+
+    - name: Fail if SSH key doesn't exist
+      ansible.builtin.fail:
+        msg: |
+          SSH private key not found at {{ ssh_private_key_path }}
+          Please generate an SSH key pair:
+            ssh-keygen -t rsa -b 4096 -f {{ ssh_private_key_path }}
+      when: not ssh_key_stat.stat.exists
+
+    - name: Display prerequisites status
+      ansible.builtin.debug:
+        msg: |
+          Prerequisites check complete!
+          - Python: {{ ansible_python_version }}
+          - SSH Key: {{ ssh_private_key_path }} (exists)
+
+          Next steps:
+          1. Configure Proxmox API credentials in inventory/group_vars/vault.yml
+          2. Run: ansible-playbook playbooks/01-create-vms.yml

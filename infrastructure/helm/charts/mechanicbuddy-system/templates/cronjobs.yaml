@@ -1,0 +1,99 @@
+{{- if .Values.metricsCollector.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mechanicbuddy-system.fullname" . }}-metrics-collector
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mechanicbuddy-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics-collector
+spec:
+  schedule: {{ .Values.metricsCollector.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 1800
+      template:
+        metadata:
+          labels:
+            {{- include "mechanicbuddy-system.labels" . | nindent 12 }}
+            app.kubernetes.io/component: metrics-collector
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "mechanicbuddy-system.serviceAccountName" . }}
+          {{- with .Values.global.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: metrics-collector
+              image: "{{ .Values.metricsCollector.image.repository }}:{{ .Values.metricsCollector.image.tag }}"
+              envFrom:
+                - configMapRef:
+                    name: {{ include "mechanicbuddy-system.fullname" . }}-config
+              env:
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mechanicbuddy-system.dbSecretName" . }}
+                      key: password
+                - name: STRIPE_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mechanicbuddy-system.appSecretName" . }}
+                      key: stripe-secret-key
+              resources:
+                {{- toYaml .Values.metricsCollector.resources | nindent 16 }}
+{{- end }}
+---
+{{- if .Values.demoCleanup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mechanicbuddy-system.fullname" . }}-demo-cleanup
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mechanicbuddy-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: demo-cleanup
+spec:
+  schedule: {{ .Values.demoCleanup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            {{- include "mechanicbuddy-system.labels" . | nindent 12 }}
+            app.kubernetes.io/component: demo-cleanup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "mechanicbuddy-system.serviceAccountName" . }}
+          {{- with .Values.global.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: demo-cleanup
+              image: "{{ .Values.demoCleanup.image.repository }}:{{ .Values.demoCleanup.image.tag }}"
+              envFrom:
+                - configMapRef:
+                    name: {{ include "mechanicbuddy-system.fullname" . }}-config
+              env:
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mechanicbuddy-system.dbSecretName" . }}
+                      key: password
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "250m"
+{{- end }}

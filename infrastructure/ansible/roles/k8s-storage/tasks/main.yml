@@ -1,0 +1,56 @@
+---
+- name: Create storage directory on all nodes
+  ansible.builtin.file:
+    path: "{{ local_path_storage_path }}"
+    state: directory
+    mode: '0777'
+  delegate_to: "{{ item }}"
+  loop: "{{ groups['k8s_cluster'] }}"
+  become: true
+
+- name: Check if local-path-provisioner namespace exists
+  ansible.builtin.command: kubectl get namespace {{ local_path_provisioner_namespace }}
+  register: storage_ns_check
+  failed_when: false
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install local-path-provisioner
+  ansible.builtin.command: >
+    kubectl apply -f
+    https://raw.githubusercontent.com/rancher/local-path-provisioner/{{ local_path_provisioner_version }}/deploy/local-path-storage.yaml
+  register: storage_result
+  changed_when: "'created' in storage_result.stdout or 'configured' in storage_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for local-path-provisioner to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=available deployment/local-path-provisioner
+    -n {{ local_path_provisioner_namespace }}
+    --timeout=300s
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Set local-path as default StorageClass
+  ansible.builtin.command: >
+    kubectl patch storageclass local-path
+    -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  when: local_path_default_class
+  register: default_class_result
+  changed_when: "'patched' in default_class_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Verify storage class
+  ansible.builtin.command: kubectl get storageclass
+  register: storage_class
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display storage classes
+  ansible.builtin.debug:
+    var: storage_class.stdout_lines

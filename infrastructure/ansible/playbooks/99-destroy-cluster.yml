@@ -1,0 +1,79 @@
+---
+# Playbook to destroy the Kubernetes cluster VMs
+# WARNING: This will permanently delete all VMs and data!
+
+- name: Destroy Kubernetes cluster
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+
+  vars_prompt:
+    - name: confirm_destroy
+      prompt: |
+        WARNING: This will permanently delete all Kubernetes VMs!
+
+        VMs to be deleted:
+        {% for node in control_plane_nodes %}
+          - {{ node.name }} ({{ node.ip }})
+        {% endfor %}
+        {% for node in worker_nodes %}
+          - {{ node.name }} ({{ node.ip }})
+        {% endfor %}
+
+        Type 'yes-destroy-cluster' to confirm
+      private: false
+
+  tasks:
+    - name: Verify confirmation
+      ansible.builtin.assert:
+        that:
+          - confirm_destroy == 'yes-destroy-cluster'
+        fail_msg: "Destruction cancelled. You must type 'yes-destroy-cluster' to confirm."
+
+    - name: Stop VMs
+      community.general.proxmox_kvm:
+        api_host: "{{ proxmox_api_host }}"
+        api_user: "{{ proxmox_api_user }}"
+        api_token_id: "{{ proxmox_api_token_id }}"
+        api_token_secret: "{{ proxmox_api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        state: stopped
+        force: true
+        timeout: 120
+      loop: "{{ control_plane_nodes + worker_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      ignore_errors: true
+
+    - name: Delete VMs
+      community.general.proxmox_kvm:
+        api_host: "{{ proxmox_api_host }}"
+        api_user: "{{ proxmox_api_user }}"
+        api_token_id: "{{ proxmox_api_token_id }}"
+        api_token_secret: "{{ proxmox_api_token_secret }}"
+        node: "{{ proxmox_node }}"
+        vmid: "{{ item.vmid }}"
+        state: absent
+      loop: "{{ control_plane_nodes + worker_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Remove local kubeconfig
+      ansible.builtin.file:
+        path: "{{ kubeconfig_local_path }}"
+        state: absent
+      delegate_to: localhost
+
+    - name: Display destruction summary
+      ansible.builtin.debug:
+        msg: |
+          Cluster destroyed successfully!
+
+          Deleted VMs:
+          {% for node in control_plane_nodes + worker_nodes %}
+            - {{ node.name }}
+          {% endfor %}
+
+          Local kubeconfig removed: {{ kubeconfig_local_path }}

@@ -1,0 +1,129 @@
+---
+# Playbook to install Kubernetes addons
+# This installs ingress-nginx, cert-manager, CloudNativePG, and storage
+
+- name: Install Kubernetes addons
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Verify cluster is ready
+      ansible.builtin.command: kubectl get nodes
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: nodes_check
+      changed_when: false
+      failed_when: nodes_check.rc != 0
+
+- name: Install storage provisioner
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: k8s-storage
+
+- name: Install ingress-nginx
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: k8s-ingress-nginx
+
+- name: Install cert-manager
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: k8s-cert-manager
+
+- name: Install CloudNativePG operator
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: k8s-cloudnative-pg
+
+- name: Configure Cloudflare DNS records
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+
+  roles:
+    - role: cloudflare-dns
+
+- name: Display final cluster status
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+  vars:
+    kubeconfig_local_path: "{{ playbook_dir }}/../kubeconfig"
+    cluster_issuer_name: "letsencrypt-prod"
+
+  tasks:
+    - name: Get all pods in all namespaces
+      ansible.builtin.command: kubectl get pods -A
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: all_pods
+      changed_when: false
+
+    - name: Get all services
+      ansible.builtin.command: kubectl get svc -A
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: all_services
+      changed_when: false
+
+    - name: Display cluster summary
+      ansible.builtin.debug:
+        msg: |
+          ==============================================
+          Kubernetes cluster setup complete!
+          ==============================================
+
+          Installed Components:
+          - Kubernetes {{ k8s_version }}
+          - Calico CNI {{ calico_version }}
+          - ingress-nginx {{ ingress_nginx_version }}
+          - cert-manager {{ cert_manager_version }}
+          - CloudNativePG {{ cloudnative_pg_version }}
+          - local-path-provisioner {{ local_path_provisioner_version }}
+
+          All Pods:
+          {{ all_pods.stdout }}
+
+          All Services:
+          {{ all_services.stdout }}
+
+          ==============================================
+          Cluster is ready for MechanicBuddy deployment!
+          ==============================================
+
+          To use kubectl:
+            export KUBECONFIG={{ kubeconfig_local_path }}
+
+          Worker node IPs:
+          {% for node in worker_nodes %}
+            - {{ node.name }}: {{ node.ip }}
+          {% endfor %}
+
+          DNS Configuration (auto-configured via Cloudflare):
+            - api.{{ base_domain }} -> {{ external_ingress_ip }}
+            - app.{{ base_domain }} -> {{ external_ingress_ip }}
+            - *.{{ base_domain }} -> {{ external_ingress_ip }}
+
+          Traffic Flow:
+            Internet -> {{ external_ingress_ip }} (nginx proxy) -> 192.168.1.101 (k8s ingress)
+
+          TLS Certificates:
+            - ClusterIssuer: {{ cluster_issuer_name }} (DNS-01 via Cloudflare)
+            - Staging issuer also available for testing
+
+          Next steps:
+            1. Deploy MechanicBuddy application via Helm chart

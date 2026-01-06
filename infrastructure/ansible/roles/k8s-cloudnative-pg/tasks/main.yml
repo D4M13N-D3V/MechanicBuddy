@@ -1,0 +1,52 @@
+---
+- name: Check if CloudNativePG namespace exists
+  ansible.builtin.command: kubectl get namespace {{ cloudnative_pg_namespace }}
+  register: cnpg_ns_check
+  failed_when: false
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install CloudNativePG operator
+  ansible.builtin.command: >
+    kubectl apply -f
+    https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-{{ cloudnative_pg_version | regex_replace('^(\d+\.\d+).*', '\1') }}/releases/cnpg-{{ cloudnative_pg_version }}.yaml
+  register: cnpg_result
+  changed_when: "'created' in cnpg_result.stdout or 'configured' in cnpg_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for CloudNativePG operator to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=available deployment/cnpg-controller-manager
+    -n {{ cloudnative_pg_namespace }}
+    --timeout=300s
+  register: cnpg_ready
+  retries: 5
+  delay: 30
+  until: cnpg_ready.rc == 0
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Verify CloudNativePG installation
+  ansible.builtin.command: kubectl get pods -n {{ cloudnative_pg_namespace }}
+  register: cnpg_pods
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display CloudNativePG pods
+  ansible.builtin.debug:
+    var: cnpg_pods.stdout_lines
+
+- name: Verify CloudNativePG CRDs are installed
+  ansible.builtin.command: kubectl get crd clusters.postgresql.cnpg.io
+  register: cnpg_crd
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display CRD info
+  ansible.builtin.debug:
+    msg: "CloudNativePG CRD 'clusters.postgresql.cnpg.io' is available"

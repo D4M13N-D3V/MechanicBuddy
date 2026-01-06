@@ -1,0 +1,9 @@
+---
+# Kubeconfig location
+kubeconfig_local_path: "{{ playbook_dir }}/../kubeconfig"
+
+# Reset cluster before init (use with caution)
+k8s_reset_cluster: false
+
+# kubeadm init timeout
+kubeadm_init_timeout: 300

@@ -1,0 +1,121 @@
+---
+# Playbook to resize VM disks via Proxmox API and extend filesystems
+# Run this if disk resize failed during VM creation
+
+- name: Resize VM disks on Proxmox
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Resize control plane disks via API
+      ansible.builtin.uri:
+        url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port }}/api2/json/nodes/{{ proxmox_node }}/qemu/{{ item.vmid }}/resize"
+        method: PUT
+        headers:
+          Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+        body_format: form-urlencoded
+        body:
+          disk: scsi0
+          size: "{{ item.disk_size }}"
+        validate_certs: false
+      loop: "{{ control_plane_nodes + worker_nodes }}"
+      loop_control:
+        label: "{{ item.name }} -> {{ item.disk_size }}"
+      register: resize_result
+      failed_when: false
+
+    - name: Display resize results
+      ansible.builtin.debug:
+        msg: "{{ item.item.name }}: {{ 'SUCCESS' if item.status == 200 else 'FAILED or already resized' }}"
+      loop: "{{ resize_result.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+- name: Extend filesystems on VMs
+  hosts: k8s_cluster
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Install growpart (cloud-guest-utils)
+      ansible.builtin.apt:
+        name: cloud-guest-utils
+        state: present
+        update_cache: true
+      register: apt_result
+      retries: 3
+      delay: 10
+      until: apt_result is success
+
+    - name: Get root partition device
+      ansible.builtin.shell: |
+        lsblk -no PKNAME $(findmnt -n -o SOURCE /)
+      register: root_disk
+      changed_when: false
+
+    - name: Get root partition number
+      ansible.builtin.shell: |
+        findmnt -n -o SOURCE / | grep -oE '[0-9]+$'
+      register: root_partition
+      changed_when: false
+
+    - name: Grow partition to fill disk
+      ansible.builtin.command: "growpart /dev/{{ root_disk.stdout | trim }} {{ root_partition.stdout | trim }}"
+      register: growpart_result
+      changed_when: "'CHANGED' in growpart_result.stdout"
+      failed_when: false
+
+    - name: Check filesystem type
+      ansible.builtin.shell: |
+        findmnt -n -o FSTYPE /
+      register: fs_type
+      changed_when: false
+
+    - name: Resize ext4 filesystem
+      ansible.builtin.command: "resize2fs $(findmnt -n -o SOURCE /)"
+      when: fs_type.stdout | trim == 'ext4'
+      register: resize_ext4
+      changed_when: resize_ext4.rc == 0
+
+    - name: Resize XFS filesystem
+      ansible.builtin.command: "xfs_growfs /"
+      when: fs_type.stdout | trim == 'xfs'
+      register: resize_xfs
+      changed_when: resize_xfs.rc == 0
+
+    - name: Check for LVM
+      ansible.builtin.shell: |
+        findmnt -n -o SOURCE / | grep -q mapper && echo "lvm" || echo "no"
+      register: is_lvm
+      changed_when: false
+
+    - name: Resize LVM physical volume
+      ansible.builtin.command: "pvresize /dev/{{ root_disk.stdout | trim }}{{ root_partition.stdout | trim }}"
+      when: is_lvm.stdout | trim == 'lvm'
+      failed_when: false
+
+    - name: Extend LVM logical volume
+      ansible.builtin.command: "lvextend -l +100%FREE $(findmnt -n -o SOURCE /)"
+      when: is_lvm.stdout | trim == 'lvm'
+      failed_when: false
+
+    - name: Resize filesystem on LVM
+      ansible.builtin.shell: |
+        if [ "{{ fs_type.stdout | trim }}" = "ext4" ]; then
+          resize2fs $(findmnt -n -o SOURCE /)
+        elif [ "{{ fs_type.stdout | trim }}" = "xfs" ]; then
+          xfs_growfs /
+        fi
+      when: is_lvm.stdout | trim == 'lvm'
+      failed_when: false
+
+    - name: Show disk space after resize
+      ansible.builtin.command: df -h /
+      register: disk_space
+      changed_when: false
+
+    - name: Display available disk space
+      ansible.builtin.debug:
+        msg: "{{ disk_space.stdout_lines }}"

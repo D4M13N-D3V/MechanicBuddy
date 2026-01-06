@@ -1,0 +1,59 @@
+---
+- name: Check if ingress-nginx namespace exists
+  ansible.builtin.command: kubectl get namespace {{ ingress_nginx_namespace }}
+  register: ingress_ns_check
+  failed_when: false
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Download ingress-nginx manifest
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ ingress_nginx_version }}/deploy/static/provider/baremetal/deploy.yaml"
+    dest: /tmp/ingress-nginx-deploy.yaml
+    mode: '0644'
+
+- name: Apply ingress-nginx manifest
+  ansible.builtin.command: kubectl apply -f /tmp/ingress-nginx-deploy.yaml
+  register: ingress_apply_result
+  changed_when: "'created' in ingress_apply_result.stdout or 'configured' in ingress_apply_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Create ingress-nginx DaemonSet patch for host network
+  ansible.builtin.template:
+    src: ingress-nginx-daemonset-patch.yml.j2
+    dest: /tmp/ingress-nginx-daemonset-patch.yml
+    mode: '0644'
+
+- name: Convert ingress-nginx deployment to DaemonSet with host network
+  ansible.builtin.command: kubectl apply -f /tmp/ingress-nginx-daemonset-patch.yml
+  register: daemonset_patch_result
+  changed_when: "'created' in daemonset_patch_result.stdout or 'configured' in daemonset_patch_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for ingress-nginx controller to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=ready pod
+    -l app.kubernetes.io/component=controller
+    -n {{ ingress_nginx_namespace }}
+    --timeout=300s
+  register: ingress_ready
+  retries: 5
+  delay: 30
+  until: ingress_ready.rc == 0
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Verify ingress-nginx installation
+  ansible.builtin.command: kubectl get pods -n {{ ingress_nginx_namespace }}
+  register: ingress_pods
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display ingress-nginx pods
+  ansible.builtin.debug:
+    var: ingress_pods.stdout_lines

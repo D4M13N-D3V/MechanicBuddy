@@ -1,0 +1,47 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mechanicbuddy-system.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mechanicbuddy-system.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Values.ingress.tls.enabled }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.tls.clusterIssuer | quote }}
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        {{- range .Values.ingress.hosts }}
+        - {{ .host }}
+        {{- end }}
+      secretName: {{ include "mechanicbuddy-system.fullname" . }}-tls
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                {{- if eq .service "portal" }}
+                name: {{ include "mechanicbuddy-system.fullname" $ }}-portal
+                port:
+                  number: {{ $.Values.portal.port }}
+                {{- else if eq .service "management-api" }}
+                name: {{ include "mechanicbuddy-system.fullname" $ }}-api
+                port:
+                  number: {{ $.Values.managementApi.port }}
+                {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}

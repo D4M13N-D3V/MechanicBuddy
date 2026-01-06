@@ -1,0 +1,29 @@
+---
+- name: Check if node is already part of cluster
+  ansible.builtin.stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet_conf
+
+- name: Join worker node to cluster
+  ansible.builtin.command: "{{ hostvars[groups['k8s_control_plane'][0]]['k8s_join_command'] }}"
+  when: not kubelet_conf.stat.exists
+  register: join_result
+  changed_when: join_result.rc == 0
+  retries: 3
+  delay: 30
+
+- name: Wait for node to be ready
+  ansible.builtin.command: >
+    kubectl get node {{ inventory_hostname }} -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  delegate_to: "{{ groups['k8s_control_plane'][0] }}"
+  register: node_ready
+  until: node_ready.stdout == "True"
+  retries: 30
+  delay: 10
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display node join status
+  ansible.builtin.debug:
+    msg: "Worker node {{ inventory_hostname }} successfully joined the cluster"

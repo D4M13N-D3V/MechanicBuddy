@@ -1,0 +1,136 @@
+---
+# =============================================================================
+# MechanicBuddy Kubernetes Infrastructure Configuration
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SSH Configuration
+# -----------------------------------------------------------------------------
+ssh_private_key_path: "~/.ssh/id_rsa"
+ssh_public_key_path: "~/.ssh/id_rsa.pub"
+
+# -----------------------------------------------------------------------------
+# Proxmox Settings
+# -----------------------------------------------------------------------------
+proxmox_api_host: "proxmox.d4m13n.dev"
+proxmox_api_port: 443
+proxmox_api_user: "root@pam"
+proxmox_api_token_id: "ansible"
+proxmox_api_token_secret: "{{ vault_proxmox_api_token_secret }}"
+proxmox_node: "medusa"
+
+# VM Template (Ubuntu 22.04 cloud image)
+vm_template_name: "ubuntu-22.04-cloud"
+vm_template_id: 9000
+
+# Storage
+proxmox_storage: "local-lvm"
+
+# -----------------------------------------------------------------------------
+# Network Settings
+# -----------------------------------------------------------------------------
+network_bridge: "vmbr0"
+network_cidr: "192.168.1.0/24"
+network_gateway: "192.168.1.1"
+network_netmask: "255.255.255.0"
+dns_servers:
+  - "1.1.1.1"
+  - "8.8.8.8"
+dns_search_domain: "mechanicbuddy.local"
+
+# -----------------------------------------------------------------------------
+# Kubernetes Cluster Settings
+# -----------------------------------------------------------------------------
+k8s_version: "v1.29.15"
+k8s_apt_version: "1.29.*"
+k8s_cluster_name: "mechanicbuddy-cluster"
+k8s_pod_network_cidr: "10.244.0.0/16"
+k8s_service_cidr: "10.96.0.0/12"
+k8s_control_plane_endpoint: "k8s-api.mechanicbuddy.local"
+
+# Container runtime
+containerd_version: "1.7.*"
+
+# CNI Plugin
+cni_plugin: "calico"
+calico_version: "v3.27.0"
+
+# -----------------------------------------------------------------------------
+# Node Specifications
+# -----------------------------------------------------------------------------
+control_plane_nodes:
+  - name: k8s-control-1
+    vmid: 200
+    ip: 192.168.1.100
+    cores: 4
+    memory: 8192
+    disk_size: "50G"
+    description: "Kubernetes Control Plane"
+
+worker_nodes:
+  - name: k8s-worker-1
+    vmid: 201
+    ip: 192.168.1.101
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 1"
+  - name: k8s-worker-2
+    vmid: 202
+    ip: 192.168.1.102
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 2"
+
+# -----------------------------------------------------------------------------
+# Kubernetes Addons
+# -----------------------------------------------------------------------------
+# Ingress Controller
+ingress_nginx_version: "v1.9.6"
+ingress_nginx_replica_count: 2
+
+# cert-manager
+cert_manager_version: "v1.14.3"
+letsencrypt_email: "ssl@mechanicbuddy.app"
+letsencrypt_server: "https://acme-v02.api.letsencrypt.org/directory"
+# Use staging for testing: https://acme-staging-v02.api.letsencrypt.org/directory
+
+# CloudNativePG
+cloudnative_pg_version: "1.22.1"
+
+# Storage
+storage_provisioner: "local-path"
+local_path_provisioner_version: "v0.0.26"
+
+# -----------------------------------------------------------------------------
+# Cloudflare Configuration
+# -----------------------------------------------------------------------------
+cloudflare_api_token: "{{ vault_cloudflare_api_token }}"
+cloudflare_zone_name: "mechanicbuddy.app"
+
+# -----------------------------------------------------------------------------
+# External Access Configuration
+# -----------------------------------------------------------------------------
+# Public IP of the nginx reverse proxy that forwards to k8s ingress
+external_ingress_ip: "136.56.217.220"
+
+# -----------------------------------------------------------------------------
+# Domain Configuration
+# -----------------------------------------------------------------------------
+base_domain: "mechanicbuddy.app"
+management_domain: "mechanicbuddy.app"
+tenant_subdomain_pattern: "*.mechanicbuddy.app"
+
+# DNS records to create (will be auto-created via Cloudflare API)
+# These point to the external nginx proxy IP
+dns_records:
+  - name: "api"           # api.mechanicbuddy.app
+    type: "A"
+    proxied: true
+  - name: "app"           # app.mechanicbuddy.app
+    type: "A"
+    proxied: true
+  - name: "*"             # *.mechanicbuddy.app (wildcard for tenants)
+    type: "A"
+    proxied: false        # Cloudflare doesn't proxy wildcard records on free plan

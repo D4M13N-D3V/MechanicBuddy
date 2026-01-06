@@ -1,0 +1,9 @@
+---
+# Calico version
+calico_version: "v3.27.0"
+
+# Calico operator namespace
+calico_operator_namespace: "tigera-operator"
+
+# Pod CIDR (must match kubeadm config)
+pod_network_cidr: "{{ k8s_pod_network_cidr }}"

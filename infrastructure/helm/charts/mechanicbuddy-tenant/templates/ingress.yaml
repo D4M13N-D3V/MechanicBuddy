@@ -1,0 +1,78 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mechanicbuddy-tenant.fullname" . }}
+  namespace: tenant-{{ .Values.tenant.id }}
+  labels:
+    {{- include "mechanicbuddy-tenant.labels" . | nindent 4 }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.domains.clusterIssuer | quote }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - hosts:
+        - {{ include "mechanicbuddy-tenant.defaultDomain" . }}
+        {{- range .Values.domains.custom }}
+        - {{ . }}
+        {{- end }}
+      secretName: {{ include "mechanicbuddy-tenant.fullname" . }}-tls
+  rules:
+    # Default domain rules
+    - host: {{ include "mechanicbuddy-tenant.defaultDomain" . }}
+      http:
+        paths:
+          # API routes
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mechanicbuddy-tenant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.port }}
+          - path: /swagger
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mechanicbuddy-tenant.fullname" . }}-api
+                port:
+                  number: {{ .Values.api.port }}
+          # Frontend routes (catch-all)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mechanicbuddy-tenant.fullname" . }}-web
+                port:
+                  number: {{ .Values.web.port }}
+    # Custom domain rules
+    {{- range .Values.domains.custom }}
+    - host: {{ . }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mechanicbuddy-tenant.fullname" $ }}-api
+                port:
+                  number: {{ $.Values.api.port }}
+          - path: /swagger
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mechanicbuddy-tenant.fullname" $ }}-api
+                port:
+                  number: {{ $.Values.api.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "mechanicbuddy-tenant.fullname" $ }}-web
+                port:
+                  number: {{ $.Values.web.port }}
+    {{- end }}
+{{- end }}

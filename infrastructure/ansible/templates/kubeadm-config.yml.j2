@@ -1,0 +1,54 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: {{ node_ip }}
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: {{ inventory_hostname }}
+  taints:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+clusterName: {{ k8s_cluster_name }}
+kubernetesVersion: v{{ k8s_version }}.0
+controlPlaneEndpoint: "{{ k8s_control_plane_endpoint }}:6443"
+networking:
+  podSubnet: {{ k8s_pod_network_cidr }}
+  serviceSubnet: {{ k8s_service_cidr }}
+  dnsDomain: cluster.local
+apiServer:
+  certSANs:
+    - "{{ k8s_control_plane_endpoint }}"
+    - "{{ node_ip }}"
+    - "127.0.0.1"
+    - "localhost"
+{% for node in control_plane_nodes %}
+    - "{{ node.name }}"
+    - "{{ node.ip }}"
+{% endfor %}
+  extraArgs:
+    authorization-mode: Node,RBAC
+    enable-admission-plugins: NodeRestriction
+controllerManager:
+  extraArgs:
+    bind-address: 0.0.0.0
+scheduler:
+  extraArgs:
+    bind-address: 0.0.0.0
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+containerRuntimeEndpoint: unix:///var/run/containerd/containerd.sock
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs

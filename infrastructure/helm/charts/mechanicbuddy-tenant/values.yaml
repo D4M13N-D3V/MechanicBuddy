@@ -1,0 +1,188 @@
+# =============================================================================
+# MechanicBuddy Tenant Helm Chart Values
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Tenant Configuration
+# -----------------------------------------------------------------------------
+tenant:
+  # Unique tenant identifier (used in namespace, database, etc.)
+  id: ""
+  # Company name for display
+  name: ""
+  # Subscription tier: demo | free | professional | enterprise
+  tier: "free"
+  # Owner email for notifications
+  ownerEmail: ""
+
+# -----------------------------------------------------------------------------
+# Domain Configuration
+# -----------------------------------------------------------------------------
+domains:
+  # Base domain for the platform
+  baseDomain: "mechanicbuddy.app"
+  # Default subdomain: {tenant.id}.mechanicbuddy.app
+  default: ""
+  # Custom domains (optional)
+  custom: []
+  # TLS certificate issuer
+  clusterIssuer: "letsencrypt-prod"
+
+# -----------------------------------------------------------------------------
+# Demo/Trial Settings
+# -----------------------------------------------------------------------------
+demo:
+  enabled: false
+  # Trial expiration in days
+  expirationDays: 7
+  # Demo data population
+  populateSampleData: true
+
+# -----------------------------------------------------------------------------
+# PostgreSQL (CloudNativePG)
+# -----------------------------------------------------------------------------
+postgresql:
+  # Number of instances (1 for single node, 3 for HA)
+  instances: 1
+  # Database name
+  database: "mechanicbuddy"
+  # Database user
+  username: "mechanicbuddy"
+  # Storage configuration
+  storage:
+    size: "10Gi"
+    storageClass: "local-path"
+  # Resource limits
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  # Backup configuration (optional)
+  backup:
+    enabled: false
+    schedule: "0 2 * * *"
+    retentionDays: 7
+
+# -----------------------------------------------------------------------------
+# API Service (.NET)
+# -----------------------------------------------------------------------------
+api:
+  # Number of replicas
+  replicas: 1
+  # Container image
+  image:
+    repository: "ghcr.io/mechanicbuddy/api"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  # Service port
+  port: 15567
+  # Resource limits
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  # Health check paths
+  healthCheck:
+    liveness: "/health/live"
+    readiness: "/health/ready"
+  # Additional environment variables
+  extraEnv: []
+
+# -----------------------------------------------------------------------------
+# Web Frontend (Next.js)
+# -----------------------------------------------------------------------------
+web:
+  # Number of replicas
+  replicas: 1
+  # Container image
+  image:
+    repository: "ghcr.io/mechanicbuddy/web"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  # Service port
+  port: 3000
+  # Resource limits
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+  # Additional environment variables
+  extraEnv: []
+
+# -----------------------------------------------------------------------------
+# Database Migrations (DbUp)
+# -----------------------------------------------------------------------------
+migrations:
+  # Run migrations on install/upgrade
+  enabled: true
+  # Migration job image
+  image:
+    repository: "ghcr.io/mechanicbuddy/dbup"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  # Timeout for migration job
+  timeout: 300
+
+# -----------------------------------------------------------------------------
+# Ingress Configuration
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+
+# -----------------------------------------------------------------------------
+# Email Configuration (Resend SMTP Relay)
+# -----------------------------------------------------------------------------
+email:
+  # Resend SMTP settings for sending invoices/estimates to customers
+  host: "smtp.resend.com"
+  port: 587
+  # Resend API key (used as SMTP password)
+  apiKey: ""
+  # From address (must be verified in Resend)
+  fromAddress: "noreply@mechanicbuddy.app"
+
+# -----------------------------------------------------------------------------
+# Billing Integration
+# -----------------------------------------------------------------------------
+billing:
+  # Stripe customer ID
+  stripeCustomerId: ""
+  # Stripe subscription ID
+  subscriptionId: ""
+  # Mechanic limit (null = unlimited based on subscription)
+  mechanicLimit: null
+
+# -----------------------------------------------------------------------------
+# Image Pull Secrets
+# -----------------------------------------------------------------------------
+imagePullSecrets: []
+
+# -----------------------------------------------------------------------------
+# Pod Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}

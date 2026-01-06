@@ -1,0 +1,89 @@
+---
+- name: Check if cert-manager namespace exists
+  ansible.builtin.command: kubectl get namespace {{ cert_manager_namespace }}
+  register: cert_manager_ns_check
+  failed_when: false
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install cert-manager CRDs
+  ansible.builtin.command: >
+    kubectl apply -f
+    https://github.com/cert-manager/cert-manager/releases/download/{{ cert_manager_version }}/cert-manager.crds.yaml
+  register: crds_result
+  changed_when: "'created' in crds_result.stdout or 'configured' in crds_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Install cert-manager
+  ansible.builtin.command: >
+    kubectl apply -f
+    https://github.com/cert-manager/cert-manager/releases/download/{{ cert_manager_version }}/cert-manager.yaml
+  register: cert_manager_result
+  changed_when: "'created' in cert_manager_result.stdout or 'configured' in cert_manager_result.stdout"
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for cert-manager webhook to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=available deployment/cert-manager-webhook
+    -n {{ cert_manager_namespace }}
+    --timeout=300s
+  register: webhook_ready
+  retries: 5
+  delay: 30
+  until: webhook_ready.rc == 0
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Wait for cert-manager pods to be ready
+  ansible.builtin.command: >
+    kubectl wait --for=condition=ready pod -l app=cert-manager
+    -n {{ cert_manager_namespace }}
+    --timeout=300s
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Create ClusterIssuer for Let's Encrypt
+  ansible.builtin.template:
+    src: cluster-issuer.yml.j2
+    dest: /tmp/cluster-issuer.yml
+    mode: '0644'
+
+- name: Wait for cert-manager to be fully ready
+  ansible.builtin.pause:
+    seconds: 30
+
+- name: Apply ClusterIssuer
+  ansible.builtin.command: kubectl apply -f /tmp/cluster-issuer.yml
+  register: issuer_result
+  changed_when: "'created' in issuer_result.stdout or 'configured' in issuer_result.stdout"
+  retries: 5
+  delay: 10
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Verify cert-manager installation
+  ansible.builtin.command: kubectl get pods -n {{ cert_manager_namespace }}
+  register: cert_manager_pods
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display cert-manager pods
+  ansible.builtin.debug:
+    var: cert_manager_pods.stdout_lines
+
+- name: Display ClusterIssuer status
+  ansible.builtin.command: kubectl get clusterissuer {{ cluster_issuer_name }} -o wide
+  register: issuer_status
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Show ClusterIssuer
+  ansible.builtin.debug:
+    var: issuer_status.stdout_lines

@@ -1,0 +1,40 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "mechanicbuddy-system.postgresName" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mechanicbuddy-system.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.postgresql.instances }}
+
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgresql.database }}
+      owner: {{ .Values.postgresql.username }}
+      encoding: UTF8
+      localeCollate: en_US.UTF-8
+      localeCType: en_US.UTF-8
+
+  storage:
+    size: {{ .Values.postgresql.storage.size }}
+    storageClass: {{ .Values.postgresql.storage.storageClass }}
+
+  resources:
+    requests:
+      memory: {{ .Values.postgresql.resources.requests.memory | quote }}
+      cpu: {{ .Values.postgresql.resources.requests.cpu | quote }}
+    limits:
+      memory: {{ .Values.postgresql.resources.limits.memory | quote }}
+      cpu: {{ .Values.postgresql.resources.limits.cpu | quote }}
+
+  postgresql:
+    parameters:
+      shared_buffers: "128MB"
+      max_connections: "200"
+      log_statement: "ddl"
+
+  monitoring:
+    enablePodMonitor: false

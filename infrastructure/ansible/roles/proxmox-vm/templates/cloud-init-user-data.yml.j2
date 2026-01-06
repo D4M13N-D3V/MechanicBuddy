@@ -1,0 +1,28 @@
+#cloud-config
+hostname: {{ item.name }}
+fqdn: {{ item.name }}.{{ dns_search_domain }}
+manage_etc_hosts: true
+
+users:
+  - name: {{ vm_cloud_init_user }}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - {{ ssh_public_key }}
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - qemu-guest-agent
+  - curl
+  - wget
+  - vim
+  - htop
+  - net-tools
+
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+
+final_message: "Cloud-init completed for {{ item.name }} after $UPTIME seconds"

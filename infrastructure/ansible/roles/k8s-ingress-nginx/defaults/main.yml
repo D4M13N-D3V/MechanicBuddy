@@ -1,0 +1,16 @@
+---
+# Ingress NGINX version
+ingress_nginx_version: "v1.9.6"
+
+# Namespace
+ingress_nginx_namespace: "ingress-nginx"
+
+# Replica count
+ingress_nginx_replica_count: 2
+
+# Enable host network (required for bare metal without LoadBalancer)
+ingress_nginx_host_network: true
+
+# Node selector for ingress controller
+ingress_nginx_node_selector:
+  kubernetes.io/os: linux

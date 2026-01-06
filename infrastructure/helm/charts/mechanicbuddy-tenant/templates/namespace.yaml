@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-{{ .Values.tenant.id }}
+  labels:
+    {{- include "mechanicbuddy-tenant.labels" . | nindent 4 }}
+    mechanicbuddy.app/namespace-type: tenant
+  annotations:
+    mechanicbuddy.app/tenant-name: {{ .Values.tenant.name | quote }}
+    mechanicbuddy.app/owner-email: {{ .Values.tenant.ownerEmail | quote }}
+    {{- if .Values.demo.enabled }}
+    mechanicbuddy.app/demo: "true"
+    mechanicbuddy.app/demo-expires: {{ now | dateModify (printf "+%dh" (mul .Values.demo.expirationDays 24)) | date "2006-01-02T15:04:05Z" | quote }}
+    {{- end }}

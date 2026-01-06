@@ -1,0 +1,46 @@
+# Demo tier values
+# 7-day trial with sample data
+
+tenant:
+  tier: "demo"
+
+demo:
+  enabled: true
+  expirationDays: 7
+  populateSampleData: true
+
+# Minimal resources for demo
+postgresql:
+  instances: 1
+  storage:
+    size: "5Gi"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+api:
+  replicas: 1
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+
+web:
+  replicas: 1
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "125m"
+
+billing:
+  mechanicLimit: 3  # Limited mechanics in demo

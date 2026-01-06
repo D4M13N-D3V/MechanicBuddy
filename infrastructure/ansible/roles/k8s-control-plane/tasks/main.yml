@@ -1,0 +1,110 @@
+---
+- name: Check if cluster is already initialized
+  ansible.builtin.stat:
+    path: /etc/kubernetes/admin.conf
+  register: k8s_admin_conf
+
+- name: Reset cluster if requested
+  ansible.builtin.command: kubeadm reset -f
+  when: k8s_reset_cluster and k8s_admin_conf.stat.exists
+  changed_when: true
+
+- name: Create kubeadm config directory
+  ansible.builtin.file:
+    path: /etc/kubernetes/kubeadm
+    state: directory
+    mode: '0755'
+
+- name: Generate kubeadm configuration
+  ansible.builtin.template:
+    src: kubeadm-config.yml.j2
+    dest: /etc/kubernetes/kubeadm/kubeadm-config.yml
+    mode: '0644'
+  when: not k8s_admin_conf.stat.exists
+
+- name: Initialize Kubernetes cluster
+  ansible.builtin.command: >
+    kubeadm init
+    --config /etc/kubernetes/kubeadm/kubeadm-config.yml
+    --upload-certs
+  register: kubeadm_init
+  when: not k8s_admin_conf.stat.exists
+  changed_when: kubeadm_init.rc == 0
+  async: "{{ kubeadm_init_timeout }}"
+  poll: 10
+
+- name: Create .kube directory for ubuntu user
+  ansible.builtin.file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy admin.conf to ubuntu user's kube config
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/ubuntu/.kube/config
+    remote_src: true
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+
+- name: Create .kube directory for root
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+
+- name: Copy admin.conf to root's kube config
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: true
+    mode: '0600'
+
+- name: Fetch kubeconfig to local machine
+  ansible.builtin.fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ kubeconfig_local_path }}"
+    flat: true
+
+- name: Update kubeconfig server address for external access
+  ansible.builtin.replace:
+    path: "{{ kubeconfig_local_path }}"
+    regexp: 'server: https://.*:6443'
+    replace: "server: https://{{ node_ip }}:6443"
+  delegate_to: localhost
+  become: false
+
+- name: Generate join command
+  ansible.builtin.command: kubeadm token create --print-join-command
+  register: join_command_result
+  changed_when: false
+
+- name: Set join command fact
+  ansible.builtin.set_fact:
+    k8s_join_command: "{{ join_command_result.stdout }}"
+
+- name: Save join command to file
+  ansible.builtin.copy:
+    content: "{{ k8s_join_command }}"
+    dest: /etc/kubernetes/kubeadm/join-command.sh
+    mode: '0700'
+
+- name: Wait for control plane to be ready
+  ansible.builtin.command: kubectl get nodes
+  register: kubectl_nodes
+  until: kubectl_nodes.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  environment:
+    KUBECONFIG: /etc/kubernetes/admin.conf
+
+- name: Display cluster info
+  ansible.builtin.debug:
+    msg: |
+      Kubernetes cluster initialized!
+      Control plane endpoint: {{ k8s_control_plane_endpoint }}:6443
+      Kubeconfig saved to: {{ kubeconfig_local_path }}

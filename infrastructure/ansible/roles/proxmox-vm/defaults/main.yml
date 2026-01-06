@@ -1,0 +1,21 @@
+---
+# Default variables for proxmox-vm role
+
+# VM defaults
+vm_default_cores: 2
+vm_default_memory: 4096
+vm_default_disk_size: "32G"
+vm_default_storage: "{{ proxmox_storage }}"
+vm_default_bridge: "{{ network_bridge }}"
+
+# Cloud-init settings
+vm_cloud_init_storage: "{{ proxmox_storage }}"
+vm_cloud_init_user: "ubuntu"
+
+# VM state
+vm_state: present
+vm_start_on_create: true
+
+# Timeout for VM operations
+vm_clone_timeout: 600
+vm_start_timeout: 300

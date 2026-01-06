@@ -1,0 +1,39 @@
+---
+# Use the external nginx proxy IP for DNS records
+- name: Display DNS records to be created
+  ansible.builtin.debug:
+    msg: |
+      Creating DNS records in Cloudflare zone: {{ cloudflare_zone_name }}
+      Target IP: {{ external_ingress_ip }} (external nginx proxy)
+      Internal routing: nginx -> 192.168.1.101 (k8s-worker-1) -> k8s ingress
+      Records:
+      {% for record in dns_records %}
+        - {{ record.name }}.{{ cloudflare_zone_name }} -> {{ external_ingress_ip }}
+      {% endfor %}
+
+- name: Create/Update DNS A records
+  community.general.cloudflare_dns:
+    zone: "{{ cloudflare_zone_name }}"
+    record: "{{ item.name }}"
+    type: "{{ item.type | default('A') }}"
+    value: "{{ external_ingress_ip }}"
+    ttl: "{{ item.ttl | default(cloudflare_dns_ttl) }}"
+    proxied: "{{ item.proxied | default(cloudflare_dns_proxied) }}"
+    api_token: "{{ cloudflare_api_token }}"
+    state: present
+    solo: true  # Remove other records with same name/type
+  loop: "{{ dns_records }}"
+  loop_control:
+    label: "{{ item.name }}.{{ cloudflare_zone_name }}"
+  register: dns_results
+
+- name: Display created DNS records
+  ansible.builtin.debug:
+    msg: |
+      DNS records created/updated successfully!
+
+      {% for result in dns_results.results %}
+      {{ result.item.name }}.{{ cloudflare_zone_name }} -> {{ external_ingress_ip }}
+      {% endfor %}
+
+      Note: DNS propagation may take a few minutes.

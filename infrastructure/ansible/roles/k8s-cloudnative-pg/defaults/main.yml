@@ -1,0 +1,6 @@
+---
+# CloudNativePG version
+cloudnative_pg_version: "1.22.1"
+
+# Namespace for the operator
+cloudnative_pg_namespace: "cnpg-system"

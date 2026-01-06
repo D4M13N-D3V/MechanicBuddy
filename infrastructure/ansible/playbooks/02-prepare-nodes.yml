@@ -1,0 +1,44 @@
+---
+# Playbook to prepare all nodes with Kubernetes prerequisites
+# This installs containerd, kubeadm, kubelet, and kubectl
+
+- name: Prepare Kubernetes nodes
+  hosts: k8s_cluster
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Wait for nodes to be ready
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      ansible.builtin.apt:
+        upgrade: dist
+      register: apt_upgrade
+
+    - name: Reboot if required
+      ansible.builtin.reboot:
+        reboot_timeout: 300
+      when: apt_upgrade.changed
+
+  roles:
+    - role: k8s-prerequisites
+
+  post_tasks:
+    - name: Display node preparation status
+      ansible.builtin.debug:
+        msg: |
+          Node {{ inventory_hostname }} prepared successfully!
+          - containerd: installed
+          - kubeadm: installed
+          - kubelet: installed
+          - kubectl: installed

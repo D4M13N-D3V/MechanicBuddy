@@ -1,0 +1,52 @@
+---
+# Cloudflare API token secret for DNS-01 challenge
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token-secret
+  namespace: {{ cert_manager_namespace }}
+type: Opaque
+stringData:
+  api-token: {{ cloudflare_api_token }}
+---
+# Production issuer with DNS-01 challenge (supports wildcard certs)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ cluster_issuer_name }}
+spec:
+  acme:
+    email: {{ letsencrypt_email }}
+    server: {{ letsencrypt_server }}
+    privateKeySecretRef:
+      name: {{ cluster_issuer_name }}-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+        selector:
+          dnsZones:
+            - "{{ cloudflare_zone_name }}"
+---
+# Staging issuer for testing (higher rate limits)
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    email: {{ letsencrypt_email }}
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-staging-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+        selector:
+          dnsZones:
+            - "{{ cloudflare_zone_name }}"

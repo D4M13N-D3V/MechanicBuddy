@@ -1,0 +1,15 @@
+---
+# cert-manager version
+cert_manager_version: "v1.14.3"
+
+# Namespace
+cert_manager_namespace: "cert-manager"
+
+# Let's Encrypt configuration
+letsencrypt_email: "ssl@mechanicbuddy.app"
+letsencrypt_server: "https://acme-v02.api.letsencrypt.org/directory"
+# Staging server for testing (higher rate limits):
+# letsencrypt_server: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+# ClusterIssuer name
+cluster_issuer_name: "letsencrypt-prod"

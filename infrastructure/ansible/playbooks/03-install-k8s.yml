@@ -1,0 +1,75 @@
+---
+# Playbook to initialize Kubernetes cluster
+# This initializes the control plane and joins worker nodes
+
+- name: Initialize Kubernetes control plane
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: k8s-control-plane
+
+- name: Join worker nodes to cluster
+  hosts: k8s_workers
+  become: true
+  gather_facts: true
+  serial: 1  # Join workers one at a time
+
+  roles:
+    - role: k8s-worker
+
+- name: Install CNI (Calico)
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  roles:
+    - role: k8s-cni
+
+- name: Verify cluster
+  hosts: k8s_control_plane
+  become: true
+  gather_facts: false
+
+  vars:
+    kubeconfig_local_path: "{{ playbook_dir }}/../kubeconfig"
+
+  tasks:
+    - name: Wait for all nodes to be ready
+      ansible.builtin.command: >
+        kubectl wait --for=condition=ready node --all --timeout=300s
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      changed_when: false
+
+    - name: Get cluster info
+      ansible.builtin.command: kubectl cluster-info
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: cluster_info
+      changed_when: false
+
+    - name: Get all nodes
+      ansible.builtin.command: kubectl get nodes -o wide
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      register: nodes_info
+      changed_when: false
+
+    - name: Display cluster status
+      ansible.builtin.debug:
+        msg: |
+          Kubernetes cluster initialized successfully!
+
+          {{ cluster_info.stdout }}
+
+          Nodes:
+          {{ nodes_info.stdout }}
+
+          Kubeconfig saved to: {{ kubeconfig_local_path }}
+
+          To use kubectl locally:
+            export KUBECONFIG={{ kubeconfig_local_path }}
+
+          Next step: Run ansible-playbook playbooks/04-install-addons.yml

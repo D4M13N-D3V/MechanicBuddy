@@ -1,0 +1,9 @@
+---
+# Cloudflare zone
+cloudflare_zone_name: "mechanicbuddy.app"
+
+# TTL for DNS records (1 = auto)
+cloudflare_dns_ttl: 1
+
+# Default to not proxied (direct connection needed for k8s ingress)
+cloudflare_dns_proxied: false
