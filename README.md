@@ -174,11 +174,11 @@ cd ../../../frontend
 npm install
 npm run build
 rm -rf src
-rsync -avzr --delete --exclude=".git" --exclude="node_modules" ./ /opt/apps/mechanicbuddy-app/
+rsync -avzr --delete --exclude=".git" --exclude="node_modules" ./ /opt/apps/carcare-app/
 
-cd /opt/apps/mechanicbuddy-app
+cd /opt/apps/carcare-app
 npm install -g pm2
-pm2 start npm --name "mechanicbuddy-app" -- start
+pm2 start npm --name "carcare-app" -- start
 pm2 startup
 pm2 save
 ```
