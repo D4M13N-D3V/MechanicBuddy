@@ -103,4 +103,4 @@ GitHub Actions workflows in `.github/workflows/`:
 
 ## Default Login
 
-Username: `admin`, Password: `mechanicbuddy`
+Username: `admin`, Password: `carcare`

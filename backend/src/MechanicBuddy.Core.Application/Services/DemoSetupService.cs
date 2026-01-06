@@ -41,7 +41,7 @@ namespace MechanicBuddy.Core.Application.Services
 
             string tenantName = ShortGuid.NewGuid();
             string username = $"demo{tenantName}";
-            string password = "mechanicbuddy";
+            string password = "carcare";
             string hashedPassword = Authorization.PasswordHasher.getHash(password);
 
             // Create tenant database from template
