@@ -133,12 +133,12 @@ sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com -d api.yourdomain.c
 ### 6. Prepare Application Directories
 
 ```bash
-sudo mkdir -p /opt/apps/mechanicbuddy-app
+sudo mkdir -p /opt/apps/carcare-app
 sudo mkdir -p /opt/apps/dbup
-sudo mkdir -p /opt/apps/mechanicbuddy
+sudo mkdir -p /opt/apps/carcare
 sudo mkdir -p /opt/puppeteer
-sudo mkdir -p /var/mechanicbuddy/pdf
-sudo chown -R $USER /opt/apps /opt/puppeteer /var/mechanicbuddy
+sudo mkdir -p /var/carcare/pdf
+sudo chown -R $USER /opt/apps /opt/puppeteer /var/carcare
 ```
 
 ### 7. Application Deployment
