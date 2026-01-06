@@ -1,18 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import {
-  Popover,
-  PopoverButton,
-  PopoverBackdrop,
-  PopoverPanel,
-} from '@headlessui/react'
+import { useState } from 'react'
 import clsx from 'clsx'
 
 import { Button } from '@/_components/layout/Button'
 import { Container } from '@/_components/layout/Container'
- 
- 
+
+
 function MobileNavIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -45,46 +40,60 @@ interface MobileNavigationProps {
 }
 
 function MobileNavigation({ onTryDemoClick }: MobileNavigationProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
-    <Popover className="relative">
-      <PopoverButton
-        className="relative z-10 flex h-8 w-8 items-center justify-center ui-focus-visible:outline-none"
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative z-10 flex h-8 w-8 items-center justify-center"
         aria-label="Toggle Navigation"
       >
-        {({ open }) => <MobileNavIcon open={open} />}
-      </PopoverButton>
-      <PopoverBackdrop
-        transition
-        className="fixed inset-0 z-40 bg-slate-300/50 duration-150 data-[closed]:opacity-0 data-[enter]:ease-out data-[leave]:ease-in"
-      />
-      <PopoverPanel
-        transition
-        className="absolute right-0 top-full z-50 mt-4 w-screen max-w-xs origin-top-right flex-col rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 ring-1 shadow-xl ring-slate-900/5 data-[closed]:scale-95 data-[closed]:opacity-0 data-[enter]:duration-150 data-[enter]:ease-out data-[leave]:duration-100 data-[leave]:ease-in"
-      >
-        <hr className="m-2 border-slate-300/40" />
-        <Button
-          href="https://github.com/rene98c/carcareco"
-          variant="outline"
-        >
-          View on GitHub
-        </Button>
-        <Button 
-          href="/auth/login"
-          color="blue"
-          className="mt-2"
-        >
-          Log in
-        </Button>
-        {onTryDemoClick && (
-          <button
-            onClick={onTryDemoClick}
-            className="mt-2 rounded-md bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-300"
+        <MobileNavIcon open={isOpen} />
+      </button>
+
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-300/50"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Panel */}
+      {isOpen && (
+        <div className="absolute right-0 top-full z-50 mt-4 w-72 origin-top-right rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 ring-1 shadow-xl ring-slate-900/5">
+          <hr className="m-2 border-slate-300/40" />
+          <Button
+            href="https://github.com/rene98c/carcareco"
+            variant="outline"
+            onClick={() => setIsOpen(false)}
           >
-            Try the demo
-          </button>
-        )}
-      </PopoverPanel>
-    </Popover>
+            View on GitHub
+          </Button>
+          <Button
+            href="/auth/login"
+            color="blue"
+            className="mt-2"
+            onClick={() => setIsOpen(false)}
+          >
+            Log in
+          </Button>
+          {onTryDemoClick && (
+            <button
+              onClick={() => {
+                setIsOpen(false)
+                onTryDemoClick()
+              }}
+              className="mt-2 w-full rounded-md bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-300"
+            >
+              Try the demo
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -92,14 +101,14 @@ interface HeaderProps {
   onTryDemoClick?: () => void;
 }
 
-export function  Header({ onTryDemoClick }: HeaderProps) {
+export function Header({ onTryDemoClick }: HeaderProps) {
   return (
     <header className="py-10">
       <Container>
         <nav className="relative z-50 flex justify-between">
           <div className="flex items-center md:gap-x-12">
             <Link href="#" aria-label="Home">
-               
+
             </Link>
             <div className="hidden md:flex md:gap-x-6">
               {/* Add navigation links here if needed */}
