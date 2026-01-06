@@ -1,0 +1,16 @@
+# Patch to add secret volume mount to existing tenant deployment
+# Apply with: kubectl patch deployment api-testt -n mb-testt --patch-file tenant-deployment-patch.yaml
+spec:
+  template:
+    spec:
+      volumes:
+        - name: secrets-volume
+          secret:
+            secretName: api-secrets-testt
+      containers:
+        - name: api
+          volumeMounts:
+            - name: secrets-volume
+              mountPath: /app/appsettings.Secrets.json
+              subPath: appsettings.Secrets.json
+              readOnly: true

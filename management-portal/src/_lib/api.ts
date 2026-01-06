@@ -102,8 +102,8 @@ export async function updateTenantStatus(
   });
 }
 
-export async function deleteTenant(id: string): Promise<ApiResponse<void>> {
-  return fetchApi<void>(`/api/tenants/${id}`, {
+export async function deleteTenant(tenantId: string): Promise<ApiResponse<void>> {
+  return fetchApi<void>(`/api/tenants/${tenantId}`, {
     method: "DELETE",
   });
 }

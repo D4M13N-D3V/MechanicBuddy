@@ -19,6 +19,9 @@ public class KubernetesClient : IKubernetesClient
     private readonly string _resendSmtpPassword;
     private readonly string _ingressClassName;
     private readonly string _clusterIssuer;
+    private readonly string _apiImage;
+    private readonly string _jwtSecret;
+    private readonly string _consumerSecret;
 
     public KubernetesClient(
         IConfiguration configuration,
@@ -60,6 +63,9 @@ public class KubernetesClient : IKubernetesClient
         _certManagerNamespace = configuration["Kubernetes:CertManagerNamespace"] ?? "cert-manager";
         _wildcardSecretName = configuration["Kubernetes:WildcardSecretName"]
             ?? $"wildcard-{_baseDomain.Replace(".", "-")}-tls";
+        _apiImage = configuration["Kubernetes:ApiImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest";
+        _jwtSecret = configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is required");
+        _consumerSecret = configuration["Jwt:ConsumerSecret"] ?? throw new InvalidOperationException("Jwt:ConsumerSecret is required");
     }
 
     private readonly string _certManagerNamespace;
@@ -105,9 +111,77 @@ public class KubernetesClient : IKubernetesClient
         var namespaceName = $"mb-{tenantId}";
         var deploymentName = $"api-{tenantId}";
         var serviceName = $"api-{tenantId}";
+        var secretName = $"api-secrets-{tenantId}";
+        var schemaName = $"tenant_{tenantId.Replace("-", "_")}";
 
         // Get resource limits based on tier
         var (cpuLimit, memoryLimit, replicas) = GetResourceLimitsForTier(tier);
+
+        // Create appsettings.Secrets.json content for tenant
+        var secretsJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            PdfDirectory = "/var/mechanicbuddy/pdf",
+            PuppeteerPath = "/opt/puppeteer",
+            JwtOptions = new
+            {
+                Secret = _jwtSecret,
+                ConsumerSecret = _consumerSecret
+            },
+            DbOptions = new
+            {
+                Host = _postgresHost,
+                Port = 5432,
+                UserId = _postgresUser,
+                Password = _postgresPassword,
+                Name = "mechanicbuddy",
+                Schema = schemaName,
+                MultiTenancy = new { Enabled = true, TenantId = tenantId }
+            },
+            SmtpOptions = new
+            {
+                Host = _resendSmtpHost,
+                Port = _resendSmtpPort.ToString(),
+                User = _resendSmtpUser,
+                Password = _resendSmtpPassword
+            },
+            Cors = new
+            {
+                Mode = "open",
+                AppHost = $"{tenantId}.{_baseDomain}"
+            }
+        }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+
+        // Create the secret
+        var secret = new V1Secret
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = secretName,
+                NamespaceProperty = namespaceName,
+                Labels = new Dictionary<string, string>
+                {
+                    ["app"] = "mechanicbuddy-api",
+                    ["tenant-id"] = tenantId
+                }
+            },
+            Type = "Opaque",
+            StringData = new Dictionary<string, string>
+            {
+                ["appsettings.Secrets.json"] = secretsJson
+            }
+        };
+
+        try
+        {
+            await _client.CoreV1.CreateNamespacedSecretAsync(secret, namespaceName);
+            _logger.LogInformation("Created secret {Secret} in namespace {Namespace}", secretName, namespaceName);
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            // Secret already exists, update it
+            await _client.CoreV1.ReplaceNamespacedSecretAsync(secret, secretName, namespaceName);
+            _logger.LogInformation("Updated existing secret {Secret} in namespace {Namespace}", secretName, namespaceName);
+        }
 
         // Create deployment
         var deployment = new V1Deployment
@@ -146,15 +220,36 @@ public class KubernetesClient : IKubernetesClient
                     },
                     Spec = new V1PodSpec
                     {
+                        Volumes = new List<V1Volume>
+                        {
+                            new V1Volume
+                            {
+                                Name = "secrets-volume",
+                                Secret = new V1SecretVolumeSource
+                                {
+                                    SecretName = secretName
+                                }
+                            }
+                        },
                         Containers = new List<V1Container>
                         {
                             new V1Container
                             {
                                 Name = "api",
-                                Image = "mechanicbuddy/api:latest",
+                                Image = _apiImage,
                                 Ports = new List<V1ContainerPort>
                                 {
                                     new V1ContainerPort { ContainerPort = 80 }
+                                },
+                                VolumeMounts = new List<V1VolumeMount>
+                                {
+                                    new V1VolumeMount
+                                    {
+                                        Name = "secrets-volume",
+                                        MountPath = "/app/appsettings.Secrets.json",
+                                        SubPath = "appsettings.Secrets.json",
+                                        ReadOnlyProperty = true
+                                    }
                                 },
                                 Resources = new V1ResourceRequirements
                                 {
@@ -172,12 +267,7 @@ public class KubernetesClient : IKubernetesClient
                                 Env = new List<V1EnvVar>
                                 {
                                     new V1EnvVar { Name = "TENANT_ID", Value = tenantId },
-                                    new V1EnvVar { Name = "ASPNETCORE_ENVIRONMENT", Value = "Production" },
-                                    // SMTP configuration for tenant email (via Resend)
-                                    new V1EnvVar { Name = "Smtp__Host", Value = _resendSmtpHost },
-                                    new V1EnvVar { Name = "Smtp__Port", Value = _resendSmtpPort.ToString() },
-                                    new V1EnvVar { Name = "Smtp__User", Value = _resendSmtpUser },
-                                    new V1EnvVar { Name = "Smtp__Password", Value = _resendSmtpPassword }
+                                    new V1EnvVar { Name = "ASPNETCORE_ENVIRONMENT", Value = "Production" }
                                 }
                             }
                         }

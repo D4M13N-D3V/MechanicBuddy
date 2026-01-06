@@ -1,38 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { Badge } from "@/_components/ui/Badge";
 import { Button } from "@/_components/ui/Button";
-import { formatDate, formatCurrency } from "@/_lib/utils";
+import { formatDate } from "@/_lib/utils";
 import Link from "next/link";
-import { ArrowLeft, Building2, Users, Database, Activity } from "lucide-react";
+import { ArrowLeft, Building2, Users, Database, Activity, AlertCircle } from "lucide-react";
+import { getTenant } from "@/_lib/api";
+import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
 
-// Mock data - replace with actual API calls
-const tenant = {
-  id: "1",
-  companyName: "Auto Express LLC",
-  subdomain: "autoexpress",
-  plan: "standard",
-  status: "active",
-  billingEmail: "billing@autoexpress.com",
-  mechanicCount: 5,
-  storageUsedMb: 2400,
-  lastActivityAt: "2026-01-06T10:30:00Z",
-  createdAt: "2025-11-15T00:00:00Z",
-  updatedAt: "2026-01-06T10:30:00Z",
+const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
+  active: "success",
+  trial: "warning",
+  suspended: "danger",
+  deleted: "default",
+  provisioning: "info",
 };
-
-const stats = {
-  totalRevenue: 600,
-  totalWorkOrders: 234,
-  totalInvoices: 189,
-  activeUsers: 5,
-};
-
-const recentActivity = [
-  { action: "Invoice created", timestamp: "2026-01-06T10:30:00Z" },
-  { action: "Work order completed", timestamp: "2026-01-06T09:15:00Z" },
-  { action: "New client added", timestamp: "2026-01-05T16:20:00Z" },
-  { action: "User login", timestamp: "2026-01-05T14:45:00Z" },
-];
 
 export default async function TenantDetailPage({
   params,
@@ -40,20 +21,35 @@ export default async function TenantDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const response = await getTenant(id);
 
-  const planColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
-    free: "default",
-    standard: "info",
-    premium: "warning",
-    enterprise: "success",
-  };
+  if (!response.success || !response.data) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/tenants">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Tenants
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+              <p>Unable to load tenant details.</p>
+            </div>
+            <p className="text-sm text-dark-500 mt-2">
+              Error: {response.error || "Tenant not found"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
-    active: "success",
-    trial: "warning",
-    suspended: "danger",
-    cancelled: "default",
-  };
+  const tenant = response.data;
 
   return (
     <div className="space-y-6">
@@ -69,11 +65,11 @@ export default async function TenantDetailPage({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{tenant.companyName}</h1>
-          <p className="text-gray-600 mt-1">Tenant ID: {id}</p>
+          <p className="text-gray-600 mt-1">Tenant ID: {tenant.tenantId}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Suspend</Button>
-          <Button variant="danger">Delete</Button>
+          <DeleteTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} />
         </div>
       </div>
 
@@ -83,9 +79,9 @@ export default async function TenantDetailPage({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {formatCurrency(stats.totalRevenue)}
+                <p className="text-sm text-gray-600">Tier</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1 capitalize">
+                  {tenant.tier}
                 </p>
               </div>
               <Activity className="h-8 w-8 text-primary-600" />
@@ -97,12 +93,12 @@ export default async function TenantDetailPage({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Work Orders</p>
+                <p className="text-sm text-gray-600">Mechanics</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.totalWorkOrders}
+                  {tenant.mechanicCount ?? 0} / {tenant.maxMechanics}
                 </p>
               </div>
-              <Building2 className="h-8 w-8 text-primary-600" />
+              <Users className="h-8 w-8 text-primary-600" />
             </div>
           </CardContent>
         </Card>
@@ -111,9 +107,9 @@ export default async function TenantDetailPage({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Invoices</p>
+                <p className="text-sm text-gray-600">Storage Limit</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.totalInvoices}
+                  {tenant.maxStorage} MB
                 </p>
               </div>
               <Database className="h-8 w-8 text-primary-600" />
@@ -125,12 +121,14 @@ export default async function TenantDetailPage({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.activeUsers}
-                </p>
+                <p className="text-sm text-gray-600">Status</p>
+                <div className="mt-1">
+                  <Badge variant={statusColors[tenant.status]}>
+                    {tenant.status}
+                  </Badge>
+                </div>
               </div>
-              <Users className="h-8 w-8 text-primary-600" />
+              <Building2 className="h-8 w-8 text-primary-600" />
             </div>
           </CardContent>
         </Card>
@@ -146,7 +144,14 @@ export default async function TenantDetailPage({
             <div>
               <label className="text-sm font-medium text-gray-600">Subdomain</label>
               <p className="text-gray-900 mt-1">
-                <code className="bg-gray-100 px-2 py-1 rounded">{tenant.subdomain}</code>
+                <a
+                  href={tenant.apiUrl || `https://${tenant.tenantId}.mechanicbuddy.app`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gray-100 px-2 py-1 rounded font-mono hover:bg-gray-200 transition-colors"
+                >
+                  {tenant.tenantId}.mechanicbuddy.app
+                </a>
               </p>
             </div>
             <div>
@@ -158,37 +163,56 @@ export default async function TenantDetailPage({
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Billing Email</label>
-              <p className="text-gray-900 mt-1">{tenant.billingEmail}</p>
+              <label className="text-sm font-medium text-gray-600">Owner Email</label>
+              <p className="text-gray-900 mt-1">{tenant.ownerEmail}</p>
             </div>
+            {tenant.ownerName && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Owner Name</label>
+                <p className="text-gray-900 mt-1">{tenant.ownerName}</p>
+              </div>
+            )}
             <div>
-              <label className="text-sm font-medium text-gray-600">Mechanics</label>
-              <p className="text-gray-900 mt-1">{tenant.mechanicCount}</p>
+              <label className="text-sm font-medium text-gray-600">Demo Account</label>
+              <p className="text-gray-900 mt-1">{tenant.isDemo ? "Yes" : "No"}</p>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-600">Created</label>
               <p className="text-gray-900 mt-1">{formatDate(tenant.createdAt)}</p>
             </div>
+            {tenant.trialEndsAt && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Trial Ends</label>
+                <p className="text-gray-900 mt-1">{formatDate(tenant.trialEndsAt)}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Activity & Billing */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Activity & Billing</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div className="h-2 w-2 bg-primary-600 rounded-full mt-2" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                    <p className="text-xs text-gray-500">{formatDate(activity.timestamp)}</p>
-                  </div>
-                </div>
-              ))}
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-600">Last Activity</label>
+              <p className="text-gray-900 mt-1">
+                {tenant.lastActivityAt ? formatDate(tenant.lastActivityAt) : "Never"}
+              </p>
             </div>
+            {tenant.lastBilledAt && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Last Billed</label>
+                <p className="text-gray-900 mt-1">{formatDate(tenant.lastBilledAt)}</p>
+              </div>
+            )}
+            {tenant.subscriptionEndsAt && (
+              <div>
+                <label className="text-sm font-medium text-gray-600">Subscription Ends</label>
+                <p className="text-gray-900 mt-1">{formatDate(tenant.subscriptionEndsAt)}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
