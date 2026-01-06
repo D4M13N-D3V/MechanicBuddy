@@ -63,7 +63,7 @@ public class TenantService
             Status = isDemo ? "trial" : "active",
             IsDemo = isDemo,
             CreatedAt = DateTime.UtcNow,
-            TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(14) : DateTime.UtcNow.AddDays(30),
+            TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(7) : DateTime.UtcNow.AddDays(30),
             MaxMechanics = GetMaxMechanicsForTier(tier),
             MaxStorage = GetMaxStorageForTier(tier)
         };

@@ -58,7 +58,7 @@ public class ResendEmailClient : IEmailClient
                 <li><strong>Password:</strong> carcare</li>
             </ul>
             <p>Please change your password after first login.</p>
-            <p>Your demo includes full access to all features for 14 days.</p>
+            <p>Your demo includes full access to all features for 7 days.</p>
             <p>If you have any questions, feel free to reach out!</p>
             <p>Best regards,<br/>The MechanicBuddy Team</p>
         ";

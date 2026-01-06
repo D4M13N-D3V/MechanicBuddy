@@ -100,7 +100,7 @@ export function AddTenantDialog({ open, onClose }: AddTenantDialogProps) {
                 className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-600"
               />
               <label htmlFor="isDemo" className="text-sm text-gray-700">
-                This is a demo account (14-day trial)
+                This is a demo account (7-day trial)
               </label>
             </div>
 

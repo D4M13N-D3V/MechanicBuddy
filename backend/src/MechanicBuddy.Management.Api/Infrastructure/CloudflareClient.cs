@@ -213,6 +213,7 @@ public class CloudflareClient : ICloudflareClient
     private async Task<bool> UpdateDnsRecordAsync(string recordId, string subdomain, string target)
     {
         var recordName = $"{subdomain}.{_baseDomain}";
+        var zoneId = await GetZoneIdAsync();
 
         var request = new CloudflareDnsCreateRequest
         {
@@ -229,7 +230,7 @@ public class CloudflareClient : ICloudflareClient
         });
 
         var response = await _httpClient.PutAsync(
-            $"zones/{_zoneId}/dns_records/{recordId}",
+            $"zones/{zoneId}/dns_records/{recordId}",
             new StringContent(json, Encoding.UTF8, "application/json"));
 
         if (response.IsSuccessStatusCode)
