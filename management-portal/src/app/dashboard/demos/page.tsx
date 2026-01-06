@@ -8,10 +8,9 @@ import { AlertCircle } from "lucide-react";
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   pending: "warning",
-  approved: "info",
+  contacted: "info",
   converted: "success",
-  rejected: "default",
-  expired: "danger",
+  declined: "default",
 };
 
 export default async function DemosPage() {
@@ -22,8 +21,8 @@ export default async function DemosPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Demo Requests</h1>
-            <p className="text-gray-600 mt-1">Manage demo requests</p>
+            <h1 className="text-3xl font-bold text-dark-900">Demo Requests</h1>
+            <p className="text-dark-500 mt-1">Manage demo requests</p>
           </div>
         </div>
         <Card>
@@ -32,7 +31,7 @@ export default async function DemosPage() {
               <AlertCircle className="h-5 w-5" />
               <p>Unable to load demo requests. Please check that the Management API is running.</p>
             </div>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-dark-500 mt-2">
               Error: {response.error || "Connection failed"}
             </p>
           </CardContent>
@@ -48,8 +47,8 @@ export default async function DemosPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Demo Requests</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-dark-900">Demo Requests</h1>
+          <p className="text-dark-500 mt-1">
             {pendingCount} pending request{pendingCount !== 1 ? "s" : ""} waiting for review
           </p>
         </div>
@@ -76,18 +75,18 @@ export default async function DemosPage() {
                 {demoRequests.map((request) => (
                   <TableRow key={request.id}>
                     <TableCell>
-                      <p className="font-medium text-gray-900">{request.companyName}</p>
+                      <p className="font-semibold text-dark-900">{request.companyName}</p>
                     </TableCell>
                     <TableCell>
                       <a
                         href={`mailto:${request.email}`}
-                        className="text-primary-600 hover:text-primary-700 text-sm"
+                        className="text-primary-600 hover:text-primary-700 text-sm font-medium"
                       >
                         {request.email}
                       </a>
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm text-gray-600 max-w-md truncate">
+                      <p className="text-sm text-dark-500 max-w-md truncate">
                         {request.message || "No message"}
                       </p>
                     </TableCell>
@@ -97,18 +96,18 @@ export default async function DemosPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-dark-500">
                         {formatRelativeTime(request.createdAt)}
                       </span>
                     </TableCell>
                     <TableCell>
                       {request.status === "pending" && (
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Approve</Button>
-                          <Button variant="ghost" size="sm">Reject</Button>
+                          <Button variant="outline" size="sm">Contact</Button>
+                          <Button variant="ghost" size="sm">Decline</Button>
                         </div>
                       )}
-                      {request.status === "approved" && (
+                      {request.status === "contacted" && (
                         <Button variant="outline" size="sm">Convert</Button>
                       )}
                     </TableCell>
@@ -117,7 +116,7 @@ export default async function DemosPage() {
               </TableBody>
             </Table>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-dark-500">
               <p>No demo requests yet</p>
               <p className="text-sm mt-2">Demo requests will appear here once visitors submit the form.</p>
             </div>
