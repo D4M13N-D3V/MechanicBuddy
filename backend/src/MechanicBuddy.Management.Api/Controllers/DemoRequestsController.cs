@@ -133,9 +133,25 @@ public class DemoRequestsController : ControllerBase
         var count = await _demoRequestService.GetPendingCountAsync();
         return Ok(new { count });
     }
+
+    [HttpPatch("{id}/status")]
+    [Authorize]
+    public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateDemoStatusRequest request)
+    {
+        try
+        {
+            var demoRequest = await _demoRequestService.UpdateStatusAsync(id, request.Status);
+            return Ok(demoRequest);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public record CreateDemoRequestRequest(string Email, string CompanyName, string? PhoneNumber);
 public record ApproveDemoRequest(string? Notes);
 public record RejectDemoRequest(string Reason);
 public record ConvertDemoRequest(string Tier);
+public record UpdateDemoStatusRequest(string Status);

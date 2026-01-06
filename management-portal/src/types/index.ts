@@ -22,16 +22,18 @@ export interface TenantStats {
 }
 
 // Demo request types
+export type DemoRequestStatus = 'new' | 'pending_trial' | 'complete' | 'cancelled';
+
 export interface DemoRequest {
   id: string;
   email: string;
   companyName: string;
   phoneNumber?: string;
-  message: string;
-  status: 'pending' | 'contacted' | 'converted' | 'declined';
+  message?: string;
+  status: DemoRequestStatus;
   createdAt: string;
-  contactedAt?: string;
   notes?: string;
+  tenantId?: string;
 }
 
 // Pricing types

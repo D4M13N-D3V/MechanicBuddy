@@ -5,12 +5,20 @@ import { formatRelativeTime } from "@/_lib/utils";
 import { getDemoRequests } from "@/_lib/api";
 import { AlertCircle } from "lucide-react";
 import { DemoActions } from "./DemoActions";
+import type { DemoRequestStatus } from "@/types";
 
-const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
-  pending: "warning",
-  contacted: "info",
-  converted: "success",
-  declined: "default",
+const statusColors: Record<DemoRequestStatus, "default" | "success" | "warning" | "danger" | "info"> = {
+  new: "info",
+  pending_trial: "warning",
+  complete: "success",
+  cancelled: "default",
+};
+
+const statusLabels: Record<DemoRequestStatus, string> = {
+  new: "New",
+  pending_trial: "Pending Trial",
+  complete: "Complete",
+  cancelled: "Cancelled",
 };
 
 export default async function DemosPage() {
@@ -41,7 +49,7 @@ export default async function DemosPage() {
   }
 
   const demoRequests = response.data.items;
-  const pendingCount = demoRequests.filter(d => d.status === "pending").length;
+  const newCount = demoRequests.filter(d => d.status === "new").length;
 
   return (
     <div className="space-y-6">
@@ -49,7 +57,7 @@ export default async function DemosPage() {
         <div>
           <h1 className="text-3xl font-bold text-dark-900">Demo Requests</h1>
           <p className="text-dark-500 mt-1">
-            {pendingCount} pending request{pendingCount !== 1 ? "s" : ""} waiting for review
+            {newCount} new request{newCount !== 1 ? "s" : ""} waiting for review
           </p>
         </div>
       </div>
@@ -64,7 +72,7 @@ export default async function DemosPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Company</TableHead>
-                  <TableHead>Email</TableHead>
+                  <TableHead>Contact</TableHead>
                   <TableHead>Message</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Submitted</TableHead>
@@ -75,24 +83,34 @@ export default async function DemosPage() {
                 {demoRequests.map((request) => (
                   <TableRow key={request.id}>
                     <TableCell>
-                      <p className="font-semibold text-dark-900">{request.companyName}</p>
+                      <p className="font-semibold text-dark-900">{request.companyName || "N/A"}</p>
                     </TableCell>
                     <TableCell>
-                      <a
-                        href={`mailto:${request.email}`}
-                        className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-                      >
-                        {request.email}
-                      </a>
+                      <div className="space-y-1">
+                        <a
+                          href={`mailto:${request.email}`}
+                          className="text-primary-600 hover:text-primary-700 text-sm font-medium block"
+                        >
+                          {request.email}
+                        </a>
+                        {request.phoneNumber && (
+                          <a
+                            href={`tel:${request.phoneNumber}`}
+                            className="text-dark-500 hover:text-dark-700 text-sm block"
+                          >
+                            {request.phoneNumber}
+                          </a>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <p className="text-sm text-dark-500 max-w-md truncate">
-                        {request.message || "No message"}
+                      <p className="text-sm text-dark-500 max-w-md" title={request.message || undefined}>
+                        {request.message ? (request.message.length > 100 ? request.message.slice(0, 100) + "..." : request.message) : "No message"}
                       </p>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusColors[request.status] || "default"}>
-                        {request.status}
+                      <Badge variant={statusColors[request.status as DemoRequestStatus] || "default"}>
+                        {statusLabels[request.status as DemoRequestStatus] || request.status}
                       </Badge>
                     </TableCell>
                     <TableCell>

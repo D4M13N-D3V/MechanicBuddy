@@ -162,6 +162,16 @@ export async function rejectDemoRequest(
   });
 }
 
+export async function updateDemoRequestStatus(
+  id: string,
+  status: string
+): Promise<ApiResponse<DemoRequest>> {
+  return fetchApi<DemoRequest>(`/api/demorequests/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
 // Billing API
 export async function getBillingTransactions(
   page = 1,

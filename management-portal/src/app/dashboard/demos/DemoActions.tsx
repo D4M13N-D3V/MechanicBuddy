@@ -2,8 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/_components/ui/Button";
-import { approveDemoRequest, rejectDemoRequest } from "@/_lib/api";
+import { updateDemoRequestStatus } from "@/_lib/api";
+import type { DemoRequestStatus } from "@/types";
+
+const statuses: { value: DemoRequestStatus; label: string }[] = [
+  { value: "new", label: "New" },
+  { value: "pending_trial", label: "Pending Trial" },
+  { value: "complete", label: "Complete" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 interface DemoActionsProps {
   id: string;
@@ -12,73 +19,40 @@ interface DemoActionsProps {
 
 export function DemoActions({ id, status }: DemoActionsProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(status);
 
-  const handleApprove = async () => {
-    setIsLoading("approve");
+  const handleStatusChange = async (newStatus: string) => {
+    if (newStatus === currentStatus) return;
+
+    setIsLoading(true);
     try {
-      const result = await approveDemoRequest(id);
+      const result = await updateDemoRequestStatus(id, newStatus);
       if (result.success) {
+        setCurrentStatus(newStatus);
         router.refresh();
       } else {
-        alert(result.error || "Failed to approve demo request");
+        alert(result.error || "Failed to update status");
       }
     } catch (error) {
       alert("An error occurred");
     } finally {
-      setIsLoading(null);
+      setIsLoading(false);
     }
   };
 
-  const handleReject = async () => {
-    const reason = prompt("Enter rejection reason:");
-    if (!reason) return;
-
-    setIsLoading("reject");
-    try {
-      const result = await rejectDemoRequest(id, reason);
-      if (result.success) {
-        router.refresh();
-      } else {
-        alert(result.error || "Failed to reject demo request");
-      }
-    } catch (error) {
-      alert("An error occurred");
-    } finally {
-      setIsLoading(null);
-    }
-  };
-
-  if (status === "pending") {
-    return (
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleApprove}
-          disabled={isLoading !== null}
-        >
-          {isLoading === "approve" ? "Approving..." : "Approve"}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleReject}
-          disabled={isLoading !== null}
-        >
-          {isLoading === "reject" ? "Rejecting..." : "Reject"}
-        </Button>
-      </div>
-    );
-  }
-
-  if (status === "approved") {
-    return (
-      <Button variant="outline" size="sm" disabled>
-        Active Demo
-      </Button>
-    );
-  }
-
-  return null;
+  return (
+    <select
+      value={currentStatus}
+      onChange={(e) => handleStatusChange(e.target.value)}
+      disabled={isLoading}
+      className="block w-full rounded-md border-gray-300 py-1.5 px-2 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {statuses.map((s) => (
+        <option key={s.value} value={s.value}>
+          {s.label}
+        </option>
+      ))}
+    </select>
+  );
 }
