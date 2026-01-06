@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MechanicBuddy.Management.Api.Services;
 using MechanicBuddy.Management.Api.Domain;
+using MechanicBuddy.Management.Api.Infrastructure;
 
 namespace MechanicBuddy.Management.Api.Controllers;
 
@@ -11,11 +12,16 @@ namespace MechanicBuddy.Management.Api.Controllers;
 public class TenantsController : ControllerBase
 {
     private readonly TenantService _tenantService;
+    private readonly ITenantDatabaseProvisioner _dbProvisioner;
     private readonly ILogger<TenantsController> _logger;
 
-    public TenantsController(TenantService tenantService, ILogger<TenantsController> logger)
+    public TenantsController(
+        TenantService tenantService,
+        ITenantDatabaseProvisioner dbProvisioner,
+        ILogger<TenantsController> logger)
     {
         _tenantService = tenantService;
+        _dbProvisioner = dbProvisioner;
         _logger = logger;
     }
 
@@ -115,13 +121,50 @@ public class TenantsController : ControllerBase
     [Authorize(Policy = "SuperAdminOnly")]
     public async Task<IActionResult> Delete(string tenantId)
     {
-        var success = await _tenantService.DeleteTenantAsync(tenantId);
-        if (!success)
+        var result = await _tenantService.DeleteTenantAsync(tenantId);
+
+        if (!result.Success)
         {
-            return NotFound();
+            // Both K8s and DB deletion failed
+            return BadRequest(new
+            {
+                message = "Failed to delete tenant",
+                kubernetesError = result.KubernetesError,
+                databaseError = result.DatabaseError
+            });
         }
 
-        return NoContent();
+        // Return details about what was deleted
+        return Ok(new
+        {
+            message = "Tenant deleted successfully",
+            kubernetesDeleted = result.KubernetesDeleted,
+            databaseDeleted = result.DatabaseDeleted,
+            tenantNotInDatabase = result.TenantNotInDatabase,
+            warnings = GetDeleteWarnings(result)
+        });
+    }
+
+    private static List<string> GetDeleteWarnings(Services.DeleteTenantResult result)
+    {
+        var warnings = new List<string>();
+
+        if (result.TenantNotInDatabase)
+        {
+            warnings.Add("Tenant was not found in database (orphaned Kubernetes resources were cleaned up)");
+        }
+
+        if (!string.IsNullOrEmpty(result.KubernetesError))
+        {
+            warnings.Add($"Kubernetes cleanup warning: {result.KubernetesError}");
+        }
+
+        if (!string.IsNullOrEmpty(result.DatabaseError))
+        {
+            warnings.Add($"Database cleanup warning: {result.DatabaseError}");
+        }
+
+        return warnings;
     }
 
     [HttpGet("stats")]
@@ -129,6 +172,51 @@ public class TenantsController : ControllerBase
     {
         var stats = await _tenantService.GetStatsAsync();
         return Ok(stats);
+    }
+
+    /// <summary>
+    /// Provisions the database for an existing tenant.
+    /// Use this to fix tenants that were created without database provisioning.
+    /// </summary>
+    [HttpPost("{tenantId}/provision-database")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> ProvisionDatabase(string tenantId)
+    {
+        try
+        {
+            // Check if tenant exists in the management database
+            var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+            }
+
+            // Check if database already exists
+            var exists = await _dbProvisioner.TenantDatabaseExistsAsync(tenantId);
+            if (exists)
+            {
+                return Conflict(new { message = $"Database schema for tenant '{tenantId}' already exists" });
+            }
+
+            // Provision the database
+            _logger.LogInformation("Provisioning database for existing tenant {TenantId}", tenantId);
+            var connectionString = await _dbProvisioner.ProvisionTenantDatabaseAsync(tenantId);
+
+            // Update tenant with connection string
+            tenant.DbConnectionString = connectionString;
+            await _tenantService.UpdateTenantAsync(tenant);
+
+            return Ok(new
+            {
+                message = $"Database provisioned successfully for tenant '{tenantId}'",
+                connectionString
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to provision database for tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }
 

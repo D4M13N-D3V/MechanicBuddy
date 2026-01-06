@@ -4,6 +4,16 @@ using MechanicBuddy.Management.Api.Infrastructure;
 
 namespace MechanicBuddy.Management.Api.Services;
 
+public class DeleteTenantResult
+{
+    public bool Success { get; set; }
+    public bool KubernetesDeleted { get; set; }
+    public bool DatabaseDeleted { get; set; }
+    public bool TenantNotInDatabase { get; set; }
+    public string? KubernetesError { get; set; }
+    public string? DatabaseError { get; set; }
+}
+
 public class TenantService
 {
     private readonly ITenantRepository _tenantRepository;
@@ -165,27 +175,50 @@ public class TenantService
         return await _tenantRepository.UpdateAsync(tenant);
     }
 
-    public async Task<bool> DeleteTenantAsync(string tenantId)
+    public async Task<DeleteTenantResult> DeleteTenantAsync(string tenantId)
     {
         var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
-        if (tenant == null)
-        {
-            return false;
-        }
+        var result = new DeleteTenantResult();
 
+        // Always try to delete Kubernetes resources (handles orphaned resources)
         try
         {
-            // Delete Kubernetes resources
             await _k8sClient.DeleteNamespaceAsync(tenantId);
-
-            // Delete from database
-            return await _tenantRepository.DeleteAsync(tenant.Id);
+            result.KubernetesDeleted = true;
+            _logger.LogInformation("Deleted Kubernetes resources for tenant {TenantId}", tenantId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete tenant {TenantId}", tenantId);
-            throw;
+            _logger.LogWarning(ex, "Failed to delete Kubernetes resources for tenant {TenantId}", tenantId);
+            result.KubernetesError = ex.Message;
         }
+
+        // Delete from database if tenant exists
+        if (tenant != null)
+        {
+            try
+            {
+                var deleted = await _tenantRepository.DeleteAsync(tenant.Id);
+                result.DatabaseDeleted = deleted;
+                if (deleted)
+                {
+                    _logger.LogInformation("Deleted tenant {TenantId} from database", tenantId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete tenant {TenantId} from database", tenantId);
+                result.DatabaseError = ex.Message;
+            }
+        }
+        else
+        {
+            _logger.LogWarning("Tenant {TenantId} not found in database (may be orphaned K8s resources only)", tenantId);
+            result.TenantNotInDatabase = true;
+        }
+
+        result.Success = result.KubernetesDeleted || result.DatabaseDeleted;
+        return result;
     }
 
     public async Task<Dictionary<string, object>> GetStatsAsync()

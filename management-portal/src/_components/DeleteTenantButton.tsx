@@ -23,17 +23,30 @@ export function DeleteTenantButton({ tenantId, companyName }: DeleteTenantButton
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
     setError(null);
+    setWarnings([]);
 
     const response = await deleteTenant(tenantId);
 
-    if (response.success) {
-      setDialogOpen(false);
-      router.push("/dashboard/tenants");
-      router.refresh();
+    if (response.success && response.data) {
+      // Show warnings if any before redirecting
+      if (response.data.warnings && response.data.warnings.length > 0) {
+        setWarnings(response.data.warnings);
+        // Wait a moment to show warnings then redirect
+        setTimeout(() => {
+          setDialogOpen(false);
+          router.push("/dashboard/tenants");
+          router.refresh();
+        }, 2000);
+      } else {
+        setDialogOpen(false);
+        router.push("/dashboard/tenants");
+        router.refresh();
+      }
     } else {
       setError(response.error || "Failed to delete tenant");
       setIsDeleting(false);
@@ -70,6 +83,17 @@ export function DeleteTenantButton({ tenantId, companyName }: DeleteTenantButton
             <p className="text-sm text-red-600 mt-4 p-3 bg-red-50 rounded-lg">
               {error}
             </p>
+          )}
+          {warnings.length > 0 && (
+            <div className="text-sm text-amber-600 mt-4 p-3 bg-amber-50 rounded-lg">
+              <p className="font-medium">Deleted with warnings:</p>
+              <ul className="list-disc list-inside mt-1">
+                {warnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+              <p className="mt-2 text-xs">Redirecting...</p>
+            </div>
           )}
         </DialogContent>
 

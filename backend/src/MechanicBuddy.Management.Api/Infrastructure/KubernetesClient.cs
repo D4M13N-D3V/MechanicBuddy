@@ -10,6 +10,7 @@ public class KubernetesClient : IKubernetesClient
     private readonly ILogger<KubernetesClient> _logger;
     private readonly ICloudflareClient _cloudflareClient;
     private readonly INpmClient _npmClient;
+    private readonly ITenantDatabaseProvisioner _dbProvisioner;
     private readonly string _baseDomain;
     private readonly string _postgresHost;
     private readonly string _postgresUser;
@@ -30,12 +31,14 @@ public class KubernetesClient : IKubernetesClient
         ILogger<KubernetesClient> logger,
         ICloudflareClient cloudflareClient,
         INpmClient npmClient,
+        ITenantDatabaseProvisioner dbProvisioner,
         IKubernetes? kubernetes = null)
     {
         _configuration = configuration;
         _logger = logger;
         _cloudflareClient = cloudflareClient;
         _npmClient = npmClient;
+        _dbProvisioner = dbProvisioner;
 
         if (kubernetes != null)
         {
@@ -605,19 +608,12 @@ public class KubernetesClient : IKubernetesClient
 
     public async Task<string> CreateTenantDatabaseAsync(string tenantId)
     {
-        // In a real implementation, this would:
-        // 1. Create a new PostgreSQL database/schema
-        // 2. Run migrations
-        // 3. Return connection string
+        _logger.LogInformation("Creating database for tenant {TenantId}", tenantId);
 
-        // For now, we'll create a schema in the shared database
-        var schemaName = $"tenant_{tenantId.Replace("-", "_")}";
-        var connectionString = $"Host={_postgresHost};Database=mechanicbuddy;Username={_postgresUser};Password={_postgresPassword};SearchPath={schemaName}";
+        // Use the database provisioner to create schema and run migrations
+        var connectionString = await _dbProvisioner.ProvisionTenantDatabaseAsync(tenantId);
 
-        _logger.LogInformation("Created database schema {Schema} for tenant {TenantId}", schemaName, tenantId);
-
-        // In production, execute SQL to create schema and run migrations
-        await Task.CompletedTask;
+        _logger.LogInformation("Successfully created database for tenant {TenantId}", tenantId);
 
         return connectionString;
     }

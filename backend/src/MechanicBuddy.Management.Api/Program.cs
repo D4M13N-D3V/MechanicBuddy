@@ -190,24 +190,29 @@ builder.Services.AddSingleton<INpmClient>(sp =>
     return new NoOpNpmClient(sp.GetRequiredService<ILogger<NoOpNpmClient>>());
 });
 
+// Register Database Provisioner
+builder.Services.AddSingleton<ITenantDatabaseProvisioner, TenantDatabaseProvisioner>();
+
 // Register Infrastructure Clients
 builder.Services.AddSingleton<IKubernetesClient>(sp =>
 {
     var kubernetes = sp.GetService<IKubernetes>();
     var cloudflareClient = sp.GetRequiredService<ICloudflareClient>();
     var npmClient = sp.GetRequiredService<INpmClient>();
+    var dbProvisioner = sp.GetRequiredService<ITenantDatabaseProvisioner>();
     var config = sp.GetRequiredService<IConfiguration>();
 
     if (kubernetes == null)
     {
         var logger = sp.GetRequiredService<ILogger<NoOpKubernetesClient>>();
-        return new NoOpKubernetesClient(logger, config);
+        return new NoOpKubernetesClient(logger, config, dbProvisioner);
     }
     return new KubernetesClient(
         config,
         sp.GetRequiredService<ILogger<KubernetesClient>>(),
         cloudflareClient,
         npmClient,
+        dbProvisioner,
         kubernetes);
 });
 builder.Services.AddSingleton<IStripeClient, StripeClient>();

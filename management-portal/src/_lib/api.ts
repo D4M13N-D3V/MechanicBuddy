@@ -102,8 +102,16 @@ export async function updateTenantStatus(
   });
 }
 
-export async function deleteTenant(tenantId: string): Promise<ApiResponse<void>> {
-  return fetchApi<void>(`/api/tenants/${tenantId}`, {
+export interface DeleteTenantResponse {
+  message: string;
+  kubernetesDeleted: boolean;
+  databaseDeleted: boolean;
+  tenantNotInDatabase: boolean;
+  warnings: string[];
+}
+
+export async function deleteTenant(tenantId: string): Promise<ApiResponse<DeleteTenantResponse>> {
+  return fetchApi<DeleteTenantResponse>(`/api/tenants/${tenantId}`, {
     method: "DELETE",
   });
 }
