@@ -47,7 +47,7 @@ When running MechanicBuddy locally, a default user is created for convenience:
 
 ```txt
 Username: admin
-Password: mechanicbuddy
+Password: carcare
 ```
 
 ## 📸 Screenshots
