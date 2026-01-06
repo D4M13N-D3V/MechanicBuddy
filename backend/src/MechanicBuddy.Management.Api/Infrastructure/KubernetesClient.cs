@@ -239,7 +239,7 @@ public class KubernetesClient : IKubernetesClient
                                 Image = _apiImage,
                                 Ports = new List<V1ContainerPort>
                                 {
-                                    new V1ContainerPort { ContainerPort = 80 }
+                                    new V1ContainerPort { ContainerPort = 15567 }
                                 },
                                 VolumeMounts = new List<V1VolumeMount>
                                 {
@@ -305,7 +305,7 @@ public class KubernetesClient : IKubernetesClient
                     {
                         Protocol = "TCP",
                         Port = 80,
-                        TargetPort = 80
+                        TargetPort = 15567
                     }
                 },
                 Type = "ClusterIP"
