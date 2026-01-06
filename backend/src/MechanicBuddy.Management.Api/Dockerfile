@@ -2,14 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project file and restore
-COPY backend/src/MechanicBuddy.Management.Api/*.csproj ./MechanicBuddy.Management.Api/
-RUN dotnet restore MechanicBuddy.Management.Api/MechanicBuddy.Management.Api.csproj
+# Copy all source files (needed for project references)
+COPY backend/src/ ./
 
-# Copy source and publish
-COPY backend/src/MechanicBuddy.Management.Api/ ./MechanicBuddy.Management.Api/
+# Restore and publish
+RUN dotnet restore MechanicBuddy.Management.Api/MechanicBuddy.Management.Api.csproj
 RUN dotnet publish MechanicBuddy.Management.Api/MechanicBuddy.Management.Api.csproj \
-    -c Release -o /app/publish
+    -c Release -o /app/publish --no-restore
 
 # ---------- runtime ----------
 FROM mcr.microsoft.com/dotnet/aspnet:9.0

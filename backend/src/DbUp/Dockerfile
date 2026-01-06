@@ -2,13 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project file and restore
-COPY backend/src/DbUp/*.csproj ./DbUp/
-RUN dotnet restore DbUp/DbUp.csproj
+# Copy all source files (needed for project references)
+COPY backend/src/ ./
 
-# Copy source and publish
-COPY backend/src/DbUp/ ./DbUp/
-RUN dotnet publish DbUp/DbUp.csproj -c Release -o /app/publish
+# Restore and publish
+RUN dotnet restore DbUp/DbUp.csproj
+RUN dotnet publish DbUp/DbUp.csproj -c Release -o /app/publish --no-restore
 
 # ---------- runtime ----------
 FROM mcr.microsoft.com/dotnet/runtime:9.0
