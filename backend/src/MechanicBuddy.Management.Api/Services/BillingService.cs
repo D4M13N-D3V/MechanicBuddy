@@ -199,7 +199,7 @@ public class BillingService
         {
             TenantId = tenantId,
             EventType = "payment_succeeded",
-            Amount = (invoice.AmountPaid ?? 0) / 100m, // Convert from cents
+            Amount = invoice.AmountPaid / 100m, // Convert from cents
             Currency = invoice.Currency?.ToUpperInvariant() ?? "USD",
             StripeEventId = stripeEvent.Id,
             InvoiceId = invoice.Id,
@@ -500,15 +500,12 @@ public class BillingService
             _ => tenant.Status
         };
 
-        if (subscription.CurrentPeriodEnd.HasValue)
-        {
-            tenant.SubscriptionEndsAt = subscription.CurrentPeriodEnd.Value;
-        }
+        tenant.SubscriptionEndsAt = subscription.CurrentPeriodEnd;
 
         // Update mechanic count from quantity
         if (subscription.Items?.Data != null && subscription.Items.Data.Any())
         {
-            var quantity = subscription.Items.Data.First().Quantity ?? 0;
+            var quantity = subscription.Items.Data.First().Quantity;
             tenant.MaxMechanics = (int)quantity;
             tenant.Tier = GetTierName((int)quantity);
         }
@@ -525,7 +522,7 @@ public class BillingService
             {
                 ["subscription_id"] = subscription.Id,
                 ["status"] = subscription.Status,
-                ["quantity"] = subscription.Items?.Data?.FirstOrDefault()?.Quantity ?? 0
+                ["quantity"] = subscription.Items?.Data?.FirstOrDefault()?.Quantity ?? 0L
             }
         });
 
@@ -562,13 +559,13 @@ public class BillingService
         {
             TenantId = tenantId,
             EventType = "payment_failed",
-            Amount = (invoice.AmountDue ?? 0) / 100m,
+            Amount = invoice.AmountDue / 100m,
             Currency = invoice.Currency?.ToUpperInvariant() ?? "USD",
             InvoiceId = invoice.Id,
             CreatedAt = DateTime.UtcNow,
             Metadata = new Dictionary<string, object>
             {
-                ["attempt_count"] = invoice.AttemptCount ?? 0,
+                ["attempt_count"] = invoice.AttemptCount,
                 ["next_payment_attempt"] = invoice.NextPaymentAttempt?.ToString("o") ?? "none"
             }
         });

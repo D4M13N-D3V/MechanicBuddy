@@ -31,7 +31,7 @@ public static class ServiceCollectionExtensions
                 logger.LogInformation("Using in-cluster Kubernetes configuration");
                 return new Kubernetes(config);
             }
-            catch (KubeConfigException)
+            catch (k8s.Exceptions.KubeConfigException)
             {
                 try
                 {

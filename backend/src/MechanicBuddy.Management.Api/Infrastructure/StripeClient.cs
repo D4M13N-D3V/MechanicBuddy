@@ -178,13 +178,13 @@ public class StripeClient : IStripeClient
     // Payment methods and checkout
     public async Task<string> CreateCheckoutSessionAsync(string customerId, string priceId, string successUrl, string cancelUrl)
     {
-        var options = new SessionCreateOptions
+        var options = new Stripe.Checkout.SessionCreateOptions
         {
             Customer = customerId,
             PaymentMethodTypes = new List<string> { "card" },
-            LineItems = new List<SessionLineItemOptions>
+            LineItems = new List<Stripe.Checkout.SessionLineItemOptions>
             {
-                new SessionLineItemOptions
+                new Stripe.Checkout.SessionLineItemOptions
                 {
                     Price = priceId,
                     Quantity = 1
@@ -195,7 +195,7 @@ public class StripeClient : IStripeClient
             CancelUrl = cancelUrl
         };
 
-        var service = new SessionService();
+        var service = new Stripe.Checkout.SessionService();
         var session = await service.CreateAsync(options);
 
         _logger.LogInformation("Created checkout session {SessionId} for customer {CustomerId}", session.Id, customerId);
