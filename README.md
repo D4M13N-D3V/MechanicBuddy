@@ -146,8 +146,8 @@ sudo chown -R $USER /opt/apps /opt/puppeteer /var/carcare
 Clone MechanicBuddy repository:
 
 ```bash
-git clone https://github.com/yourusername/mechanicbuddy.git /opt/apps/mechanicbuddy
-cd /opt/apps/mechanicbuddy
+git clone https://github.com/yourusername/mechanicbuddy.git /opt/apps/carcare
+cd /opt/apps/carcare
 
 # Generate secrets
 chmod +x scripts/setup-secrets.sh
