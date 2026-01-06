@@ -3,13 +3,13 @@ services:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: mechanicbuddy
-      POSTGRES_PASSWORD: mechanicbuddy
-      POSTGRES_DB: mechanicbuddy            # template DB name seed
+      POSTGRES_USER: carcare
+      POSTGRES_PASSWORD: carcare
+      POSTGRES_DB: carcare            # template DB name seed
     volumes:
       - dbdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "mechanicbuddy"]
+      test: ["CMD", "pg_isready", "-U", "carcare"]
       interval: 10s
       retries: 10
 
