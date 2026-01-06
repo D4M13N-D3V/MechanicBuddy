@@ -17,6 +17,8 @@ spec:
         app.kubernetes.io/name: mechanicbuddy
         app.kubernetes.io/component: management-portal
     spec:
+      imagePullSecrets:
+        - name: ghcr-credentials
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001

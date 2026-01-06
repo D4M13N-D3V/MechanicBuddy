@@ -18,6 +18,8 @@ spec:
         app.kubernetes.io/component: management-api
     spec:
       serviceAccountName: management-api
+      imagePullSecrets:
+        - name: ghcr-credentials
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
