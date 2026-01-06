@@ -9,6 +9,7 @@ resources:
   # Do NOT add secrets.yaml here to avoid ID conflicts
 
 # Production-specific patches
+# NOTE: For actual production, use SealedSecrets or External Secrets Operator
 patches:
   # Override DB credentials
   - target:
@@ -17,7 +18,7 @@ patches:
     patch: |
       - op: replace
         path: /stringData/password
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "ProductionDBPassword456!"
   # Override API secrets
   - target:
       kind: Secret
@@ -25,16 +26,16 @@ patches:
     patch: |
       - op: replace
         path: /stringData/connection-string
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=ProductionDBPassword456!"
       - op: replace
         path: /stringData/jwt-secret
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "REDACTED_JWT"
       - op: replace
         path: /stringData/stripe-secret-key
         value: "REDACTED_STRIPE_SK"
       - op: replace
         path: /stringData/stripe-webhook-secret
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "whsec_PRODUCTION_WEBHOOK_SECRET"
       - op: replace
         path: /stringData/resend-api-key
         value: "REDACTED_RESEND_KEY"
@@ -45,7 +46,7 @@ patches:
     patch: |
       - op: replace
         path: /stringData/session-secret
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "ProductionSessionSecretMinimum32Characters!"
       - op: replace
         path: /stringData/stripe-publishable-key
         value: "REDACTED_STRIPE_PK"
@@ -56,7 +57,7 @@ patches:
     patch: |
       - op: replace
         path: /stringData/api-token
-        value: "REPLACE_WITH_SEALED_SECRET"
+        value: "production-cronjob-api-token-456"
   # Higher replicas for production
   - target:
       kind: Deployment

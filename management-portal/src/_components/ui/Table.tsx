@@ -16,7 +16,7 @@ Table.displayName = "Table";
 
 const TableHeader = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <thead ref={ref} className={cn("bg-gray-50", className)} {...props} />
+    <thead ref={ref} className={cn("bg-dark-50", className)} {...props} />
   )
 );
 TableHeader.displayName = "TableHeader";
@@ -36,7 +36,7 @@ const TableFooter = forwardRef<HTMLTableSectionElement, HTMLAttributes<HTMLTable
   ({ className, ...props }, ref) => (
     <tfoot
       ref={ref}
-      className={cn("border-t bg-gray-50 font-medium", className)}
+      className={cn("border-t bg-dark-50 font-medium", className)}
       {...props}
     />
   )
@@ -48,7 +48,7 @@ const TableRow = forwardRef<HTMLTableRowElement, HTMLAttributes<HTMLTableRowElem
     <tr
       ref={ref}
       className={cn(
-        "border-b transition-colors hover:bg-gray-50",
+        "border-b border-dark-100 transition-colors hover:bg-dark-50",
         className
       )}
       {...props}
@@ -62,7 +62,7 @@ const TableHead = forwardRef<HTMLTableCellElement, HTMLAttributes<HTMLTableCellE
     <th
       ref={ref}
       className={cn(
-        "h-12 px-4 text-left align-middle font-medium text-gray-700",
+        "h-12 px-4 text-left align-middle font-semibold text-dark-600 uppercase text-xs tracking-wider",
         className
       )}
       {...props}
@@ -75,7 +75,7 @@ const TableCell = forwardRef<HTMLTableCellElement, HTMLAttributes<HTMLTableCellE
   ({ className, ...props }, ref) => (
     <td
       ref={ref}
-      className={cn("p-4 align-middle", className)}
+      className={cn("p-4 align-middle text-dark-700", className)}
       {...props}
     />
   )
@@ -86,7 +86,7 @@ const TableCaption = forwardRef<HTMLTableCaptionElement, HTMLAttributes<HTMLTabl
   ({ className, ...props }, ref) => (
     <caption
       ref={ref}
-      className={cn("mt-4 text-sm text-gray-500", className)}
+      className={cn("mt-4 text-sm text-dark-500", className)}
       {...props}
     />
   )
