@@ -77,15 +77,23 @@ public class BillingEventRepository : IBillingEventRepository
     {
         using var connection = new NpgsqlConnection(_connectionString);
         var sql = @"SELECT COALESCE(SUM(amount), 0) FROM management.billing_events
-                    WHERE event_type = 'payment_succeeded'
-                    AND (@StartDate IS NULL OR created_at >= @StartDate)
-                    AND (@EndDate IS NULL OR created_at <= @EndDate)";
+                    WHERE event_type = 'payment_succeeded'";
 
-        return await connection.ExecuteScalarAsync<decimal>(sql, new
+        var parameters = new DynamicParameters();
+
+        if (startDate.HasValue)
         {
-            StartDate = startDate,
-            EndDate = endDate
-        });
+            sql += " AND created_at >= @StartDate";
+            parameters.Add("StartDate", startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            sql += " AND created_at <= @EndDate";
+            parameters.Add("EndDate", endDate.Value);
+        }
+
+        return await connection.ExecuteScalarAsync<decimal>(sql, parameters);
     }
 
     public async Task<IEnumerable<BillingEvent>> GetAllAsync(int skip = 0, int take = 50)

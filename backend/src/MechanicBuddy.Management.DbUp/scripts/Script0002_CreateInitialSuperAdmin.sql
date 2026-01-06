@@ -13,7 +13,7 @@ INSERT INTO management.super_admins (
 ) VALUES (
     'admin@mechanicbuddy.app',
     -- BCrypt hash of 'admin123' - CHANGE THIS PASSWORD AFTER FIRST LOGIN
-    '$2a$11$rKkPO6qoNhWp0tLbLx.hS.0qYXpFqnAMfzJLEpSOvVBnR8YcFJ8Hy',
+    '$2b$11$sUWXt48bueT3svslqEKCKucG4S8OTOGxG7yljj/D6Yq6xdbFsQhDu',
     'System Administrator',
     'owner',
     true
