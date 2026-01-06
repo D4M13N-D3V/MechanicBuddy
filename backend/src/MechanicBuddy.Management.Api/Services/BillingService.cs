@@ -9,7 +9,7 @@ public class BillingService
 {
     private readonly ITenantRepository _tenantRepository;
     private readonly IBillingEventRepository _billingEventRepository;
-    private readonly IStripeClient _stripeClient;
+    private readonly Infrastructure.IStripeClient _stripeClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BillingService> _logger;
 
@@ -24,7 +24,7 @@ public class BillingService
     public BillingService(
         ITenantRepository tenantRepository,
         IBillingEventRepository billingEventRepository,
-        IStripeClient stripeClient,
+        Infrastructure.IStripeClient stripeClient,
         IConfiguration configuration,
         ILogger<BillingService> logger)
     {
