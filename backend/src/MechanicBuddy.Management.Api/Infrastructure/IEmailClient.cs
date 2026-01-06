@@ -8,4 +8,5 @@ public interface IEmailClient
     Task SendWelcomeEmailAsync(string email, string companyName, string tenantUrl, string adminUsername, string adminPassword, DateTime expiresAt);
     Task SendDemoExpiringSoonEmailAsync(string email, string companyName, string apiUrl, DateTime expiresAt, string tenantId);
     Task SendDemoExpiredEmailAsync(string email, string companyName, string conversionUrl);
+    Task SendDemoStatusUpdateEmailAsync(string email, string companyName, string oldStatus, string newStatus);
 }

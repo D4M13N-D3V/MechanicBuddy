@@ -341,10 +341,26 @@ public class DemoRequestService
             throw new InvalidOperationException("Demo request not found");
         }
 
+        var oldStatus = demoRequest.Status;
         demoRequest.Status = status;
         await _demoRequestRepository.UpdateAsync(demoRequest);
 
-        _logger.LogInformation("Updated demo request {Id} status to {Status}", id, status);
+        // Send status update notification email
+        try
+        {
+            await _emailClient.SendDemoStatusUpdateEmailAsync(
+                demoRequest.Email,
+                demoRequest.CompanyName,
+                oldStatus,
+                status
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send status update email to {Email}", demoRequest.Email);
+        }
+
+        _logger.LogInformation("Updated demo request {Id} status from {OldStatus} to {NewStatus}", id, oldStatus, status);
 
         return demoRequest;
     }

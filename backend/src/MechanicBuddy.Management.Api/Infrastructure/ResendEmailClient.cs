@@ -192,6 +192,36 @@ public class ResendEmailClient : IEmailClient
         await SendEmailAsync(email, subject, html);
     }
 
+    public async Task SendDemoStatusUpdateEmailAsync(string email, string companyName, string oldStatus, string newStatus)
+    {
+        var statusMessages = new Dictionary<string, string>
+        {
+            ["new"] = "Your demo request has been received and is awaiting review.",
+            ["pending_trial"] = "Great news! Your demo request has been approved and your trial is being set up. You'll receive access details shortly.",
+            ["complete"] = "Your demo trial has been completed. We hope you enjoyed exploring MechanicBuddy!",
+            ["cancelled"] = "Your demo request has been cancelled. If this was a mistake or you'd like to request a new demo, please visit our website."
+        };
+
+        var statusMessage = statusMessages.TryGetValue(newStatus, out var msg)
+            ? msg
+            : $"Your demo request status has been updated to: {newStatus}";
+
+        var subject = $"Demo Request Update - MechanicBuddy";
+        var html = $@"
+            <h1>Demo Request Status Update</h1>
+            <p>Hi {companyName},</p>
+            <p>{statusMessage}</p>
+            <div style=""background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;"">
+                <p style=""margin: 0;""><strong>Previous status:</strong> {oldStatus}</p>
+                <p style=""margin: 10px 0 0 0;""><strong>New status:</strong> {newStatus}</p>
+            </div>
+            <p>If you have any questions, please don't hesitate to contact our support team.</p>
+            <p>Best regards,<br/>The MechanicBuddy Team</p>
+        ";
+
+        await SendEmailAsync(email, subject, html);
+    }
+
     private async Task SendEmailAsync(string to, string subject, string html)
     {
         try
