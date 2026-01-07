@@ -67,7 +67,7 @@ namespace MechanicBuddy.Core.Application.Services
                 // Create admin employee
                 await connection.ExecuteAsync(@"
                 INSERT INTO domain.employee(id, firstname, lastname, email, phone, proffession, description, introducedat)
-                VALUES (@Id, 'Demo', 'Admin', 'admin@example.com', '+1234567890', 'Administrator', 'Demo Admin Account', CURRENT_TIMESTAMP)",
+                VALUES (@Id, 'Demo', 'Admin', 'admin@mechanicbuddy.app', '+1234567890', 'Administrator', 'Demo Admin Account', CURRENT_TIMESTAMP)",
                     new { Id = adminEmployeeId });
 
                 // Update the user with the employee ID
@@ -101,7 +101,7 @@ namespace MechanicBuddy.Core.Application.Services
 
                 await connection.ExecuteAsync(@"
                     INSERT INTO domain.clientemail(clientid, address, isactive)
-                    VALUES (@ClientId, 'company@example.com', true)",
+                    VALUES (@ClientId, 'company@mechanicbuddy.app', true)",
                     new { ClientId = companyClientId });
 
                 var privateClientId = Guid.NewGuid();
@@ -117,7 +117,7 @@ namespace MechanicBuddy.Core.Application.Services
 
                 await connection.ExecuteAsync(@"
                     INSERT INTO domain.clientemail(clientid, address, isactive)
-                    VALUES (@ClientId, 'john.doe@example.com', true)",
+                    VALUES (@ClientId, 'john.doe@mechanicbuddy.app', true)",
                     new { ClientId = privateClientId });
 
                 // Create vehicles
@@ -171,13 +171,13 @@ namespace MechanicBuddy.Core.Application.Services
                 var mechanic1Id = Guid.NewGuid();
                 await connection.ExecuteAsync(@"
                     INSERT INTO domain.employee(id, firstname, lastname, email, phone, proffession, description, introducedat)
-                    VALUES (@Id, 'Mike', 'Smith', 'mike.smith@example.com', '+1111222333', 'Senior Mechanic', 'Experienced mechanic', CURRENT_TIMESTAMP)",
+                    VALUES (@Id, 'Mike', 'Smith', 'mike.smith@mechanicbuddy.app', '+1111222333', 'Senior Mechanic', 'Experienced mechanic', CURRENT_TIMESTAMP)",
                     new { Id = mechanic1Id });
 
                 var mechanic2Id = Guid.NewGuid();
                 await connection.ExecuteAsync(@"
                     INSERT INTO domain.employee(id, firstname, lastname, email, phone, proffession, description, introducedat)
-                    VALUES (@Id, 'Emily', 'Johnson', 'emily.johnson@example.com', '+1444555666', 'Junior Mechanic', 'New mechanic', CURRENT_TIMESTAMP)",
+                    VALUES (@Id, 'Emily', 'Johnson', 'emily.johnson@mechanicbuddy.app', '+1444555666', 'Junior Mechanic', 'New mechanic', CURRENT_TIMESTAMP)",
                     new { Id = mechanic2Id });
 
                 // Create works with offers and jobs

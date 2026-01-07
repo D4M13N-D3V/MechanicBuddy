@@ -30,7 +30,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
                     "Default Company",
                     "+1234567890",
                     "123 Main St",
-                    "info@example.com",
+                    "noreply@mechanicbuddy.app",
                     "EE123456789012",
                     "REG12345",
                     "KMKR123456"
