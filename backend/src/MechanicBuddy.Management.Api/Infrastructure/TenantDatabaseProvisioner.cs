@@ -14,8 +14,8 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     private readonly string _templateDbName;
     private readonly string _tenancyDbName;
 
-    // Default admin password hash (password: "carcare")
-    private const string DefaultAdminPasswordHash = "$2a$11$zsTS62pGn5Cfca4CgqRJxebx45je/3nJj.puxIArFwtAjHew67m6i";
+    // Default admin password hash (password: "06011998abcABC!@draco!@")
+    private const string DefaultAdminPasswordHash = "$2b$11$us0tnoEtiguvnj2CVi2KXOW5hhYgsm5W7ohaJqqjB7Q0dER3pz/EG";
 
     // Template employee ID (from mechanicbuddy-testt template database)
     private const string TemplateEmployeeId = "a7227c1f-3bbc-4367-a9b8-baa83d0f19ca";
