@@ -134,7 +134,7 @@ export interface IGallerySectionOptions {
   description: string | null;
 }
 
-// Gallery Photo Item
+// Gallery Photo Item (for admin with full image data)
 export interface IGalleryPhotoItem {
   id?: string;
   imageBase64: string | null;
@@ -142,6 +142,14 @@ export interface IGalleryPhotoItem {
   caption: string | null;
   sortOrder: number;
   isActive: boolean;
+}
+
+// Public Gallery Photo Item (lightweight with URL)
+export interface IPublicGalleryPhotoItem {
+  id: string;
+  imageUrl: string;
+  caption: string;
+  sortOrder: number;
 }
 
 // Social Link Item
@@ -157,7 +165,7 @@ export interface ISocialLinkItem {
   showInFooter: boolean;
 }
 
-// Full Landing Content Options
+// Full Landing Content Options (for admin)
 export interface ILandingContentOptions {
   hero: IHeroOptions;
   services: IServiceItem[];
@@ -170,6 +178,22 @@ export interface ILandingContentOptions {
   sectionVisibility: ISectionVisibilityOptions;
   gallerySection: IGallerySectionOptions;
   galleryPhotos: IGalleryPhotoItem[];
+  socialLinks: ISocialLinkItem[];
+}
+
+// Public Landing Content Options (lightweight - uses image URLs)
+export interface IPublicLandingContentOptions {
+  hero: IHeroOptions;
+  services: IServiceItem[];
+  about: IAboutOptions;
+  stats: IStatItem[];
+  tipsSection: ITipsSectionOptions;
+  tips: ITipItem[];
+  footer: IFooterOptions;
+  contact: IContactOptions;
+  sectionVisibility: ISectionVisibilityOptions;
+  gallerySection: IGallerySectionOptions;
+  galleryPhotos: IPublicGalleryPhotoItem[];
   socialLinks: ISocialLinkItem[];
 }
 
@@ -187,6 +211,6 @@ export interface ICompanyInfo {
 // Public Landing Page Data
 export interface IPublicLandingData {
   branding: IBrandingOptions;
-  content: ILandingContentOptions;
+  content: IPublicLandingContentOptions;
   companyInfo: ICompanyInfo;
 }

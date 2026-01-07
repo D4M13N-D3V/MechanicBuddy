@@ -1,3 +1,4 @@
+using MechanicBuddy.Core.Application.Configuration;
 using MechanicBuddy.Core.Application.Services;
 using MechanicBuddy.Core.Domain;
 using NHibernate;
@@ -335,6 +336,20 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
         {
             return await session.Query<LandingGalleryPhoto>()
                 .OrderBy(p => p.SortOrder)
+                .ToListAsync();
+        }
+
+        // Gallery Photo Metadata - only loads metadata, NOT the image binary data
+        public async Task<IList<GalleryPhotoMetadata>> GetGalleryPhotoMetadataAsync()
+        {
+            return await session.Query<LandingGalleryPhoto>()
+                .OrderBy(p => p.SortOrder)
+                .Select(p => new GalleryPhotoMetadata(
+                    p.Id,
+                    p.Caption ?? "",
+                    p.SortOrder,
+                    p.IsActive
+                ))
                 .ToListAsync();
         }
 

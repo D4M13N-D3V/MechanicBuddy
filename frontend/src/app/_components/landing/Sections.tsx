@@ -11,7 +11,7 @@ import {
     TruckIcon,
     PhotoIcon,
 } from "@heroicons/react/24/outline"
-import { IPublicLandingData, IServiceItem, IGalleryPhotoItem } from "@/app/home/settings/branding/model"
+import { IPublicLandingData, IServiceItem, IPublicGalleryPhotoItem } from "@/app/home/settings/branding/model"
 import { ServiceRequestForm } from "./ServiceRequestForm"
 import SocialIcons from "./SocialIcons"
 
@@ -224,15 +224,13 @@ export function TipsSection({ data }: { data: IPublicLandingData }) {
     )
 }
 
-function GalleryPhoto({ photo }: { photo: IGalleryPhotoItem }) {
-    const imageUrl = photo.id ? `/api/branding/gallery-photos/${photo.id}/image` : null
-
-    if (!imageUrl) return null
+function GalleryPhoto({ photo }: { photo: IPublicGalleryPhotoItem }) {
+    if (!photo.imageUrl) return null
 
     return (
         <div className="relative group overflow-hidden rounded-xl bg-slate-200 aspect-[4/3]">
             <img
-                src={imageUrl}
+                src={photo.imageUrl}
                 alt={photo.caption || 'Gallery photo'}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -250,9 +248,10 @@ export function GallerySection({ data }: { data: IPublicLandingData }) {
 
     if (!sectionVisibility?.galleryVisible) return null
 
-    const activePhotos = (galleryPhotos || []).filter(p => p.isActive).sort((a, b) => a.sortOrder - b.sortOrder)
+    // Public gallery photos are already filtered (active only) and sorted by backend
+    const photos = galleryPhotos || []
 
-    if (activePhotos.length === 0) return null
+    if (photos.length === 0) return null
 
     return (
         <section id="gallery" className="py-16 bg-white">
@@ -274,7 +273,7 @@ export function GallerySection({ data }: { data: IPublicLandingData }) {
                     )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {activePhotos.map((photo) => (
+                    {photos.map((photo) => (
                         <GalleryPhoto key={photo.id} photo={photo} />
                     ))}
                 </div>

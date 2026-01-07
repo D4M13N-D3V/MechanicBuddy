@@ -139,11 +139,27 @@ namespace MechanicBuddy.Core.Application.Configuration
         string Description
     );
 
-    // Gallery Photo Item
+    // Gallery Photo Item (with full image data for admin)
     public record GalleryPhotoOptions(
         Guid? Id,
         string ImageBase64,
         string ImageMimeType,
+        string Caption,
+        int SortOrder,
+        bool IsActive
+    );
+
+    // Gallery Photo Item (lightweight for public landing page - uses URL instead of base64)
+    public record PublicGalleryPhotoOptions(
+        Guid Id,
+        string ImageUrl,
+        string Caption,
+        int SortOrder
+    );
+
+    // Gallery Photo Metadata (for listing without loading binary data)
+    public record GalleryPhotoMetadata(
+        Guid Id,
         string Caption,
         int SortOrder,
         bool IsActive
@@ -178,10 +194,26 @@ namespace MechanicBuddy.Core.Application.Configuration
         List<SocialLinkOptions> SocialLinks
     );
 
+    // Public Landing Content Options (lightweight - no base64 images)
+    public record PublicLandingContentOptions(
+        HeroOptions Hero,
+        List<ServiceItemOptions> Services,
+        AboutOptions About,
+        List<StatItemOptions> Stats,
+        TipsSectionOptions TipsSection,
+        List<TipItemOptions> Tips,
+        FooterOptions Footer,
+        ContactOptions Contact,
+        SectionVisibilityOptions SectionVisibility,
+        GallerySectionOptions GallerySection,
+        List<PublicGalleryPhotoOptions> GalleryPhotos,
+        List<SocialLinkOptions> SocialLinks
+    );
+
     // Public Landing Page Data (for unauthenticated access)
     public record PublicLandingData(
         BrandingOptions Branding,
-        LandingContentOptions Content,
+        PublicLandingContentOptions Content,
         RequisitesOptions CompanyInfo
     );
 }

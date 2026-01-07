@@ -780,10 +780,59 @@ namespace MechanicBuddy.Core.Application.Services
             );
         }
 
-        public async Task<PublicLandingData> GetPublicLandingDataAsync()
+        // Get gallery photos with URLs instead of base64 (lightweight for public)
+        // Uses metadata query that does NOT load the image binary data
+        public async Task<List<PublicGalleryPhotoOptions>> GetPublicGalleryPhotosAsync(string baseUrl)
+        {
+            var photos = await repository.GetGalleryPhotoMetadataAsync();
+            return photos
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.SortOrder)
+                .Select(p => new PublicGalleryPhotoOptions(
+                    p.Id,
+                    $"{baseUrl}/api/branding/gallery-photos/{p.Id}/image",
+                    p.Caption ?? "",
+                    p.SortOrder
+                ))
+                .ToList();
+        }
+
+        // Get public landing content (lightweight - no base64 images)
+        public async Task<PublicLandingContentOptions> GetPublicLandingContentAsync(string baseUrl)
+        {
+            var hero = await GetHeroAsync();
+            var services = await GetServicesAsync();
+            var about = await GetAboutAsync();
+            var stats = await GetStatsAsync();
+            var tipsSection = await GetTipsSectionAsync();
+            var tips = await GetTipsAsync();
+            var footer = await GetFooterAsync();
+            var contact = await GetContactAsync();
+            var sectionVisibility = await GetSectionVisibilityAsync();
+            var gallerySection = await GetGallerySectionAsync();
+            var galleryPhotos = await GetPublicGalleryPhotosAsync(baseUrl);
+            var socialLinks = await GetSocialLinksAsync();
+
+            return new PublicLandingContentOptions(
+                hero,
+                services,
+                about,
+                stats,
+                tipsSection,
+                tips,
+                footer,
+                contact,
+                sectionVisibility,
+                gallerySection,
+                galleryPhotos,
+                socialLinks
+            );
+        }
+
+        public async Task<PublicLandingData> GetPublicLandingDataAsync(string baseUrl)
         {
             var branding = await GetBrandingAsync();
-            var content = await GetLandingContentAsync();
+            var content = await GetPublicLandingContentAsync(baseUrl);
             var requisites = await tenantConfigRepository.GetRequisitesAsync();
 
             var companyInfo = new RequisitesOptions(

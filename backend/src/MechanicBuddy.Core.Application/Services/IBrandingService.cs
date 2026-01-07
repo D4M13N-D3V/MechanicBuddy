@@ -87,6 +87,7 @@ namespace MechanicBuddy.Core.Application.Services
 
         // Full Content
         Task<LandingContentOptions> GetLandingContentAsync();
-        Task<PublicLandingData> GetPublicLandingDataAsync();
+        Task<PublicLandingContentOptions> GetPublicLandingContentAsync(string baseUrl);
+        Task<PublicLandingData> GetPublicLandingDataAsync(string baseUrl);
     }
 }

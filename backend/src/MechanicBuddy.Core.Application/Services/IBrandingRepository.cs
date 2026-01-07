@@ -1,3 +1,4 @@
+using MechanicBuddy.Core.Application.Configuration;
 using MechanicBuddy.Core.Domain;
 using System;
 using System.Collections.Generic;
@@ -62,6 +63,7 @@ namespace MechanicBuddy.Core.Application.Services
 
         // Gallery Photos
         Task<IList<LandingGalleryPhoto>> GetGalleryPhotosAsync();
+        Task<IList<GalleryPhotoMetadata>> GetGalleryPhotoMetadataAsync(); // Lightweight - no image data
         Task<LandingGalleryPhoto> GetGalleryPhotoByIdAsync(Guid id);
         Task SaveGalleryPhotoAsync(LandingGalleryPhoto photo);
         Task DeleteGalleryPhotoAsync(Guid id);

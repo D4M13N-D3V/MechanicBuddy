@@ -25,6 +25,16 @@ namespace MechanicBuddy.Http.Api.Controllers
             this.logger = logger;
         }
 
+        private string GetBaseUrl()
+        {
+            // Use X-Forwarded headers if behind a proxy, otherwise use Request
+            var forwardedProto = Request.Headers["X-Forwarded-Proto"].ToString();
+            var forwardedHost = Request.Headers["X-Forwarded-Host"].ToString();
+            var scheme = !string.IsNullOrEmpty(forwardedProto) ? forwardedProto : Request.Scheme;
+            var host = !string.IsNullOrEmpty(forwardedHost) ? forwardedHost : Request.Host.ToString();
+            return $"{scheme}://{host}";
+        }
+
         // GET /api/publiclanding
         [HttpGet]
         [ResponseCache(Duration = 60)] // Cache for 1 minute
@@ -32,7 +42,8 @@ namespace MechanicBuddy.Http.Api.Controllers
         {
             try
             {
-                return await brandingService.GetPublicLandingDataAsync();
+                var baseUrl = GetBaseUrl();
+                return await brandingService.GetPublicLandingDataAsync(baseUrl);
             }
             catch (Exception ex)
             {
@@ -60,11 +71,12 @@ namespace MechanicBuddy.Http.Api.Controllers
         // GET /api/publiclanding/content
         [HttpGet("content")]
         [ResponseCache(Duration = 60)]
-        public async Task<ActionResult<LandingContentOptions>> GetContent()
+        public async Task<ActionResult<PublicLandingContentOptions>> GetContent()
         {
             try
             {
-                return await brandingService.GetLandingContentAsync();
+                var baseUrl = GetBaseUrl();
+                return await brandingService.GetPublicLandingContentAsync(baseUrl);
             }
             catch (Exception ex)
             {
