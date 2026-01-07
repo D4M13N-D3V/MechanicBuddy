@@ -20,7 +20,7 @@ export function Navigation({ data }: NavigationProps) {
         { name: "Services", href: "#services" },
         { name: "About Us", href: "#about" },
         ...(content.tipsSection.isVisible && content.sectionVisibility?.tipsVisible ? [{ name: "Auto Tips", href: "#tips" }] : []),
-        ...(content.sectionVisibility?.galleryVisible && content.galleryPhotos?.some(p => p.isActive) ? [{ name: "Gallery", href: "#gallery" }] : []),
+        ...(content.sectionVisibility?.galleryVisible && content.galleryPhotos?.length > 0 ? [{ name: "Gallery", href: "#gallery" }] : []),
         { name: "Contact", href: "#contact" },
     ]
 
