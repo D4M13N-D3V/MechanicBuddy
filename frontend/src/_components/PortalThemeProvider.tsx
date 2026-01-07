@@ -24,7 +24,7 @@ export default function PortalThemeProvider({ colors, children }: PortalThemePro
             root.style.setProperty('--portal-sidebar-text', colors.sidebarText)
             root.style.setProperty('--portal-sidebar-active-bg', colors.sidebarActiveBg)
             root.style.setProperty('--portal-sidebar-active-text', colors.sidebarActiveText)
-            root.style.setProperty('--portal-accent-color', colors.accentColor)
+            root.style.setProperty('--portal-accent', colors.accentColor)
             root.style.setProperty('--portal-content-bg', colors.contentBg)
         }
     }, [colors])

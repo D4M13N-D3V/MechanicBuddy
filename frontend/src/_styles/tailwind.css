@@ -62,3 +62,56 @@
   overflow: auto !important;
   padding-right: 0px !important;
 }
+
+/* Portal accent color overrides for buttons and interactive elements */
+@layer utilities {
+  /* Primary buttons - use accent color */
+  .bg-indigo-600 {
+    background-color: var(--portal-accent, #4f46e5) !important;
+  }
+  .bg-indigo-500 {
+    background-color: var(--portal-accent, #4f46e5) !important;
+  }
+  .hover\:bg-indigo-500:hover {
+    background-color: color-mix(in srgb, var(--portal-accent, #4f46e5) 85%, black) !important;
+  }
+  .hover\:bg-indigo-700:hover {
+    background-color: color-mix(in srgb, var(--portal-accent, #4f46e5) 75%, black) !important;
+  }
+
+  /* Focus rings */
+  .focus-visible\:outline-indigo-600:focus-visible {
+    outline-color: var(--portal-accent, #4f46e5) !important;
+  }
+  .focus\:ring-indigo-500:focus {
+    --tw-ring-color: var(--portal-accent, #4f46e5) !important;
+  }
+  .focus\:ring-indigo-600:focus {
+    --tw-ring-color: var(--portal-accent, #4f46e5) !important;
+  }
+  .focus\:border-indigo-500:focus {
+    border-color: var(--portal-accent, #4f46e5) !important;
+  }
+
+  /* Text colors */
+  .text-indigo-600 {
+    color: var(--portal-accent, #4f46e5) !important;
+  }
+  .text-indigo-500 {
+    color: var(--portal-accent, #4f46e5) !important;
+  }
+  .hover\:text-indigo-500:hover {
+    color: color-mix(in srgb, var(--portal-accent, #4f46e5) 85%, black) !important;
+  }
+  .hover\:text-indigo-900:hover {
+    color: color-mix(in srgb, var(--portal-accent, #4f46e5) 70%, black) !important;
+  }
+
+  /* Border colors */
+  .border-indigo-600 {
+    border-color: var(--portal-accent, #4f46e5) !important;
+  }
+  .ring-indigo-500 {
+    --tw-ring-color: var(--portal-accent, #4f46e5) !important;
+  }
+}
