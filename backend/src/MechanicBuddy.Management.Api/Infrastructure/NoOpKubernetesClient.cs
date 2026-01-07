@@ -58,4 +58,16 @@ public class NoOpKubernetesClient : IKubernetesClient
         _logger.LogWarning("Kubernetes not available. Skipping namespace deletion for tenant {TenantId}", tenantId);
         return Task.CompletedTask;
     }
+
+    public Task RestartDeploymentAsync(string tenantId, string deploymentType)
+    {
+        _logger.LogWarning("Kubernetes not available. Skipping {DeploymentType} restart for tenant {TenantId}", deploymentType, tenantId);
+        return Task.CompletedTask;
+    }
+
+    public Task<string> RunMigrationJobAsync(string tenantId)
+    {
+        _logger.LogWarning("Kubernetes not available. Skipping migration job for tenant {TenantId}", tenantId);
+        return Task.FromResult($"dbup-migrate-{tenantId}-noop");
+    }
 }

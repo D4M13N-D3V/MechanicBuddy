@@ -228,3 +228,27 @@ export async function getBillingStats(): Promise<ApiResponse<{
 export async function getHealthStatus(): Promise<ApiResponse<{ status: string; timestamp: string }>> {
   return fetchApi<{ status: string; timestamp: string }>("/api/health");
 }
+
+// Tenant Operations
+export interface TenantOperationResponse {
+  message: string;
+  jobName?: string;
+}
+
+export async function restartTenantApi(tenantId: string): Promise<ApiResponse<TenantOperationResponse>> {
+  return fetchApi<TenantOperationResponse>(`/api/tenants/${tenantId}/restart-api`, {
+    method: "POST",
+  });
+}
+
+export async function restartTenantFrontend(tenantId: string): Promise<ApiResponse<TenantOperationResponse>> {
+  return fetchApi<TenantOperationResponse>(`/api/tenants/${tenantId}/restart-frontend`, {
+    method: "POST",
+  });
+}
+
+export async function runTenantMigration(tenantId: string): Promise<ApiResponse<TenantOperationResponse>> {
+  return fetchApi<TenantOperationResponse>(`/api/tenants/${tenantId}/run-migration`, {
+    method: "POST",
+  });
+}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Building2, Users, Database, Activity, AlertCircle } from "lucide-react";
 import { getTenant } from "@/_lib/api";
 import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
+import { TenantOperationsButtons } from "@/_components/TenantOperationsButtons";
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   active: "success",
@@ -72,6 +73,19 @@ export default async function TenantDetailPage({
           <DeleteTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} />
         </div>
       </div>
+
+      {/* Operations Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Deployment Operations</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-4">
+            Manage the Kubernetes deployments and database for this tenant.
+          </p>
+          <TenantOperationsButtons tenantId={tenant.tenantId} />
+        </CardContent>
+      </Card>
 
       {/* Overview Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

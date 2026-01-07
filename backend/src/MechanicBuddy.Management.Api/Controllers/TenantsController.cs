@@ -13,15 +13,18 @@ public class TenantsController : ControllerBase
 {
     private readonly TenantService _tenantService;
     private readonly ITenantDatabaseProvisioner _dbProvisioner;
+    private readonly IKubernetesClient _kubernetesClient;
     private readonly ILogger<TenantsController> _logger;
 
     public TenantsController(
         TenantService tenantService,
         ITenantDatabaseProvisioner dbProvisioner,
+        IKubernetesClient kubernetesClient,
         ILogger<TenantsController> logger)
     {
         _tenantService = tenantService;
         _dbProvisioner = dbProvisioner;
+        _kubernetesClient = kubernetesClient;
         _logger = logger;
     }
 
@@ -225,6 +228,86 @@ public class TenantsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to provision database for tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+    /// <summary>
+    /// Restarts the API deployment for a tenant.
+    /// </summary>
+    [HttpPost("{tenantId}/restart-api")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> RestartApi(string tenantId)
+    {
+        try
+        {
+            var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+            }
+
+            _logger.LogInformation("Restarting API deployment for tenant {TenantId}", tenantId);
+            await _kubernetesClient.RestartDeploymentAsync(tenantId, "api");
+
+            return Ok(new { message = $"API deployment restarted for tenant '{tenantId}'" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restart API deployment for tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Restarts the frontend deployment for a tenant.
+    /// </summary>
+    [HttpPost("{tenantId}/restart-frontend")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> RestartFrontend(string tenantId)
+    {
+        try
+        {
+            var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+            }
+
+            _logger.LogInformation("Restarting frontend deployment for tenant {TenantId}", tenantId);
+            await _kubernetesClient.RestartDeploymentAsync(tenantId, "frontend");
+
+            return Ok(new { message = $"Frontend deployment restarted for tenant '{tenantId}'" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restart frontend deployment for tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Runs database migrations for a tenant.
+    /// </summary>
+    [HttpPost("{tenantId}/run-migration")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> RunMigration(string tenantId)
+    {
+        try
+        {
+            var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+            }
+
+            _logger.LogInformation("Running database migration for tenant {TenantId}", tenantId);
+            var jobName = await _kubernetesClient.RunMigrationJobAsync(tenantId);
+
+            return Ok(new { message = $"Migration job '{jobName}' started for tenant '{tenantId}'", jobName });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to run migration for tenant {TenantId}", tenantId);
             return BadRequest(new { message = ex.Message });
         }
     }

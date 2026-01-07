@@ -665,6 +665,131 @@ public class KubernetesClient : IKubernetesClient
         }
     }
 
+    public async Task RestartDeploymentAsync(string tenantId, string deploymentType)
+    {
+        var namespaceName = $"mb-{tenantId}";
+        var deploymentName = deploymentType.ToLower() switch
+        {
+            "api" => $"api-{tenantId}",
+            "frontend" => $"frontend-{tenantId}",
+            _ => throw new ArgumentException($"Invalid deployment type: {deploymentType}")
+        };
+
+        try
+        {
+            // Read the current deployment
+            var deployment = await _client.AppsV1.ReadNamespacedDeploymentAsync(deploymentName, namespaceName);
+
+            // Add or update restart annotation to trigger rollout
+            deployment.Spec.Template.Metadata ??= new V1ObjectMeta();
+            deployment.Spec.Template.Metadata.Annotations ??= new Dictionary<string, string>();
+            deployment.Spec.Template.Metadata.Annotations["kubectl.kubernetes.io/restartedAt"] = DateTime.UtcNow.ToString("o");
+
+            // Apply the update
+            await _client.AppsV1.ReplaceNamespacedDeploymentAsync(deployment, deploymentName, namespaceName);
+            _logger.LogInformation("Restarted deployment {Deployment} in namespace {Namespace}", deploymentName, namespaceName);
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogError("Deployment {Deployment} not found in namespace {Namespace}", deploymentName, namespaceName);
+            throw new InvalidOperationException($"Deployment {deploymentName} not found in namespace {namespaceName}");
+        }
+    }
+
+    public async Task<string> RunMigrationJobAsync(string tenantId)
+    {
+        var namespaceName = $"mb-{tenantId}";
+        var jobName = $"dbup-migrate-{tenantId}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        var apiSecretName = $"api-secrets-{tenantId}";
+        var imagePullSecretName = "ghcr-credentials";
+        var dbupImage = _configuration["Kubernetes:DbUpImage"] ?? "ghcr.io/d4m13n-d3v/mechanicbuddy-dbup:latest";
+
+        // Delete any existing completed/failed migration jobs first
+        try
+        {
+            var existingJobs = await _client.BatchV1.ListNamespacedJobAsync(namespaceName, labelSelector: "app=dbup-migrate");
+            foreach (var existingJob in existingJobs.Items)
+            {
+                await _client.BatchV1.DeleteNamespacedJobAsync(
+                    existingJob.Metadata.Name,
+                    namespaceName,
+                    propagationPolicy: "Background"
+                );
+                _logger.LogInformation("Deleted existing migration job {Job}", existingJob.Metadata.Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to clean up existing migration jobs");
+        }
+
+        // Create the migration job
+        var job = new V1Job
+        {
+            Metadata = new V1ObjectMeta
+            {
+                Name = jobName,
+                NamespaceProperty = namespaceName,
+                Labels = new Dictionary<string, string>
+                {
+                    ["app"] = "dbup-migrate",
+                    ["tenant-id"] = tenantId
+                }
+            },
+            Spec = new V1JobSpec
+            {
+                TtlSecondsAfterFinished = 300, // Auto-delete after 5 minutes
+                BackoffLimit = 1,
+                Template = new V1PodTemplateSpec
+                {
+                    Spec = new V1PodSpec
+                    {
+                        RestartPolicy = "Never",
+                        ImagePullSecrets = new List<V1LocalObjectReference>
+                        {
+                            new V1LocalObjectReference { Name = imagePullSecretName }
+                        },
+                        Volumes = new List<V1Volume>
+                        {
+                            new V1Volume
+                            {
+                                Name = "secrets",
+                                Secret = new V1SecretVolumeSource
+                                {
+                                    SecretName = apiSecretName
+                                }
+                            }
+                        },
+                        Containers = new List<V1Container>
+                        {
+                            new V1Container
+                            {
+                                Name = "dbup",
+                                Image = dbupImage,
+                                ImagePullPolicy = "Always",
+                                VolumeMounts = new List<V1VolumeMount>
+                                {
+                                    new V1VolumeMount
+                                    {
+                                        Name = "secrets",
+                                        MountPath = "/app/appsettings.Secrets.json",
+                                        SubPath = "appsettings.Secrets.json",
+                                        ReadOnlyProperty = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        await _client.BatchV1.CreateNamespacedJobAsync(job, namespaceName);
+        _logger.LogInformation("Created migration job {Job} in namespace {Namespace}", jobName, namespaceName);
+
+        return jobName;
+    }
+
     /// <summary>
     /// Copies the GHCR image pull secret from mechanicbuddy-system namespace to the target namespace
     /// </summary>
