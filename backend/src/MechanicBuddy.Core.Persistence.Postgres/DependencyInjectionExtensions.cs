@@ -47,7 +47,7 @@ namespace MechanicBuddy.Core.Repository.Postgres
             services.AddScoped<IUserRepository>(x => {
                 return new UserRepository(x.GetRequiredService<IOptions<DbOptions>>());
             });
-            services.AddScoped<ISession>(x =>{
+            services.AddScoped<NHibernate.ISession>(x =>{
 
                 if (!multitenancyEnabled) return defaultFactory.OpenSession();
 
