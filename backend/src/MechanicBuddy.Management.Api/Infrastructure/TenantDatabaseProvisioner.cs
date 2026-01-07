@@ -34,7 +34,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         _baseDbName = configuration["Database:PostgresDatabase"] ?? "mechanicbuddy";
         _templateDbName = configuration["Database:TemplateDatabase"] ?? "mechanicbuddy-testt";
         _tenancyDbName = configuration["Database:TenancyDatabase"] ?? "mechanicbuddy-tenancy";
-    }
+    }or
 
     public async Task<string> ProvisionTenantDatabaseAsync(string tenantId)
     {

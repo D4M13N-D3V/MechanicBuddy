@@ -50,8 +50,10 @@ namespace MechanicBuddy.Core.Repository.Postgres
 
                 if (!multitenancyEnabled) return defaultFactory.OpenSession();
 
-                var user = x.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>().HttpContext.User;
-                if (user.Identity.IsAuthenticated) 
+                var httpContext = x.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>().HttpContext;
+                var user = httpContext?.User;
+
+                if (user?.Identity?.IsAuthenticated == true)
                 {
                     if (appFactory == null)
                     {
@@ -62,9 +64,18 @@ namespace MechanicBuddy.Core.Repository.Postgres
                                 appFactory = NNhibernateFactory.BuildSessionFactory(new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly });
                             }
                         }
-                    } 
+                    }
                     return appFactory.OpenSession();
                 }
+
+                // For anonymous endpoints (like service request submission), use the default tenancy factory
+                var endpoint = httpContext?.GetEndpoint();
+                var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>() != null;
+                if (allowAnonymous && defaultFactory != null)
+                {
+                    return defaultFactory.OpenSession();
+                }
+
                 throw new System.Exception("Unable to open database session, user not authenticated.");
             });
 

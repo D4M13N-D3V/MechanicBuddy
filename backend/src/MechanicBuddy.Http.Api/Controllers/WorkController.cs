@@ -232,7 +232,8 @@ namespace MechanicBuddy.Http.Api.Controllers
         {
             foreach (var id in ids)
             {
-                var dObj = repository.Get<Work>(id); 
+                var dObj = repository.Get<Work>(id);
+                NHibernateUtil.Initialize(dObj.Offers);
                 if(dObj.Offers.Any(x=>x.Estimate!=null && x.Estimate.SentOn != null)) 
                 {
                     throw new UserException("Cannot delete work, it contains an offer sent to a client.");
@@ -508,7 +509,8 @@ from (
         public OkResult PutOffer(Guid id, short offerNumber, [FromBody] PutActivityDto model)
         {
             var work = session.Get<Work>(id);
-            
+            NHibernateUtil.Initialize(work.Offers);
+
             var offer = work.Offers.Single(x => x.OrderNr == offerNumber);
 
             offer.With(model.Notes);
@@ -524,6 +526,7 @@ from (
         public OkResult PutRepairJob(Guid id, short jobNumber, [FromBody] PutActivityDto model) //make an activity controller?
         {
             var work = session.Get<Work>(id);
+            NHibernateUtil.Initialize(work.Jobs);
 
             var job = work.Jobs.Single(x => x.OrderNr == jobNumber);
 
@@ -573,6 +576,7 @@ from (
         public async Task<OkResult> IssueInvoice(Guid id,[FromBody]  IssueInvoiceDto model)
         {
             var work = session.Get<Work>(id);
+            NHibernateUtil.Initialize(work.Jobs);
             var issuer = this.Employee();
 
             work.GenerateInvoice(numberProviderFactory, await GetVatRateaAsync(), model.PaymentType, model.DueDays, issuer);
@@ -592,6 +596,8 @@ from (
         public OkObjectResult MakeCopy(Guid id)
         {
             var work = session.Get<Work>(id);
+            NHibernateUtil.Initialize(work.Offers);
+            NHibernateUtil.Initialize(work.Jobs);
             var newWork = work.CreateCopy(this.numberProviderFactory.GetNumberProvider<Work>().Next(), this.Employee());
             session.Save(newWork);
             return Ok(newWork.Id); 
@@ -601,7 +607,8 @@ from (
         public async Task<OkObjectResult>  IssueEstimate(Guid id, int offerNumber, [FromBody]IssuePricingDto model)
         {
             var work = session.Get<Work>(id);
-             
+            NHibernateUtil.Initialize(work.Offers);
+
             var offer = work.Offers.Single(x => x.OrderNr == offerNumber);
             var issuer = this.Employee();
               
@@ -643,6 +650,8 @@ from (
         public OkObjectResult EstimateAccepted(Guid id, short offerNumber,short? targetJobNumber, [FromBody]string notes)
         {
             var work = session.Get<Work>(id);
+            NHibernateUtil.Initialize(work.Offers);
+            NHibernateUtil.Initialize(work.Jobs);
             var offer = work.Offers.Single(x => x.OrderNr == offerNumber);
             var acceptor = this.Employee();
              
@@ -659,6 +668,7 @@ from (
         public OkResult DeleteOffer(Guid id, int offerNumber)
         {
             var work = session.Get<Core.Domain.Work>(id);
+            NHibernateUtil.Initialize(work.Offers);
             var offer = work.Offers.Single(x => x.OrderNr == offerNumber);
             work.Remove(offer);
             work.Changed();
@@ -670,6 +680,7 @@ from (
         public OkResult DeleteRepairJob(Guid id, int jobNumber)
         {
             var work = session.Get<Core.Domain.Work>(id);
+            NHibernateUtil.Initialize(work.Jobs);
             var job = work.Jobs.Single(x => x.OrderNr == jobNumber);
             work.Remove(job);
             work.Changed();
@@ -681,8 +692,8 @@ from (
         [HttpPost("{id}/repairjob")]
         public OkObjectResult StartRepairJob(Guid id, [FromBody] string notes)
         {
-
             var work = session.Get<Core.Domain.Work>(id);
+            NHibernateUtil.Initialize(work.Jobs);
             var job = work.StartRepairJob(this.Employee(), notes);
             work.Changed();
             session.Update(work);
@@ -692,9 +703,9 @@ from (
         [HttpPost("{id}/offer")]
         public OkObjectResult MakeOnOffer(Guid id,[FromBody] string notes)
         {
-            
-             var work = session.Get<Core.Domain.Work>(id);
-             var offer =  work.CreateOffer(this.Employee(), notes);
+            var work = session.Get<Core.Domain.Work>(id);
+            NHibernateUtil.Initialize(work.Offers);
+            var offer = work.CreateOffer(this.Employee(), notes);
             work.Changed();
             session.Update(work);
             session.Flush();

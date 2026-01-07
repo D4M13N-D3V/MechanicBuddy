@@ -495,14 +495,14 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
              .DefaultGeneratedBy();
 
 
-            Component(x => x.Address, 
+            Component(x => x.Address,
                  c =>
                  {
-                     c.Map(a => a.Street).Column("address").Access.BackingField();
-                     c.Map(a => a.Country).Column("country").Access.BackingField();
-                     c.Map(a => a.Region).Column("region").Access.BackingField();
-                     c.Map(a => a.City).Column("city").Access.BackingField();
-                     c.Map(a => a.PostalCode).Column("postalcode").Access.BackingField();
+                     c.Map(a => a.Street).Column("address");
+                     c.Map(a => a.Country).Column("country");
+                     c.Map(a => a.Region).Column("region");
+                     c.Map(a => a.City).Column("city");
+                     c.Map(a => a.PostalCode).Column("postalcode");
                  }
              );
               

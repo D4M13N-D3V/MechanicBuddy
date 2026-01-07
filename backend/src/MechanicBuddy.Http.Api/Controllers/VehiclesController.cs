@@ -47,6 +47,9 @@ namespace MechanicBuddy.Http.Api.Controllers
        
         protected override VehicleDto Map(Vehicle entity)
         {
+            // Initialize Registrations collection to access Owner property
+            NHibernateUtil.Initialize(entity.Registrations);
+
             return new VehicleDto
             {
                 Body = entity.Body,
@@ -95,6 +98,9 @@ namespace MechanicBuddy.Http.Api.Controllers
 
         protected override void Edit(Vehicle entity, VehicleDto model)
         {
+            // Initialize Registrations collection to access Owner property
+            NHibernateUtil.Initialize(entity.Registrations);
+
             entity.Edit(model.RegNr,
                         model.Producer,
                         model.Model,
@@ -110,11 +116,11 @@ namespace MechanicBuddy.Http.Api.Controllers
                         model.Description);
             if (model.OwnerId != null)
             {
-                if (entity.Owner?.Id != model.OwnerId.GetValueOrDefault()) 
+                if (entity.Owner?.Id != model.OwnerId.GetValueOrDefault())
                 {
                     entity.RegisterTo(repository.Get<Client>(model.OwnerId.GetValueOrDefault()));
                 }
-                
+
             }
             else entity.EndRegistration();
         }
