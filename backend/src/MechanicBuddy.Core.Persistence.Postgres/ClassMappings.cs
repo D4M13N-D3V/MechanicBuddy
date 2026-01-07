@@ -663,4 +663,238 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
             Map(x => x.Notes).Column("notes").Access.BackingField();
         }
     }
+
+    // Branding and Landing Page Customization Mappings
+
+    public class TenantBrandingMapping : ClassMap<TenantBranding>
+    {
+        public TenantBrandingMapping()
+        {
+            Schema("tenant_config");
+            Table("branding");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.Logo).Column("logo").Access.BackingField();
+            Map(x => x.LogoMimeType).Column("logo_mime_type").Access.BackingField();
+            Map(x => x.PortalSidebarBg).Column("portal_sidebar_bg").Access.BackingField();
+            Map(x => x.PortalSidebarText).Column("portal_sidebar_text").Access.BackingField();
+            Map(x => x.PortalSidebarActiveBg).Column("portal_sidebar_active_bg").Access.BackingField();
+            Map(x => x.PortalSidebarActiveText).Column("portal_sidebar_active_text").Access.BackingField();
+            Map(x => x.PortalAccentColor).Column("portal_accent_color").Access.BackingField();
+            Map(x => x.PortalContentBg).Column("portal_content_bg").Access.BackingField();
+            Map(x => x.LandingPrimaryColor).Column("landing_primary_color").Access.BackingField();
+            Map(x => x.LandingSecondaryColor).Column("landing_secondary_color").Access.BackingField();
+            Map(x => x.LandingAccentColor).Column("landing_accent_color").Access.BackingField();
+            Map(x => x.LandingHeaderBg).Column("landing_header_bg").Access.BackingField();
+            Map(x => x.LandingFooterBg).Column("landing_footer_bg").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingHeroMapping : ClassMap<LandingHero>
+    {
+        public LandingHeroMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_hero");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.CompanyName).Column("company_name").Access.BackingField();
+            Map(x => x.Tagline).Column("tagline").Access.BackingField();
+            Map(x => x.Subtitle).Column("subtitle").Access.BackingField();
+            Map(x => x.SpecialtyText).Column("specialty_text").Access.BackingField();
+            Map(x => x.CtaPrimaryText).Column("cta_primary_text").Access.BackingField();
+            Map(x => x.CtaPrimaryLink).Column("cta_primary_link").Access.BackingField();
+            Map(x => x.CtaSecondaryText).Column("cta_secondary_text").Access.BackingField();
+            Map(x => x.CtaSecondaryLink).Column("cta_secondary_link").Access.BackingField();
+            Map(x => x.BackgroundImage).Column("background_image").Access.BackingField();
+            Map(x => x.BackgroundImageMimeType).Column("background_image_mime_type").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingServiceMapping : ClassMap<LandingService>
+    {
+        public LandingServiceMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_service");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.IconName).Column("icon_name").Access.BackingField();
+            Map(x => x.Title).Column("title").Access.BackingField();
+            Map(x => x.Description).Column("description").Access.BackingField();
+            Map(x => x.UsePrimaryColor).Column("use_primary_color").Access.BackingField();
+            Map(x => x.SortOrder).Column("sort_order").Access.BackingField();
+            Map(x => x.IsActive).Column("is_active").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingAboutMapping : ClassMap<LandingAbout>
+    {
+        public LandingAboutMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_about");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
+            Map(x => x.Headline).Column("headline").Access.BackingField();
+            Map(x => x.Description).Column("description").Access.BackingField();
+            Map(x => x.SecondaryDescription).Column("secondary_description").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+
+            HasMany(x => x.Features)
+                .KeyColumn("about_id")
+                .Access.BackingField()
+                .Cascade.AllDeleteOrphan()
+                .Inverse();
+        }
+    }
+
+    public class LandingAboutFeatureMapping : ClassMap<LandingAboutFeature>
+    {
+        public LandingAboutFeatureMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_about_feature");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            References(x => x.About).Column("about_id").Access.BackingField();
+            Map(x => x.Text).Column("text").Access.BackingField();
+            Map(x => x.SortOrder).Column("sort_order").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+        }
+    }
+
+    public class LandingStatMapping : ClassMap<LandingStat>
+    {
+        public LandingStatMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_stat");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.Value).Column("value").Access.BackingField();
+            Map(x => x.Label).Column("label").Access.BackingField();
+            Map(x => x.SortOrder).Column("sort_order").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingTipsSectionMapping : ClassMap<LandingTipsSection>
+    {
+        public LandingTipsSectionMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_tips_section");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.IsVisible).Column("is_visible").Access.BackingField();
+            Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
+            Map(x => x.Headline).Column("headline").Access.BackingField();
+            Map(x => x.Description).Column("description").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingTipMapping : ClassMap<LandingTip>
+    {
+        public LandingTipMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_tip");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.Title).Column("title").Access.BackingField();
+            Map(x => x.Description).Column("description").Access.BackingField();
+            Map(x => x.SortOrder).Column("sort_order").Access.BackingField();
+            Map(x => x.IsActive).Column("is_active").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingFooterMapping : ClassMap<LandingFooter>
+    {
+        public LandingFooterMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_footer");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.CompanyDescription).Column("company_description").Access.BackingField();
+            Map(x => x.ShowQuickLinks).Column("show_quick_links").Access.BackingField();
+            Map(x => x.ShowContactInfo).Column("show_contact_info").Access.BackingField();
+            Map(x => x.CopyrightText).Column("copyright_text").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingContactMapping : ClassMap<LandingContact>
+    {
+        public LandingContactMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_contact");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
+            Map(x => x.Headline).Column("headline").Access.BackingField();
+            Map(x => x.Description).Column("description").Access.BackingField();
+            Map(x => x.ShowTowing).Column("show_towing").Access.BackingField();
+            Map(x => x.TowingText).Column("towing_text").Access.BackingField();
+            Map(x => x.BusinessHours).Column("business_hours").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
 }

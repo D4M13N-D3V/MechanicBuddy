@@ -17,6 +17,21 @@
   --color-red-800: #991b1b;
   --color-red-900: #7f1d1d;
   --color-red-950: #450a0a;
+
+  /* Portal theme colors (customizable via CSS variables) */
+  --color-portal-sidebar-bg: var(--portal-sidebar-bg, #111827);
+  --color-portal-sidebar-text: var(--portal-sidebar-text, #9ca3af);
+  --color-portal-sidebar-active-bg: var(--portal-sidebar-active-bg, #1f2937);
+  --color-portal-sidebar-active-text: var(--portal-sidebar-active-text, #ffffff);
+  --color-portal-accent: var(--portal-accent, #4f46e5);
+  --color-portal-content-bg: var(--portal-content-bg, #f9fafb);
+
+  /* Landing page theme colors (customizable via CSS variables) */
+  --color-landing-primary: var(--landing-primary, #7c3aed);
+  --color-landing-secondary: var(--landing-secondary, #22c55e);
+  --color-landing-accent: var(--landing-accent, #5b21b6);
+  --color-landing-header-bg: var(--landing-header-bg, #0f172a);
+  --color-landing-footer-bg: var(--landing-footer-bg, #0f172a);
 }
 
 @layer base {

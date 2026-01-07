@@ -12,6 +12,10 @@ namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
             services.AddScoped<ITenantConfigRepository, TenantConfigRepository>();
             services.AddScoped<ITenantConfigService, TenantConfigService>();
 
+            // Register branding repository and service
+            services.AddScoped<IBrandingRepository, BrandingRepository>();
+            services.AddScoped<IBrandingService, BrandingService>();
+
             return services;
         }
     }

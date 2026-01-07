@@ -1,13 +1,15 @@
 'use client';
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
-import { BuildingOfficeIcon, UserIcon } from '@heroicons/react/20/solid'
+import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon } from '@heroicons/react/20/solid'
 import clsx from 'clsx'
-import { usePathname, useRouter } from 'next/navigation'; 
+import { usePathname, useRouter } from 'next/navigation';
 
 
 const tabs = [
   { name: 'My Account', href: '/home/profile', icon: UserIcon },
-  { name: 'Invoice Options', href: '/home/settings', icon: BuildingOfficeIcon }
+  { name: 'Invoice Options', href: '/home/settings', icon: BuildingOfficeIcon },
+  { name: 'Branding', href: '/home/settings/branding', icon: PaintBrushIcon },
+  { name: 'Landing Page', href: '/home/settings/landing', icon: GlobeAltIcon }
 ]
 
 export default function SettingsTabs() {
