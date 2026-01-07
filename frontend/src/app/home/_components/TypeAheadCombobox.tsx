@@ -48,28 +48,27 @@ export default function TypeAheadCombobox<T>({
   showLookingGlass?: boolean | undefined,
   clearable?: boolean | undefined
 }) {
-  const [datasource, setDatasource] = useState<T[]>([]);  
+  const [datasource, setDatasource] = useState<T[]>([]);
+  const [selectedValue, setSelectedValue] = useState<T | null>(defaultValue);
   const applyDatasource =(items:T[])=>{
     setDatasource(items);
   }
- 
+
   if(!className){
     className = " block w-full rounded-md bg-white py-1.5 pr-12 pl-3 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 text-sm/6";
   }
 
-  
-   
   return (
     <Combobox
         as="div"
         id={id}
         name={name}
-         
-        value={defaultValue}
+
+        value={selectedValue}
         onChange={(item) => {
-          
+          setSelectedValue(item);
           setDatasource([]);
-          onItemChange(item);  
+          onItemChange(item);
         }}
       >
 
