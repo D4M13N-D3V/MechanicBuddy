@@ -121,7 +121,7 @@ jobs:
       - name: Build and push Management DbUp
         uses: docker/build-push-action@v5
         with:
-          context: backend/src
+          context: .
           file: backend/src/MechanicBuddy.Management.DbUp/Dockerfile
           push: true
           tags: |
