@@ -43,7 +43,22 @@ namespace MechanicBuddy.Core.Repository.Postgres
             }        
 
             var appFactory = default(ISessionFactory);
-            
+            var anonymousFactory = default(ISessionFactory);
+
+            // Build anonymous factory for service requests when TenantId is configured
+            if (multitenancyEnabled && !string.IsNullOrEmpty(options.MultiTenancy?.TenantId))
+            {
+                var anonConnectionBuilder = new Npgsql.NpgsqlConnectionStringBuilder();
+                anonConnectionBuilder.Host = options.Host;
+                anonConnectionBuilder.Port = options.Port;
+                anonConnectionBuilder.Username = options.UserId;
+                anonConnectionBuilder.Password = options.Password;
+                anonConnectionBuilder.Database = new MultiTenancyDbName(options, options.MultiTenancy.TenantId);
+                anonymousFactory = NNhibernateFactory.BuildSessionFactory(
+                    new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly },
+                    anonConnectionBuilder.ToString());
+            }
+
             services.AddScoped<IUserRepository>(x => {
                 return new UserRepository(x.GetRequiredService<IOptions<DbOptions>>());
             });
@@ -69,22 +84,12 @@ namespace MechanicBuddy.Core.Repository.Postgres
                     return appFactory.OpenSession();
                 }
 
-                // For anonymous endpoints (like service request submission), use the app factory with domain mappings
+                // For anonymous endpoints (like service request submission), use the anonymous factory
                 var endpoint = httpContext?.GetEndpoint();
                 var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>() != null;
-                if (allowAnonymous)
+                if (allowAnonymous && anonymousFactory != null)
                 {
-                    if (appFactory == null)
-                    {
-                        lock (lockObj)
-                        {
-                            if (appFactory == null)
-                            {
-                                appFactory = NNhibernateFactory.BuildSessionFactory(new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly });
-                            }
-                        }
-                    }
-                    return appFactory.OpenSession();
+                    return anonymousFactory.OpenSession();
                 }
 
                 throw new System.Exception("Unable to open database session, user not authenticated.");

@@ -232,7 +232,7 @@ namespace MechanicBuddy.Core.Application.Services
             // Create an offer
             var offerId = Guid.NewGuid();
             await connection.ExecuteAsync(@"
-        INSERT INTO domain.offer(id, workid, ordernr, notes, isvehilelinesonestimate, startedon, starterid)
+        INSERT INTO domain.offer(id, workid, ordernr, notes, isvehilelesonestimate, startedon, starterid)
         VALUES (@Id, @WorkId, 1, 'Demo offer', true, CURRENT_TIMESTAMP, @StarterId)",
                 new { Id = offerId, WorkId = workId, StarterId = adminEmployeeId });
 
