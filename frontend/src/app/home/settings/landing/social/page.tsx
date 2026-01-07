@@ -8,7 +8,7 @@ import Link from "next/link";
 import { PlusIcon, PencilIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
 import { deleteSocialLink, reorderSocialLinks } from "../../branding/actions";
 import DeleteSocialButton from "./_components/DeleteSocialButton";
-import { SOCIAL_PLATFORMS } from "./_components/PlatformSelect";
+import { SOCIAL_PLATFORMS } from "./constants";
 
 function getPlatformLabel(platform: string): string {
     const found = SOCIAL_PLATFORMS.find(p => p.value === platform);
