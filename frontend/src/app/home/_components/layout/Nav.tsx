@@ -9,7 +9,6 @@ import { InboxIcon,
   } from '@heroicons/react/24/outline'
 import clsx from "clsx";
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 
 const navigationIconClass = "size-6 shrink-0";
 const navigation = [
@@ -23,30 +22,39 @@ const navigation = [
 ]
 
 
-export default   function Nav({
+export default function Nav({
     onSmallScreen,
     fullName,
     imageUrl,
+    logoUrl,
 }:{
-    onSmallScreen:boolean,
-    fullName:string,
-    imageUrl:string
+    onSmallScreen: boolean,
+    fullName: string,
+    imageUrl: string,
+    logoUrl: string,
 }) {
     const currentPath = usePathname();
-    const [logoError, setLogoError] = useState(false);
 
     return (
         <>
             <div className="flex h-16 shrink-0 items-center">
-                <Image
-                    alt="Logo"
-                    width="50"
-                    height="50"
-                    className="h-8 w-auto"
-                    src={logoError ? "/logo.png" : "/backend-api/branding/logo"}
-                    onError={() => setLogoError(true)}
-                    unoptimized
-                />
+                {logoUrl.startsWith('data:') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        alt="Logo"
+                        className="h-8 w-auto"
+                        src={logoUrl}
+                    />
+                ) : (
+                    <Image
+                        alt="Logo"
+                        width="50"
+                        height="50"
+                        className="h-8 w-auto"
+                        src={logoUrl}
+                        unoptimized
+                    />
+                )}
             </div>
             <nav className="flex flex-1 flex-col">
                 <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -58,10 +66,18 @@ export default   function Nav({
                                         href={item.href}
                                         className={clsx(
                                                (item.href !=='/home'  &&currentPath?.startsWith(item.href) || item.href =='/home'&& currentPath === '/home') //home is ambigous
-                                                ? 'bg-gray-800 text-white'
-                                                : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                                                ? 'text-white'
+                                                : 'hover:text-white',
                                             'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold',
                                         )}
+                                        style={{
+                                            backgroundColor: (item.href !=='/home' && currentPath?.startsWith(item.href) || item.href =='/home'&& currentPath === '/home')
+                                                ? 'var(--portal-sidebar-active-bg, #1f2937)'
+                                                : 'transparent',
+                                            color: (item.href !=='/home' && currentPath?.startsWith(item.href) || item.href =='/home'&& currentPath === '/home')
+                                                ? 'var(--portal-sidebar-active-text, #ffffff)'
+                                                : 'var(--portal-sidebar-text, #9ca3af)',
+                                        }}
                                     >
                                         {item.icon}
                                         {item.name}
@@ -70,15 +86,18 @@ export default   function Nav({
                             ))}
                         </ul>
                     </li>
-                    {!onSmallScreen && <li className="mt-auto flex flex-col mb-5   ">
+                    {!onSmallScreen && <li className="mt-auto flex flex-col mb-5">
                         <a
                             href="/home/settings"
-                            className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-gray-400 hover:bg-gray-800 hover:text-white"
+                            className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold hover:text-white"
+                            style={{
+                                color: 'var(--portal-sidebar-text, #9ca3af)',
+                            }}
                         >
                             <Cog6ToothIcon aria-hidden="true" className="size-6 shrink-0" />
                             Settings
                         </a>
-                        <ProfileMenu  fullName={fullName} imageUrl={imageUrl} onSmallScreen={false}></ProfileMenu>
+                        <ProfileMenu fullName={fullName} imageUrl={imageUrl} onSmallScreen={false}></ProfileMenu>
                     </li>}
                 </ul>
             </nav>

@@ -1,17 +1,18 @@
 'use client'
 import {  useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline"; 
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import Nav from './Nav';
 import ProfileMenu from './ProfileMenu';
 
 export default function NavDialog({
-  
   fullName,
   imageUrl,
-}:{ 
-  fullName:string,
-  imageUrl:string
+  logoUrl,
+}:{
+  fullName: string,
+  imageUrl: string,
+  logoUrl: string,
 })
 {
  
@@ -37,13 +38,13 @@ export default function NavDialog({
                           </div>
                         </TransitionChild>
                         {/* Sidebar component, swap this element with another sidebar if you like */}
-                        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-2 ring-1 ring-white/10">
-                          <Nav fullName={fullName} imageUrl={imageUrl}  onSmallScreen={true}></Nav>
+                        <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-2 ring-1 ring-white/10" style={{ backgroundColor: 'var(--portal-sidebar-bg, #111827)' }}>
+                          <Nav fullName={fullName} imageUrl={imageUrl} onSmallScreen={true} logoUrl={logoUrl}></Nav>
                         </div>
                       </DialogPanel>
                     </div>
                   </Dialog>
-                  <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-xs sm:px-6 lg:hidden">
+                  <div className="sticky top-0 z-40 flex items-center gap-x-6 px-4 py-4 shadow-xs sm:px-6 lg:hidden" style={{ backgroundColor: 'var(--portal-sidebar-bg, #111827)' }}>
           <button type="button" onClick={() => setSidebarOpen(true)} className="-m-2.5 p-2.5 text-gray-400 lg:hidden">
             <span className="sr-only">Open sidebar</span>
             <Bars3Icon aria-hidden="true" className="size-6" />

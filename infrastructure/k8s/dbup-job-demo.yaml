@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dbup-migrate-demo
+  namespace: mb-demo
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr-credentials
+      containers:
+        - name: dbup
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-dbup:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: secrets
+              mountPath: /app/appsettings.Secrets.json
+              subPath: appsettings.Secrets.json
+              readOnly: true
+      volumes:
+        - name: secrets
+          secret:
+            secretName: api-secrets-demo

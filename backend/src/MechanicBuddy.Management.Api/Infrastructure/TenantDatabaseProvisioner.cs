@@ -73,6 +73,9 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             }
         }
 
+        // Update the user table in the cloned tenant database to use the correct tenant name
+        await UpdateTenantUserTableAsync(tenantId, tenantDbName);
+
         // Create admin user in tenancy database
         await CreateDefaultAdminAsync(tenantId);
 
@@ -144,6 +147,25 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     {
         // Database naming: mechanicbuddy-{tenantId}
         return $"{_baseDbName}-{tenantId}";
+    }
+
+    private async Task UpdateTenantUserTableAsync(string tenantId, string tenantDbName)
+    {
+        // Update the user table in the cloned tenant database to use the correct tenant name
+        // The template database has users with the template's tenant name, we need to update them
+        var tenantConnectionString = BuildConnectionString(tenantDbName);
+
+        await using var connection = new NpgsqlConnection(tenantConnectionString);
+        await connection.OpenAsync();
+
+        // Update all users in this database to have the correct tenant name
+        await using var cmd = new NpgsqlCommand(
+            "UPDATE public.user SET tenantname = @tenantId", connection);
+        cmd.Parameters.AddWithValue("tenantId", tenantId);
+        var rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+        _logger.LogInformation("Updated {RowCount} user(s) in tenant database {DbName} with tenant name {TenantId}",
+            rowsAffected, tenantDbName, tenantId);
     }
 
     private async Task CreateDefaultAdminAsync(string tenantId)
