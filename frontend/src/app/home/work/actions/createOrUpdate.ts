@@ -17,11 +17,11 @@ export async function createOrUpdate(
     const clientId = formData.get('clientId[value]');
  //Guid? ClientId, string Description, Guid? VehicleId, Guid[] AssignedTo, int? Odo, bool StartWithOffer
     const body = {
-       clientId:clientId ==''?null:clientId,
+       clientId: clientId == '' ? null : clientId,
        description: formData.get('about'),
-       vehicleId: vehicleId??null,
-       assignedTo:formData.getAll('mechanics'),
-       odo: +(formData.get('odo')?.toString()??'0'),
+       vehicleId: vehicleId == '' ? null : vehicleId ?? null,
+       assignedTo: formData.getAll('mechanics'),
+       odo: +(formData.get('odo')?.toString() ?? '0'),
        startWithOffer: formData.get('isOffer') == 'on'
     }; 
     const url = "work"; 
