@@ -585,7 +585,15 @@ from (
 
             if (model.SendClientEmail)
             {
-                await work.Invoice.Send(pricingSender, model.ClientEmail);
+                try
+                {
+                    await work.Invoice.Send(pricingSender, model.ClientEmail);
+                }
+                catch (System.Net.Mail.SmtpException)
+                {
+                    // Email sending failed but invoice was generated successfully
+                    // Log or ignore - don't fail the whole operation
+                }
             }
             work.Changed();
             session.Update(work);
