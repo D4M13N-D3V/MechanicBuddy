@@ -23,7 +23,7 @@ export default function Saleables({
 }) {
 
      
-    const moneyFormatter = new Intl.NumberFormat('et-EE', { style: 'currency', currency: 'EUR' });
+    const moneyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
  
     const dragItem = useRef<string | undefined>(null);
     const dragOverItem = useRef<string | undefined>(null);

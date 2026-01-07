@@ -36,7 +36,7 @@ export default async function Page(
       dataFormatter: ({ price }: { price?: number }) => {
         return (
           <Fragment>
-            {price?.toFixed(2)} {price&&'€'} 
+            {price&&'$'}{price?.toFixed(2)} 
           </Fragment>
         )
       },
