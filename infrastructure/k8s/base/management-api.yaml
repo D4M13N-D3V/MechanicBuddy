@@ -115,6 +115,43 @@ spec:
                   key: password
             - name: Database__PostgresDatabase
               value: mechanicbuddy-tenancy
+            # Cloudflare configuration
+            - name: Cloudflare__ApiToken
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-credentials
+                  key: api-token
+            - name: Cloudflare__ZoneId
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-credentials
+                  key: zone-id
+            - name: Cloudflare__BaseDomain
+              value: mechanicbuddy.app
+            - name: Cloudflare__IngressTarget
+              value: ingress.mechanicbuddy.app
+            # NPM configuration
+            - name: Npm__BaseUrl
+              valueFrom:
+                secretKeyRef:
+                  name: npm-credentials
+                  key: base-url
+            - name: Npm__Email
+              valueFrom:
+                secretKeyRef:
+                  name: npm-credentials
+                  key: email
+            - name: Npm__Password
+              valueFrom:
+                secretKeyRef:
+                  name: npm-credentials
+                  key: password
+            - name: Npm__ForwardHost
+              value: "192.168.1.100"
+            - name: Npm__ForwardPort
+              value: "31840"
+            - name: Npm__WildcardCertificateId
+              value: "10"
           resources:
             requests:
               memory: "256Mi"
