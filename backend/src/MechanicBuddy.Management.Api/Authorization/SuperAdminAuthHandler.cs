@@ -14,7 +14,7 @@ public class SuperAdminAuthHandler : AuthorizationHandler<SuperAdminRequirement>
         SuperAdminRequirement requirement)
     {
         var roleClaim = context.User.FindFirst(ClaimTypes.Role);
-        if (roleClaim != null && roleClaim.Value == "super_admin")
+        if (roleClaim != null && roleClaim.Value == "owner")
         {
             context.Succeed(requirement);
         }
