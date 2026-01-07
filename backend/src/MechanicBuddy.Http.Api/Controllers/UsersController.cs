@@ -96,12 +96,18 @@ All authenticated user operations; decorate the whole class with [TenantRateLimi
             }
 
             var user = repository.GetBy(model.Username);
-              
-            if (user == null || !PasswordHasher.verifyHash(
-                model.Password, user.Password))
-            { 
-                logger.LogInformation("Authentication failure: {user} {message}", model.Username, "Wrong password or username");
-                await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt)); // wait on failure
+
+            if (user == null)
+            {
+                logger.LogInformation("Authentication failure: {user} - User not found in database", model.Username);
+                await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt));
+                return Unauthorized();
+            }
+
+            if (!PasswordHasher.verifyHash(model.Password, user.Password))
+            {
+                logger.LogInformation("Authentication failure: {user} - Password verification failed (hash: {hash})", model.Username, user.Password?.Substring(0, 20) + "...");
+                await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt));
                 return Unauthorized();
             }
 
