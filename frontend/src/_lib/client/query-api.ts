@@ -1,8 +1,9 @@
 import {
-    getCookie 
+    getCookie
   } from 'cookies-next/client';
 
-const basePath = process.env.NEXT_PUBLIC_API_URL;
+// Use relative path for client-side API calls - Next.js rewrites will proxy to backend
+const basePath = '/backend-api';
 
 const getJwtToken =()=>{
   
@@ -86,9 +87,8 @@ const dataPage =({
       headers['Authorization'] = 'Bearer ' + jwt;
     }
      
-    if(!basePath) throw new Error("NEXT_PUBLIC_API_URL env not set");
-
-    url = basePath +`/api/${url}`;
+    // basePath is now a relative path that gets rewritten by Next.js to the backend API
+    url = `${basePath}/${url}`;
      
     body = !body ? undefined : JSON.stringify(body);
     fetch(url, {
