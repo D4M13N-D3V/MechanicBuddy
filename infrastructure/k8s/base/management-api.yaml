@@ -98,6 +98,23 @@ spec:
                   key: CLUSTER_ISSUER
             - name: Provisioning__HelmChartPath
               value: /app/charts/mechanicbuddy-tenant
+            # Tenant database configuration (for schema provisioning)
+            - name: Database__PostgresHost
+              value: mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local
+            - name: Database__PostgresPort
+              value: "5432"
+            - name: Database__PostgresUser
+              valueFrom:
+                secretKeyRef:
+                  name: management-db-credentials
+                  key: username
+            - name: Database__PostgresPassword
+              valueFrom:
+                secretKeyRef:
+                  name: management-db-credentials
+                  key: password
+            - name: Database__PostgresDatabase
+              value: mechanicbuddy
           resources:
             requests:
               memory: "256Mi"
