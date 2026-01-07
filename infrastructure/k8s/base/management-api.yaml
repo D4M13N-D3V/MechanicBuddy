@@ -154,18 +154,3 @@ spec:
     app.kubernetes.io/name: mechanicbuddy
     app.kubernetes.io/component: management-api
 
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: management-api-secrets
-  labels:
-    app.kubernetes.io/name: mechanicbuddy
-    app.kubernetes.io/component: management-api
-type: Opaque
-stringData:
-  connection-string: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=CHANGE_ME"
-  jwt-secret: "CHANGE_ME_MIN_32_CHARS_LONG_SECRET_KEY"
-  stripe-secret-key: "sk_test_CHANGE_ME"
-  stripe-webhook-secret: "whsec_CHANGE_ME"
-  resend-api-key: "re_CHANGE_ME"
