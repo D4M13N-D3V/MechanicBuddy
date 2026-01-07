@@ -675,8 +675,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.Logo).Column("logo").Access.BackingField();
             Map(x => x.LogoMimeType).Column("logo_mime_type").Access.BackingField();
@@ -705,8 +704,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.CompanyName).Column("company_name").Access.BackingField();
             Map(x => x.Tagline).Column("tagline").Access.BackingField();
@@ -732,8 +730,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.IconName).Column("icon_name").Access.BackingField();
             Map(x => x.Title).Column("title").Access.BackingField();
@@ -755,8 +752,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
             Map(x => x.Headline).Column("headline").Access.BackingField();
@@ -782,8 +778,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             References(x => x.About).Column("about_id").Access.BackingField();
             Map(x => x.Text).Column("text").Access.BackingField();
@@ -801,8 +796,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.Value).Column("value").Access.BackingField();
             Map(x => x.Label).Column("label").Access.BackingField();
@@ -821,8 +815,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.IsVisible).Column("is_visible").Access.BackingField();
             Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
@@ -842,8 +835,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.Title).Column("title").Access.BackingField();
             Map(x => x.Description).Column("description").Access.BackingField();
@@ -863,8 +855,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.CompanyDescription).Column("company_description").Access.BackingField();
             Map(x => x.ShowQuickLinks).Column("show_quick_links").Access.BackingField();
@@ -884,8 +875,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
 
             Id(x => x.Id)
                 .Column("id")
-                .GeneratedBy
-                .DefaultGeneratedBy();
+                .GeneratedBy.Assigned();
 
             Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
             Map(x => x.Headline).Column("headline").Access.BackingField();
