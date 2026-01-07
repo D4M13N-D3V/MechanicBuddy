@@ -82,7 +82,7 @@ jobs:
       - name: Build and push DbUp
         uses: docker/build-push-action@v5
         with:
-          context: backend/src
+          context: .
           file: backend/src/DbUp/Dockerfile
           push: true
           tags: |
