@@ -114,7 +114,7 @@ spec:
                   name: management-db-credentials
                   key: password
             - name: Database__PostgresDatabase
-              value: mechanicbuddy
+              value: mechanicbuddy-tenancy
           resources:
             requests:
               memory: "256Mi"
