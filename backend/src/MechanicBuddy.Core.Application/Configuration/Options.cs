@@ -33,6 +33,7 @@ namespace MechanicBuddy.Core.Application.Configuration
         public class MultiTenancyOptions
         {
             public bool Enabled { get; set; }
+            public string TenantId { get; set; }
             public SuffixOptions Suffix { get; set; }
 
 
