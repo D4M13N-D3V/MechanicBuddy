@@ -5,6 +5,7 @@ using MechanicBuddy.Core.Domain;
 using MechanicBuddy.Core.Persistence.Postgres;
 using MechanicBuddy.Core.Persistence.Postgres.NHibernate;
 using MechanicBuddy.Core.Persistence.Postgres.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
