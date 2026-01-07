@@ -101,7 +101,7 @@
         <div class="grid grid-rows-3 gap-2 pt-2 pr-0">
             <div class="flex flex-row-reverse ">
                 <div class="pt-2 pl-4 text-end text-sm font-light text-gray-500 pl-0 w-35">
-                    @pricing.GetTotal(false).ToString("0.00") EUR
+                    @pricing.GetTotal(false).ToString("0.00") USD
                 </div>
                 <div class="pt-2 pr-3 pl-4 text-right text-sm font-light text-gray-500 pl-0">
                     Total
@@ -109,7 +109,7 @@
             </div>
             <div class="flex flex-row-reverse ">
                 <div class="pt-2 pl-4 text-end text-sm font-light text-gray-500 pl-0 w-35">
-                    @((pricing.GetTotal(true) - pricing.GetTotal(false)).ToString("0.00")) EUR
+                    @((pricing.GetTotal(true) - pricing.GetTotal(false)).ToString("0.00")) USD
                 </div>
                 <div class="pt-2 pr-3 pl-4 text-right text-sm font-light text-gray-500 pl-0">
                     VAT
@@ -117,7 +117,7 @@
             </div>
             <div class="flex flex-row-reverse ">
                 <div class="pt-2 pl-4 text-end text-sm font-semibold text-gray-900 pl-0 w-35">
-                    @((pricing.GetTotal(true)).ToString("0.00")) EUR
+                    @((pricing.GetTotal(true)).ToString("0.00")) USD
                 </div>
                 <div class="pt-2 pr-3 pl-4 text-right text-sm font-semibold text-gray-900 t pl-0">
                     To pay
