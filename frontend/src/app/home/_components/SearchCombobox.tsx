@@ -77,9 +77,12 @@ export default function SearchCombobox({
 }){
     
     const [selectedItem,setSelectedItem] = useState(defaultValue);
-  
+
 
     return (
+        <>
+        <input type="hidden" name={`${name}[value]`} value={selectedItem?.value ?? ''} />
+        <input type="hidden" name={`${name}[text]`} value={selectedItem?.text ?? ''} />
         <TypeAheadCombobox
         placeholder={placeholder}
         defaultValue={selectedItem}
@@ -115,7 +118,8 @@ export default function SearchCombobox({
                 }
               })   
         }}
-        > 
+        >
         </TypeAheadCombobox>
+        </>
     )
 }

@@ -101,42 +101,43 @@ export default function ClientAddress({
           </Select>  
         </div>
       </div>
-      <div className="col-span-full"> 
+      <div className="col-span-full">
       <FormLabel name='street' label=' Street address'></FormLabel>
-      <TypeAheadCombobox
-         name={name}
-          
-         placeholder={(useEhak?'Estonian address ...':'')}
-         defaultValue={selectedAddress} 
-         onSearch={(event,datasourceTarget) => {
+      {useEhak ? (
+        <TypeAheadCombobox
+           name={name}
 
-          if (!useEhak) return; 
-          queryRemoteAddressData(event.currentTarget.value)
-            .then((result) => {
-              datasourceTarget(result);
-          }) 
+           placeholder='Estonian address ...'
+           defaultValue={selectedAddress}
+           onSearch={(event,datasourceTarget) => {
+            queryRemoteAddressData(event.currentTarget.value)
+              .then((result) => {
+                datasourceTarget(result);
+            })
+           }}
+           onItemChange={(item)=>{
+              setSelectedAddress(item);
+           }}
+           displayFormatter={(address) => {
+            const ehak = address as IAddressData
+            return ehak?.street;
+           }}
+           optionFormatter={(address)=>{
+              return [
+                address.street,
+                address.city,
+                address.region,
+                address.postalCode,
+              ]
+                .filter((item) => item)
+                .join(", ")
+           }}
+          >
 
-         }}
-         onItemChange={(item)=>{
-            setSelectedAddress(item);
-         }}
-         displayFormatter={(address) => {
-          const ehak = address as IAddressData 
-          return ehak?.street; 
-         }}
-         optionFormatter={(address)=>{
-            return [
-              address.street,
-              address.city,
-              address.region,
-              address.postalCode,
-            ]
-              .filter((item) => item)
-              .join(", ")
-         }}
-        >
-        
-      </TypeAheadCombobox>
+        </TypeAheadCombobox>
+      ) : (
+        <FormInput name={`${name}[street]`} defaultValue={selectedAddress?.street} ></FormInput>
+      )}
       </div>
     
       <div className="sm:col-span-2 sm:col-start-1">
