@@ -39,15 +39,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  // Proxy client-side API calls through Next.js server to avoid NEXT_PUBLIC_API_URL build-time issues
-  async rewrites() {
-    return [
-      {
-        source: '/backend-api/:path*',
-        destination: `${apiUrl}/api/:path*`,
-      },
-    ];
-  },
   // Prevent CDN caching of HTML pages
   async headers() {
     return [
