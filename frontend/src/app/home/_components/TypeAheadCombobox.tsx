@@ -69,7 +69,7 @@ export default function TypeAheadCombobox<T>({
           setDatasource([]);
           onItemChange(item);
         }}
-        onClose={() => setDatasource([])}
+        immediate
       >
 
         <div className={(comboboxOptionsAbsolute?'':'mt-2 relative')}>  
@@ -98,8 +98,7 @@ export default function TypeAheadCombobox<T>({
           />}
           </div> 
           
-          {datasource && datasource.length > 0 && (
-            <ComboboxOptions static className={clsx(comboboxOptionsAbsolute?("w-80  sm:w-"+comboboxOptionsWidth):"w-full" ,"absolute z-10 mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden  text-sm")} >
+          <ComboboxOptions className={clsx(comboboxOptionsAbsolute?("w-80  sm:w-"+comboboxOptionsWidth):"w-full" ,"absolute z-10 mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base ring-1 shadow-lg ring-black/5 focus:outline-hidden  text-sm")} >
               {datasource.map((item, index) => (
                 <ComboboxOption
                   key={index}
@@ -115,7 +114,6 @@ export default function TypeAheadCombobox<T>({
                 </ComboboxOption>
               ))}
             </ComboboxOptions>
-          )}
         </div>
       </Combobox>
   )
