@@ -367,7 +367,7 @@ export function ContactSection({ data }: { data: IPublicLandingData }) {
 }
 
 export function Footer({ data }: { data: IPublicLandingData }) {
-    const { footer, hero, tipsSection, socialLinks, sectionVisibility } = data.content
+    const { footer, hero, tipsSection, socialLinks } = data.content
     const { companyInfo } = data
     const footerSocialLinks = (socialLinks || []).filter(l => l.isActive && l.showInFooter).sort((a, b) => a.sortOrder - b.sortOrder)
 
