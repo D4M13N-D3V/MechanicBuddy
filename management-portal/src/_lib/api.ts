@@ -36,10 +36,22 @@ async function fetchApi<T>(
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Unknown error" }));
+      const text = await response.text();
+      let errorMessage = `HTTP ${response.status}`;
+
+      if (text) {
+        try {
+          const error = JSON.parse(text);
+          errorMessage = error.message || errorMessage;
+        } catch {
+          // Response is not JSON, use the raw text if it's short enough
+          errorMessage = text.length < 200 ? text : errorMessage;
+        }
+      }
+
       return {
         success: false,
-        error: error.message || `HTTP ${response.status}`,
+        error: errorMessage,
       };
     }
 
