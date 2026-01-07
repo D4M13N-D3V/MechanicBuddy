@@ -52,8 +52,12 @@ namespace MechanicBuddy.Http.Api.Controllers
          
         [HttpGet("{id}")]
         public dynamic Get(Guid id)
-        { 
+        {
             var work = session.Get<Work>(id);
+
+            // Initialize lazy collections to avoid "could not initialize collection" errors
+            NHibernateUtil.Initialize(work.Offers);
+            NHibernateUtil.Initialize(work.Jobs);
 
             var status = work.Invoice is not null ? "completed" : (work.UserStatus.ToString().ToLower());
              
