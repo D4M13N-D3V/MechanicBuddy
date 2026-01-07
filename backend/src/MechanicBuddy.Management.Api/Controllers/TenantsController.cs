@@ -126,9 +126,19 @@ public class TenantsController : ControllerBase
         if (!result.Success)
         {
             // Both K8s and DB deletion failed
+            var errorDetails = new List<string>();
+            if (!string.IsNullOrEmpty(result.KubernetesError))
+                errorDetails.Add($"Kubernetes: {result.KubernetesError}");
+            if (!string.IsNullOrEmpty(result.DatabaseError))
+                errorDetails.Add($"Database: {result.DatabaseError}");
+
+            var errorMessage = errorDetails.Count > 0
+                ? $"Failed to delete tenant: {string.Join("; ", errorDetails)}"
+                : "Failed to delete tenant";
+
             return BadRequest(new
             {
-                message = "Failed to delete tenant",
+                message = errorMessage,
                 kubernetesError = result.KubernetesError,
                 databaseError = result.DatabaseError
             });
