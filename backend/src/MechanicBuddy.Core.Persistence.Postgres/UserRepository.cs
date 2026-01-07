@@ -32,11 +32,25 @@ namespace MechanicBuddy.Core.Repository.Postgres
 
         public User GetBy(string userName)
         {
+            // When multitenancy is enabled, filter by tenant to avoid duplicate username conflicts
+            if (dbOptions.MultiTenancy?.Enabled == true && !string.IsNullOrEmpty(dbOptions.MultiTenancy.TenantId))
+            {
+                return QuerySingleUser(
+                    $"{UserSelectQuery} WHERE UserName = @UserName AND TenantName = @TenantName",
+                    new { UserName = userName, TenantName = dbOptions.MultiTenancy.TenantId });
+            }
             return QuerySingleUser($"{UserSelectQuery} WHERE UserName = @UserName", new { UserName = userName });
         }
 
         public User GetByEmail(string email)
         {
+            // When multitenancy is enabled, filter by tenant to avoid duplicate email conflicts
+            if (dbOptions.MultiTenancy?.Enabled == true && !string.IsNullOrEmpty(dbOptions.MultiTenancy.TenantId))
+            {
+                return QuerySingleUser(
+                    $"{UserSelectQuery} WHERE Email = @Email AND TenantName = @TenantName",
+                    new { Email = email, TenantName = dbOptions.MultiTenancy.TenantId });
+            }
             return QuerySingleUser($"{UserSelectQuery} WHERE Email = @Email", new { Email = email });
         }
 
