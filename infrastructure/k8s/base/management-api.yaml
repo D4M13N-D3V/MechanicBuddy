@@ -147,9 +147,9 @@ spec:
                   name: npm-credentials
                   key: password
             - name: Npm__ForwardHost
-              value: "192.168.1.101"
+              value: "192.168.1.100"
             - name: Npm__ForwardPort
-              value: "443"
+              value: "31840"
             - name: Npm__WildcardCertificateId
               value: "17"
           resources:
