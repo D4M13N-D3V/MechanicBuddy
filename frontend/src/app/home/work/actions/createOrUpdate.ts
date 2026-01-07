@@ -10,10 +10,17 @@ export async function createOrUpdate(
       
      
     const id = formData.get('id');
-    let vehicleId = formData.get('vehicleId');
-    if(formData.get('onlyClientVehicles')=='on'){
+    // When 'onlyClientVehicles' switch is ON, user is searching all vehicles (VehiclesCombobox)
+    // When OFF, user selects from client's vehicles dropdown (Select)
+    let vehicleId = formData.get('onlyClientVehicles') == 'on'
+        ? formData.get('vehicleId[value]')  // VehiclesCombobox uses hidden input
+        : formData.get('vehicleId');         // Select uses direct value
+
+    // Also try the hidden input if direct value is empty (for VehiclesCombobox)
+    if (!vehicleId || vehicleId === '') {
         vehicleId = formData.get('vehicleId[value]');
     }
+
     const clientId = formData.get('clientId[value]');
  //Guid? ClientId, string Description, Guid? VehicleId, Guid[] AssignedTo, int? Odo, bool StartWithOffer
     const body = {
