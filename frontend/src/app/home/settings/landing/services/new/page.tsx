@@ -2,10 +2,11 @@
 
 import SettingsTabs from "@/_components/SettingsTabs";
 import Main from "../../../../_components/Main";
-import FormInput from "@/_components/FormInput";
 import FormTextArea from "@/_components/FormTextArea";
 import FormSwitch from "@/_components/FormSwitch";
 import FormLabel from "@/_components/FormLabel";
+import FormInput from "@/_components/FormInput";
+import HeroiconPicker from "@/_components/HeroiconPicker";
 import { createService } from "../../../branding/actions";
 import Link from "next/link";
 
@@ -48,15 +49,11 @@ export default async function Page() {
                             </div>
 
                             <div className="sm:col-span-4">
-                                <FormInput
+                                <HeroiconPicker
                                     name="iconName"
-                                    label="Icon Name"
+                                    label="Icon"
                                     defaultValue="WrenchIcon"
-                                    placeholder="e.g., WrenchIcon, CogIcon"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Enter a Heroicons name (e.g., WrenchIcon, CogIcon, SparklesIcon)
-                                </p>
                             </div>
 
                             <div className="sm:col-span-3">

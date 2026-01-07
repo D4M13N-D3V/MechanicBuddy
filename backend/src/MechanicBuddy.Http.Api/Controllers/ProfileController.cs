@@ -33,17 +33,18 @@ namespace MechanicBuddy.Http.Api.Controllers
             var employee = session.Get<Employee>(this.EmployeeId().GetValueOrDefault());
             if (employee == null) return NotFound();
             var user = repository.GetBy(new UserIdentifier(this.TenantName(), employee.Id));
-            return Ok(new UserProfileDto(employee.FirstName, employee.LastName,user.Email, user.UserName, user.ProfileImage == null? null: Convert.ToBase64String(user.ProfileImage)));
+            if (user == null) return NotFound();
+            return Ok(new UserProfileDto(employee.FirstName, employee.LastName, user.Email, user.UserName, user.ProfileImage == null ? null : Convert.ToBase64String(user.ProfileImage)));
         }
 
         [HttpPut]
         public IActionResult Put([FromBody] UserProfileDto profile)
         {
-             
             if (this.EmployeeId() == null) return NotFound();
             var employee = session.Get<Employee>(this.EmployeeId().GetValueOrDefault());
             if (employee == null) return NotFound();
             var user = repository.GetBy(new UserIdentifier(this.TenantName(), employee.Id));
+            if (user == null) return NotFound();
 
             if (profile.UserName != user.UserName)
             {

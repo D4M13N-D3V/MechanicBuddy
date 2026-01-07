@@ -1,15 +1,17 @@
 'use client'
 import Image from "next/image"
 import ProfileMenu from "./ProfileMenu"
-import { InboxIcon, 
-    Cog6ToothIcon, 
+import { InboxIcon,
+    Cog6ToothIcon,
     QueueListIcon,
     TruckIcon,
-    UsersIcon, 
+    UsersIcon,
   } from '@heroicons/react/24/outline'
-import clsx from "clsx"; 
+import clsx from "clsx";
 import { usePathname } from "next/navigation"
- const navigationIconClass = "size-6 shrink-0";
+import { useState } from "react"
+
+const navigationIconClass = "size-6 shrink-0";
 const navigation = [
     // { name: 'Dashboard', href: '/home', icon: <HomeIcon aria-hidden="true" className={navigationIconClass}></HomeIcon>},
     { name: 'Work', href: '/home/work', icon: <QueueListIcon aria-hidden="true" className={navigationIconClass}></QueueListIcon> },
@@ -19,22 +21,32 @@ const navigation = [
     { name: 'Requests', href: '/home/requests', icon: <InboxIcon aria-hidden="true" className={navigationIconClass}></InboxIcon>  },
     // { name: 'Services', href: '/home/services', icon: <WrenchScrewdriverIcon aria-hidden="true" className={navigationIconClass}></WrenchScrewdriverIcon>  },
 ]
- 
+
 
 export default   function Nav({
-    onSmallScreen, 
+    onSmallScreen,
     fullName,
     imageUrl,
 }:{
-    onSmallScreen:boolean, 
+    onSmallScreen:boolean,
     fullName:string,
     imageUrl:string
 }) {
-    const currentPath = usePathname() ; 
+    const currentPath = usePathname();
+    const [logoError, setLogoError] = useState(false);
+
     return (
         <>
             <div className="flex h-16 shrink-0 items-center">
-                <Image alt="B-dec" width="50" height="50" className="h-8 w-auto" src="/logo.png" ></Image>
+                <Image
+                    alt="Logo"
+                    width="50"
+                    height="50"
+                    className="h-8 w-auto"
+                    src={logoError ? "/logo.png" : "/backend-api/branding/logo"}
+                    onError={() => setLogoError(true)}
+                    unoptimized
+                />
             </div>
             <nav className="flex flex-1 flex-col">
                 <ul role="list" className="flex flex-1 flex-col gap-y-7">

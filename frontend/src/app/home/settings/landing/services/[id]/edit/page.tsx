@@ -8,6 +8,7 @@ import FormInput from "@/_components/FormInput";
 import FormTextArea from "@/_components/FormTextArea";
 import FormSwitch from "@/_components/FormSwitch";
 import FormLabel from "@/_components/FormLabel";
+import HeroiconPicker from "@/_components/HeroiconPicker";
 import { updateService } from "../../../../branding/actions";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -61,14 +62,11 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
                             </div>
 
                             <div className="sm:col-span-4">
-                                <FormInput
+                                <HeroiconPicker
                                     name="iconName"
-                                    label="Icon Name"
+                                    label="Icon"
                                     defaultValue={service.iconName}
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Enter a Heroicons name (e.g., WrenchIcon, CogIcon, SparklesIcon)
-                                </p>
                             </div>
 
                             <div className="sm:col-span-3">
