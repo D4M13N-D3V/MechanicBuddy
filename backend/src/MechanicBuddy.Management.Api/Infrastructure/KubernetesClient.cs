@@ -156,7 +156,12 @@ public class KubernetesClient : IKubernetesClient
                 Password = _postgresPassword,
                 Name = "mechanicbuddy",
                 Schema = schemaName,
-                MultiTenancy = new { Enabled = true, TenantId = tenantId }
+                MultiTenancy = new
+                {
+                    Enabled = true,
+                    TenantId = tenantId,
+                    Suffix = new { Tenancy = "tenancy", Template = "testt" }
+                }
             },
             SmtpOptions = new
             {
