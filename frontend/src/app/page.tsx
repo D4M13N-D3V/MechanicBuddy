@@ -1,5 +1,5 @@
 import { Navigation } from "./_components/landing/Navigation"
-import { HeroSection, ServicesSection, AboutSection, TipsSection, ContactSection, Footer } from "./_components/landing/Sections"
+import { HeroSection, ServicesSection, AboutSection, TipsSection, GallerySection, ContactSection, Footer } from "./_components/landing/Sections"
 import { LandingThemeProvider } from "@/_components/ThemeProvider"
 import { IPublicLandingData } from "./home/settings/branding/model"
 
@@ -50,6 +50,7 @@ export default async function Home() {
                 <ServicesSection data={data} />
                 <AboutSection data={data} />
                 <TipsSection data={data} />
+                <GallerySection data={data} />
                 <ContactSection data={data} />
             </main>
             <Footer data={data} />

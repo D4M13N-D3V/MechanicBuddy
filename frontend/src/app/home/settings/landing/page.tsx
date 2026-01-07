@@ -11,6 +11,9 @@ import {
     LightBulbIcon,
     PhoneIcon,
     DocumentTextIcon,
+    PhotoIcon,
+    ShareIcon,
+    EyeIcon,
 } from "@heroicons/react/24/outline";
 
 interface SectionCardProps {
@@ -51,6 +54,8 @@ export default async function Page() {
 
     const activeServices = content.services.filter(s => s.isActive).length;
     const activeTips = content.tips.filter(t => t.isActive).length;
+    const activePhotos = content.galleryPhotos?.filter(p => p.isActive).length || 0;
+    const activeSocialLinks = content.socialLinks?.filter(l => l.isActive).length || 0;
 
     return (
         <Main header={<SettingsTabs />} narrow={true}>
@@ -113,6 +118,29 @@ export default async function Page() {
                     description="Footer content and quick links"
                     href="/home/settings/landing/footer"
                     icon={DocumentTextIcon}
+                />
+
+                <SectionCard
+                    title="Photo Gallery"
+                    description="Showcase photos of your work"
+                    href="/home/settings/landing/gallery"
+                    icon={PhotoIcon}
+                    itemCount={activePhotos}
+                />
+
+                <SectionCard
+                    title="Social Links"
+                    description="Social media and external links"
+                    href="/home/settings/landing/social"
+                    icon={ShareIcon}
+                    itemCount={activeSocialLinks}
+                />
+
+                <SectionCard
+                    title="Section Visibility"
+                    description="Show or hide landing page sections"
+                    href="/home/settings/landing/visibility"
+                    icon={EyeIcon}
                 />
             </div>
 

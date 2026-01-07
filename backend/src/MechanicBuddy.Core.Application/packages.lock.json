@@ -1262,14 +1262,14 @@
           "System.Xml.ReaderWriter": "4.3.0"
         }
       },
-      "carmasters.core.domain": {
+      "mechanicbuddy.core.domain": {
         "type": "Project"
       },
-      "carmasters.http.api.model": {
+      "mechanicbuddy.http.api.model": {
         "type": "Project",
         "dependencies": {
           "AutoMapper": "[13.0.1, )",
-          "Carmasters.Core.Domain": "[1.0.0, )"
+          "MechanicBuddy.Core.Domain": "[1.0.0, )"
         }
       }
     }

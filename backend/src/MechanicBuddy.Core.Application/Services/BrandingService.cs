@@ -493,6 +493,261 @@ namespace MechanicBuddy.Core.Application.Services
             await repository.SaveContactAsync(contact);
         }
 
+        // Section Visibility
+        public async Task<SectionVisibilityOptions> GetSectionVisibilityAsync()
+        {
+            var visibility = await repository.GetSectionVisibilityAsync();
+            return new SectionVisibilityOptions(
+                visibility.HeroVisible,
+                visibility.ServicesVisible,
+                visibility.AboutVisible,
+                visibility.StatsVisible,
+                visibility.TipsVisible,
+                visibility.GalleryVisible,
+                visibility.ContactVisible
+            );
+        }
+
+        public async Task SaveSectionVisibilityAsync(SectionVisibilityOptions options)
+        {
+            var visibility = await repository.GetSectionVisibilityAsync();
+            visibility.Update(
+                options.HeroVisible,
+                options.ServicesVisible,
+                options.AboutVisible,
+                options.StatsVisible,
+                options.TipsVisible,
+                options.GalleryVisible,
+                options.ContactVisible
+            );
+            await repository.SaveSectionVisibilityAsync(visibility);
+        }
+
+        // Gallery Section
+        public async Task<GallerySectionOptions> GetGallerySectionAsync()
+        {
+            var section = await repository.GetGallerySectionAsync();
+            return new GallerySectionOptions(
+                section.SectionLabel,
+                section.Headline,
+                section.Description
+            );
+        }
+
+        public async Task SaveGallerySectionAsync(GallerySectionOptions options)
+        {
+            var section = await repository.GetGallerySectionAsync();
+            section.Update(options.SectionLabel, options.Headline, options.Description);
+            await repository.SaveGallerySectionAsync(section);
+        }
+
+        // Gallery Photos
+        public async Task<List<GalleryPhotoOptions>> GetGalleryPhotosAsync()
+        {
+            var photos = await repository.GetGalleryPhotosAsync();
+            return photos.Select(p => new GalleryPhotoOptions(
+                p.Id,
+                p.Image != null ? Convert.ToBase64String(p.Image) : null,
+                p.ImageMimeType,
+                p.Caption,
+                p.SortOrder,
+                p.IsActive
+            )).ToList();
+        }
+
+        public async Task<GalleryPhotoOptions> GetGalleryPhotoByIdAsync(Guid id)
+        {
+            var photo = await repository.GetGalleryPhotoByIdAsync(id);
+            if (photo == null) return null;
+
+            return new GalleryPhotoOptions(
+                photo.Id,
+                photo.Image != null ? Convert.ToBase64String(photo.Image) : null,
+                photo.ImageMimeType,
+                photo.Caption,
+                photo.SortOrder,
+                photo.IsActive
+            );
+        }
+
+        public async Task<GalleryPhotoOptions> CreateGalleryPhotoAsync(GalleryPhotoOptions options)
+        {
+            var photos = await repository.GetGalleryPhotosAsync();
+            var maxSortOrder = photos.Any() ? photos.Max(p => p.SortOrder) : -1;
+
+            var imageBytes = !string.IsNullOrEmpty(options.ImageBase64)
+                ? Convert.FromBase64String(options.ImageBase64)
+                : throw new ArgumentException("Image is required");
+
+            var photo = new LandingGalleryPhoto(
+                imageBytes,
+                options.ImageMimeType,
+                options.Caption,
+                maxSortOrder + 1
+            );
+
+            await repository.SaveGalleryPhotoAsync(photo);
+
+            return new GalleryPhotoOptions(
+                photo.Id,
+                Convert.ToBase64String(photo.Image),
+                photo.ImageMimeType,
+                photo.Caption,
+                photo.SortOrder,
+                photo.IsActive
+            );
+        }
+
+        public async Task UpdateGalleryPhotoAsync(Guid id, GalleryPhotoOptions options)
+        {
+            var photo = await repository.GetGalleryPhotoByIdAsync(id);
+            if (photo == null)
+                throw new InvalidOperationException($"Gallery photo with id {id} not found");
+
+            byte[] imageBytes = null;
+            if (!string.IsNullOrEmpty(options.ImageBase64))
+            {
+                imageBytes = Convert.FromBase64String(options.ImageBase64);
+            }
+
+            photo.Update(
+                imageBytes,
+                options.ImageMimeType,
+                options.Caption,
+                options.SortOrder,
+                options.IsActive
+            );
+
+            await repository.SaveGalleryPhotoAsync(photo);
+        }
+
+        public async Task DeleteGalleryPhotoAsync(Guid id)
+        {
+            await repository.DeleteGalleryPhotoAsync(id);
+        }
+
+        public async Task ReorderGalleryPhotosAsync(List<Guid> orderedIds)
+        {
+            for (int i = 0; i < orderedIds.Count; i++)
+            {
+                var photo = await repository.GetGalleryPhotoByIdAsync(orderedIds[i]);
+                if (photo != null)
+                {
+                    photo.UpdateSortOrder(i);
+                    await repository.SaveGalleryPhotoAsync(photo);
+                }
+            }
+        }
+
+        public async Task<byte[]> GetGalleryPhotoImageAsync(Guid id)
+        {
+            var photo = await repository.GetGalleryPhotoByIdAsync(id);
+            return photo?.Image;
+        }
+
+        // Social Links
+        public async Task<List<SocialLinkOptions>> GetSocialLinksAsync()
+        {
+            var links = await repository.GetSocialLinksAsync();
+            return links.Select(l => new SocialLinkOptions(
+                l.Id,
+                l.Platform,
+                l.Url,
+                l.DisplayName,
+                l.IconName,
+                l.SortOrder,
+                l.IsActive,
+                l.ShowInHeader,
+                l.ShowInFooter
+            )).ToList();
+        }
+
+        public async Task<SocialLinkOptions> GetSocialLinkByIdAsync(Guid id)
+        {
+            var link = await repository.GetSocialLinkByIdAsync(id);
+            if (link == null) return null;
+
+            return new SocialLinkOptions(
+                link.Id,
+                link.Platform,
+                link.Url,
+                link.DisplayName,
+                link.IconName,
+                link.SortOrder,
+                link.IsActive,
+                link.ShowInHeader,
+                link.ShowInFooter
+            );
+        }
+
+        public async Task<SocialLinkOptions> CreateSocialLinkAsync(SocialLinkOptions options)
+        {
+            var links = await repository.GetSocialLinksAsync();
+            var maxSortOrder = links.Any() ? links.Max(l => l.SortOrder) : -1;
+
+            var link = new LandingSocialLink(
+                options.Platform,
+                options.Url,
+                options.DisplayName,
+                options.IconName,
+                maxSortOrder + 1,
+                options.ShowInHeader,
+                options.ShowInFooter
+            );
+
+            await repository.SaveSocialLinkAsync(link);
+
+            return new SocialLinkOptions(
+                link.Id,
+                link.Platform,
+                link.Url,
+                link.DisplayName,
+                link.IconName,
+                link.SortOrder,
+                link.IsActive,
+                link.ShowInHeader,
+                link.ShowInFooter
+            );
+        }
+
+        public async Task UpdateSocialLinkAsync(Guid id, SocialLinkOptions options)
+        {
+            var link = await repository.GetSocialLinkByIdAsync(id);
+            if (link == null)
+                throw new InvalidOperationException($"Social link with id {id} not found");
+
+            link.Update(
+                options.Platform,
+                options.Url,
+                options.DisplayName,
+                options.IconName,
+                options.SortOrder,
+                options.IsActive,
+                options.ShowInHeader,
+                options.ShowInFooter
+            );
+
+            await repository.SaveSocialLinkAsync(link);
+        }
+
+        public async Task DeleteSocialLinkAsync(Guid id)
+        {
+            await repository.DeleteSocialLinkAsync(id);
+        }
+
+        public async Task ReorderSocialLinksAsync(List<Guid> orderedIds)
+        {
+            for (int i = 0; i < orderedIds.Count; i++)
+            {
+                var link = await repository.GetSocialLinkByIdAsync(orderedIds[i]);
+                if (link != null)
+                {
+                    link.UpdateSortOrder(i);
+                    await repository.SaveSocialLinkAsync(link);
+                }
+            }
+        }
+
         // Full Content
         public async Task<LandingContentOptions> GetLandingContentAsync()
         {
@@ -504,6 +759,10 @@ namespace MechanicBuddy.Core.Application.Services
             var tips = await GetTipsAsync();
             var footer = await GetFooterAsync();
             var contact = await GetContactAsync();
+            var sectionVisibility = await GetSectionVisibilityAsync();
+            var gallerySection = await GetGallerySectionAsync();
+            var galleryPhotos = await GetGalleryPhotosAsync();
+            var socialLinks = await GetSocialLinksAsync();
 
             return new LandingContentOptions(
                 hero,
@@ -513,7 +772,11 @@ namespace MechanicBuddy.Core.Application.Services
                 tipsSection,
                 tips,
                 footer,
-                contact
+                contact,
+                sectionVisibility,
+                gallerySection,
+                galleryPhotos,
+                socialLinks
             );
         }
 

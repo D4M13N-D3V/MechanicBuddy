@@ -281,5 +281,117 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
             await session.SaveOrUpdateAsync(contact);
             await session.FlushAsync();
         }
+
+        // Section Visibility
+        public async Task<LandingSectionVisibility> GetSectionVisibilityAsync()
+        {
+            var visibility = session.QueryOver<LandingSectionVisibility>().List<LandingSectionVisibility>().FirstOrDefault();
+
+            if (visibility == null)
+            {
+                visibility = new LandingSectionVisibility();
+                await session.SaveAsync(visibility);
+                await session.FlushAsync();
+            }
+
+            return visibility;
+        }
+
+        public async Task SaveSectionVisibilityAsync(LandingSectionVisibility visibility)
+        {
+            if (visibility == null)
+                throw new ArgumentNullException(nameof(visibility));
+
+            await session.SaveOrUpdateAsync(visibility);
+            await session.FlushAsync();
+        }
+
+        // Gallery Section
+        public async Task<LandingGallerySection> GetGallerySectionAsync()
+        {
+            var gallerySection = session.QueryOver<LandingGallerySection>().List<LandingGallerySection>().FirstOrDefault();
+
+            if (gallerySection == null)
+            {
+                gallerySection = new LandingGallerySection();
+                await session.SaveAsync(gallerySection);
+                await session.FlushAsync();
+            }
+
+            return gallerySection;
+        }
+
+        public async Task SaveGallerySectionAsync(LandingGallerySection gallerySection)
+        {
+            if (gallerySection == null)
+                throw new ArgumentNullException(nameof(gallerySection));
+
+            await session.SaveOrUpdateAsync(gallerySection);
+            await session.FlushAsync();
+        }
+
+        // Gallery Photos
+        public async Task<IList<LandingGalleryPhoto>> GetGalleryPhotosAsync()
+        {
+            return await session.Query<LandingGalleryPhoto>()
+                .OrderBy(p => p.SortOrder)
+                .ToListAsync();
+        }
+
+        public async Task<LandingGalleryPhoto> GetGalleryPhotoByIdAsync(Guid id)
+        {
+            return await session.GetAsync<LandingGalleryPhoto>(id);
+        }
+
+        public async Task SaveGalleryPhotoAsync(LandingGalleryPhoto photo)
+        {
+            if (photo == null)
+                throw new ArgumentNullException(nameof(photo));
+
+            await session.SaveOrUpdateAsync(photo);
+            await session.FlushAsync();
+        }
+
+        public async Task DeleteGalleryPhotoAsync(Guid id)
+        {
+            var photo = await session.GetAsync<LandingGalleryPhoto>(id);
+            if (photo != null)
+            {
+                await session.DeleteAsync(photo);
+                await session.FlushAsync();
+            }
+        }
+
+        // Social Links
+        public async Task<IList<LandingSocialLink>> GetSocialLinksAsync()
+        {
+            return await session.Query<LandingSocialLink>()
+                .OrderBy(s => s.SortOrder)
+                .ToListAsync();
+        }
+
+        public async Task<LandingSocialLink> GetSocialLinkByIdAsync(Guid id)
+        {
+            return await session.GetAsync<LandingSocialLink>(id);
+        }
+
+        public async Task SaveSocialLinkAsync(LandingSocialLink socialLink)
+        {
+            if (socialLink == null)
+                throw new ArgumentNullException(nameof(socialLink));
+
+            await session.SaveOrUpdateAsync(socialLink);
+            await session.FlushAsync();
+        }
+
+        public async Task DeleteSocialLinkAsync(Guid id)
+        {
+            var socialLink = await session.GetAsync<LandingSocialLink>(id);
+            if (socialLink != null)
+            {
+                await session.DeleteAsync(socialLink);
+                await session.FlushAsync();
+            }
+        }
     }
 }

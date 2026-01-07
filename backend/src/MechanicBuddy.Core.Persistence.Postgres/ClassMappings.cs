@@ -887,4 +887,91 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
             Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
         }
     }
+
+    public class LandingSectionVisibilityMapping : ClassMap<LandingSectionVisibility>
+    {
+        public LandingSectionVisibilityMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_section_visibility");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy.Assigned();
+
+            Map(x => x.HeroVisible).Column("hero_visible").Access.BackingField();
+            Map(x => x.ServicesVisible).Column("services_visible").Access.BackingField();
+            Map(x => x.AboutVisible).Column("about_visible").Access.BackingField();
+            Map(x => x.StatsVisible).Column("stats_visible").Access.BackingField();
+            Map(x => x.TipsVisible).Column("tips_visible").Access.BackingField();
+            Map(x => x.GalleryVisible).Column("gallery_visible").Access.BackingField();
+            Map(x => x.ContactVisible).Column("contact_visible").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingGallerySectionMapping : ClassMap<LandingGallerySection>
+    {
+        public LandingGallerySectionMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_gallery_section");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy.Assigned();
+
+            Map(x => x.SectionLabel).Column("section_label").Access.BackingField();
+            Map(x => x.Headline).Column("headline").Access.BackingField();
+            Map(x => x.Description).Column("description").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingGalleryPhotoMapping : ClassMap<LandingGalleryPhoto>
+    {
+        public LandingGalleryPhotoMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_gallery_photo");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy.Assigned();
+
+            Map(x => x.Image).Column("image").Access.BackingField();
+            Map(x => x.ImageMimeType).Column("image_mime_type").Access.BackingField();
+            Map(x => x.Caption).Column("caption").Access.BackingField();
+            Map(x => x.SortOrder).Column("sort_order").Access.BackingField();
+            Map(x => x.IsActive).Column("is_active").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
+
+    public class LandingSocialLinkMapping : ClassMap<LandingSocialLink>
+    {
+        public LandingSocialLinkMapping()
+        {
+            Schema("tenant_config");
+            Table("landing_social_link");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy.Assigned();
+
+            Map(x => x.Platform).Column("platform").Access.BackingField();
+            Map(x => x.Url).Column("url").Access.BackingField();
+            Map(x => x.DisplayName).Column("display_name").Access.BackingField();
+            Map(x => x.IconName).Column("icon_name").Access.BackingField();
+            Map(x => x.SortOrder).Column("sort_order").Access.BackingField();
+            Map(x => x.IsActive).Column("is_active").Access.BackingField();
+            Map(x => x.ShowInHeader).Column("show_in_header").Access.BackingField();
+            Map(x => x.ShowInFooter).Column("show_in_footer").Access.BackingField();
+            Map(x => x.CreatedAt).Column("created_at").Access.BackingField();
+            Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
+        }
+    }
 }

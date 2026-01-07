@@ -3,7 +3,7 @@
 import { httpPut, httpPost, httpDelete } from "@/_lib/server/query-api";
 import { pushToast } from "@/_lib/server/pushToast";
 import { redirect } from "next/navigation";
-import { IBrandingOptions, IServiceItem, IStatItem, ITipItem, IAboutFeature } from "./model";
+import { IBrandingOptions, IServiceItem, IStatItem, ITipItem, IAboutFeature, ISectionVisibilityOptions, IGallerySectionOptions, IGalleryPhotoItem, ISocialLinkItem } from "./model";
 
 export async function updateBranding(formData: FormData) {
     // Handle logo file upload
@@ -322,4 +322,158 @@ export async function reorderAboutFeatures(formData: FormData) {
         await httpPut({ url: 'branding/about/features/reorder', body: { order } });
     }
     redirect('/home/settings/landing/about');
+}
+
+// Section Visibility
+export async function updateSectionVisibility(formData: FormData) {
+    const body: ISectionVisibilityOptions = {
+        heroVisible: formData.get('heroVisible') === 'on',
+        servicesVisible: formData.get('servicesVisible') === 'on',
+        aboutVisible: formData.get('aboutVisible') === 'on',
+        statsVisible: formData.get('statsVisible') === 'on',
+        tipsVisible: formData.get('tipsVisible') === 'on',
+        galleryVisible: formData.get('galleryVisible') === 'on',
+        contactVisible: formData.get('contactVisible') === 'on',
+    };
+
+    await httpPut({ url: 'branding/section-visibility', body });
+
+    pushToast('Section visibility updated successfully!');
+    redirect('/home/settings/landing/visibility');
+}
+
+// Gallery Section
+export async function updateGallerySection(formData: FormData) {
+    const body: IGallerySectionOptions = {
+        sectionLabel: formData.get('sectionLabel')?.toString() || 'Our Work',
+        headline: formData.get('headline')?.toString() || 'Photo Gallery',
+        description: formData.get('description')?.toString() || null,
+    };
+
+    await httpPut({ url: 'branding/gallery-section', body });
+
+    pushToast('Gallery section updated successfully!');
+    redirect('/home/settings/landing/gallery');
+}
+
+// Gallery Photos CRUD
+export async function createGalleryPhoto(formData: FormData) {
+    const imageFile = formData.get('image') as File | null;
+    let imageBase64: string | null = null;
+    let imageMimeType: string | null = null;
+
+    if (imageFile && imageFile.size > 0) {
+        const buffer = await imageFile.arrayBuffer();
+        imageBase64 = Buffer.from(buffer).toString('base64');
+        imageMimeType = imageFile.type;
+    }
+
+    const body: Partial<IGalleryPhotoItem> = {
+        imageBase64,
+        imageMimeType,
+        caption: formData.get('caption')?.toString() || null,
+        isActive: formData.get('isActive') === 'on',
+    };
+
+    await httpPost({ url: 'branding/gallery-photos', body });
+
+    pushToast('Photo added successfully!');
+    redirect('/home/settings/landing/gallery');
+}
+
+export async function updateGalleryPhoto(formData: FormData) {
+    const id = formData.get('id')?.toString();
+    const imageFile = formData.get('image') as File | null;
+    let imageBase64: string | null = null;
+    let imageMimeType: string | null = null;
+
+    if (imageFile && imageFile.size > 0) {
+        const buffer = await imageFile.arrayBuffer();
+        imageBase64 = Buffer.from(buffer).toString('base64');
+        imageMimeType = imageFile.type;
+    }
+
+    const body: Partial<IGalleryPhotoItem> = {
+        imageBase64,
+        imageMimeType,
+        caption: formData.get('caption')?.toString() || null,
+        isActive: formData.get('isActive') === 'on',
+    };
+
+    await httpPut({ url: `branding/gallery-photos/${id}`, body });
+
+    pushToast('Photo updated successfully!');
+    redirect('/home/settings/landing/gallery');
+}
+
+export async function deleteGalleryPhoto(formData: FormData) {
+    const id = formData.get('id')?.toString();
+
+    await httpDelete({ url: `branding/gallery-photos/${id}`, body: {} });
+
+    pushToast('Photo deleted successfully!');
+    redirect('/home/settings/landing/gallery');
+}
+
+export async function reorderGalleryPhotos(formData: FormData) {
+    const orderJson = formData.get('order')?.toString();
+    if (orderJson) {
+        const order = JSON.parse(orderJson);
+        await httpPut({ url: 'branding/gallery-photos/reorder', body: order });
+    }
+    redirect('/home/settings/landing/gallery');
+}
+
+// Social Links CRUD
+export async function createSocialLink(formData: FormData) {
+    const body: Partial<ISocialLinkItem> = {
+        platform: formData.get('platform')?.toString() || 'custom',
+        url: formData.get('url')?.toString() || '',
+        displayName: formData.get('displayName')?.toString() || null,
+        iconName: formData.get('iconName')?.toString() || null,
+        isActive: formData.get('isActive') === 'on',
+        showInHeader: formData.get('showInHeader') === 'on',
+        showInFooter: formData.get('showInFooter') === 'on',
+    };
+
+    await httpPost({ url: 'branding/social-links', body });
+
+    pushToast('Social link created successfully!');
+    redirect('/home/settings/landing/social');
+}
+
+export async function updateSocialLink(formData: FormData) {
+    const id = formData.get('id')?.toString();
+    const body: Partial<ISocialLinkItem> = {
+        platform: formData.get('platform')?.toString() || 'custom',
+        url: formData.get('url')?.toString() || '',
+        displayName: formData.get('displayName')?.toString() || null,
+        iconName: formData.get('iconName')?.toString() || null,
+        isActive: formData.get('isActive') === 'on',
+        showInHeader: formData.get('showInHeader') === 'on',
+        showInFooter: formData.get('showInFooter') === 'on',
+    };
+
+    await httpPut({ url: `branding/social-links/${id}`, body });
+
+    pushToast('Social link updated successfully!');
+    redirect('/home/settings/landing/social');
+}
+
+export async function deleteSocialLink(formData: FormData) {
+    const id = formData.get('id')?.toString();
+
+    await httpDelete({ url: `branding/social-links/${id}`, body: {} });
+
+    pushToast('Social link deleted successfully!');
+    redirect('/home/settings/landing/social');
+}
+
+export async function reorderSocialLinks(formData: FormData) {
+    const orderJson = formData.get('order')?.toString();
+    if (orderJson) {
+        const order = JSON.parse(orderJson);
+        await httpPut({ url: 'branding/social-links/reorder', body: order });
+    }
+    redirect('/home/settings/landing/social');
 }

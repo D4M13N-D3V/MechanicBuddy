@@ -9,9 +9,11 @@ import {
     LightBulbIcon,
     CogIcon,
     TruckIcon,
+    PhotoIcon,
 } from "@heroicons/react/24/outline"
-import { IPublicLandingData, IServiceItem } from "@/app/home/settings/branding/model"
+import { IPublicLandingData, IServiceItem, IGalleryPhotoItem } from "@/app/home/settings/branding/model"
 import { ServiceRequestForm } from "./ServiceRequestForm"
+import SocialIcons from "./SocialIcons"
 
 // Dynamic icon mapping
 const iconMap: { [key: string]: React.ElementType } = {
@@ -31,6 +33,9 @@ function getIcon(iconName: string): React.ElementType {
 export function HeroSection({ data }: { data: IPublicLandingData }) {
     const { content } = data;
     const hero = content.hero;
+    const sectionVisibility = content.sectionVisibility;
+
+    if (!sectionVisibility?.heroVisible) return null;
 
     return (
         <section
@@ -103,8 +108,10 @@ function ServiceCard({ service }: { service: IServiceItem }) {
 }
 
 export function ServicesSection({ data }: { data: IPublicLandingData }) {
+    const { sectionVisibility } = data.content;
     const services = data.content.services.filter(s => s.isActive).sort((a, b) => a.sortOrder - b.sortOrder)
 
+    if (!sectionVisibility?.servicesVisible) return null;
     if (services.length === 0) return null
 
     return (
@@ -125,8 +132,10 @@ export function ServicesSection({ data }: { data: IPublicLandingData }) {
 }
 
 export function AboutSection({ data }: { data: IPublicLandingData }) {
-    const { about, stats } = data.content
+    const { about, stats, sectionVisibility } = data.content
     const sortedStats = stats.sort((a, b) => a.sortOrder - b.sortOrder)
+
+    if (!sectionVisibility?.aboutVisible) return null;
 
     return (
         <section id="about" className="py-16 bg-slate-900 text-white">
@@ -175,8 +184,9 @@ export function AboutSection({ data }: { data: IPublicLandingData }) {
 }
 
 export function TipsSection({ data }: { data: IPublicLandingData }) {
-    const { tipsSection, tips } = data.content
+    const { tipsSection, tips, sectionVisibility } = data.content
 
+    if (!sectionVisibility?.tipsVisible) return null
     if (!tipsSection.isVisible) return null
 
     const activeTips = tips.filter(t => t.isActive).sort((a, b) => a.sortOrder - b.sortOrder)
@@ -214,9 +224,70 @@ export function TipsSection({ data }: { data: IPublicLandingData }) {
     )
 }
 
+function GalleryPhoto({ photo }: { photo: IGalleryPhotoItem }) {
+    const imageUrl = photo.id ? `/api/branding/gallery-photos/${photo.id}/image` : null
+
+    if (!imageUrl) return null
+
+    return (
+        <div className="relative group overflow-hidden rounded-xl bg-slate-200 aspect-[4/3]">
+            <img
+                src={imageUrl}
+                alt={photo.caption || 'Gallery photo'}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            {photo.caption && (
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                    <p className="text-white text-sm font-medium">{photo.caption}</p>
+                </div>
+            )}
+        </div>
+    )
+}
+
+export function GallerySection({ data }: { data: IPublicLandingData }) {
+    const { gallerySection, galleryPhotos, sectionVisibility } = data.content
+
+    if (!sectionVisibility?.galleryVisible) return null
+
+    const activePhotos = (galleryPhotos || []).filter(p => p.isActive).sort((a, b) => a.sortOrder - b.sortOrder)
+
+    if (activePhotos.length === 0) return null
+
+    return (
+        <section id="gallery" className="py-16 bg-white">
+            <Container>
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4 bg-purple-100">
+                        <PhotoIcon className="h-7 w-7 text-landing-primary" />
+                    </div>
+                    <span className="text-sm font-bold uppercase tracking-wider mb-2 block text-landing-secondary">
+                        {gallerySection?.sectionLabel || 'Our Work'}
+                    </span>
+                    <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                        {gallerySection?.headline || 'Photo Gallery'}
+                    </h2>
+                    {gallerySection?.description && (
+                        <p className="text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                            {gallerySection.description}
+                        </p>
+                    )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {activePhotos.map((photo) => (
+                        <GalleryPhoto key={photo.id} photo={photo} />
+                    ))}
+                </div>
+            </Container>
+        </section>
+    )
+}
+
 export function ContactSection({ data }: { data: IPublicLandingData }) {
-    const { contact, services } = data.content
+    const { contact, services, sectionVisibility } = data.content
     const { companyInfo } = data
+
+    if (!sectionVisibility?.contactVisible) return null
 
     return (
         <section id="contact" className="py-16 bg-slate-100">
@@ -296,8 +367,9 @@ export function ContactSection({ data }: { data: IPublicLandingData }) {
 }
 
 export function Footer({ data }: { data: IPublicLandingData }) {
-    const { footer, hero, tipsSection } = data.content
+    const { footer, hero, tipsSection, socialLinks, sectionVisibility } = data.content
     const { companyInfo } = data
+    const footerSocialLinks = (socialLinks || []).filter(l => l.isActive && l.showInFooter).sort((a, b) => a.sortOrder - b.sortOrder)
 
     return (
         <footer className="bg-landing-footer-bg text-white">
@@ -308,9 +380,12 @@ export function Footer({ data }: { data: IPublicLandingData }) {
                             <span className="text-lg font-bold tracking-tight">{hero.companyName}</span>
                         </div>
                         {footer.companyDescription && (
-                            <p className="text-slate-400 text-sm leading-relaxed max-w-md">
+                            <p className="text-slate-400 text-sm leading-relaxed max-w-md mb-4">
                                 {footer.companyDescription}
                             </p>
+                        )}
+                        {footerSocialLinks.length > 0 && (
+                            <SocialIcons links={footerSocialLinks} />
                         )}
                     </div>
                     {footer.showQuickLinks && (

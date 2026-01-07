@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { PhoneIcon, MapPinIcon, ClockIcon } from "@heroicons/react/24/outline"
 import { IPublicLandingData } from "@/app/home/settings/branding/model"
+import SocialIcons from "./SocialIcons"
 
 interface NavigationProps {
     data: IPublicLandingData;
@@ -13,11 +14,13 @@ interface NavigationProps {
 export function Navigation({ data }: NavigationProps) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const { branding, content, companyInfo } = data;
+    const headerSocialLinks = (content.socialLinks || []).filter(l => l.isActive && l.showInHeader).sort((a, b) => a.sortOrder - b.sortOrder);
 
     const navLinks = [
         { name: "Services", href: "#services" },
         { name: "About Us", href: "#about" },
-        ...(content.tipsSection.isVisible ? [{ name: "Auto Tips", href: "#tips" }] : []),
+        ...(content.tipsSection.isVisible && content.sectionVisibility?.tipsVisible ? [{ name: "Auto Tips", href: "#tips" }] : []),
+        ...(content.sectionVisibility?.galleryVisible && content.galleryPhotos?.some(p => p.isActive) ? [{ name: "Gallery", href: "#gallery" }] : []),
         { name: "Contact", href: "#contact" },
     ]
 
@@ -40,18 +43,23 @@ export function Navigation({ data }: NavigationProps) {
                                 </span>
                             )}
                         </div>
-                        {content.contact.businessHours.length > 0 && (
-                            <span className="hidden md:flex items-center gap-2">
-                                <ClockIcon className="h-4 w-4" />
-                                <span>
-                                    {content.contact.businessHours
-                                        .filter(h => h.open !== 'Closed')
-                                        .slice(0, 2)
-                                        .map(h => `${h.day.slice(0, 3)}: ${h.open} - ${h.close}`)
-                                        .join(' | ')}
+                        <div className="flex items-center gap-4">
+                            {content.contact.businessHours.length > 0 && (
+                                <span className="hidden md:flex items-center gap-2">
+                                    <ClockIcon className="h-4 w-4" />
+                                    <span>
+                                        {content.contact.businessHours
+                                            .filter(h => h.open !== 'Closed')
+                                            .slice(0, 2)
+                                            .map(h => `${h.day.slice(0, 3)}: ${h.open} - ${h.close}`)
+                                            .join(' | ')}
+                                    </span>
                                 </span>
-                            </span>
-                        )}
+                            )}
+                            {headerSocialLinks.length > 0 && (
+                                <SocialIcons links={headerSocialLinks} className="hidden sm:flex" />
+                            )}
+                        </div>
                     </div>
                 </Container>
             </div>

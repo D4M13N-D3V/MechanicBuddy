@@ -575,6 +575,269 @@ namespace MechanicBuddy.Http.Api.Controllers
             }
         }
 
+        // === Section Visibility ===
+
+        // GET /api/branding/section-visibility
+        [HttpGet("section-visibility")]
+        public async Task<ActionResult<SectionVisibilityOptions>> GetSectionVisibility()
+        {
+            try
+            {
+                return await brandingService.GetSectionVisibilityAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving section visibility");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve section visibility");
+            }
+        }
+
+        // PUT /api/branding/section-visibility
+        [HttpPut("section-visibility")]
+        public async Task<ActionResult> UpdateSectionVisibility([FromBody] SectionVisibilityOptions options)
+        {
+            try
+            {
+                await brandingService.SaveSectionVisibilityAsync(options);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error saving section visibility");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to save section visibility");
+            }
+        }
+
+        // === Gallery Section ===
+
+        // GET /api/branding/gallery-section
+        [HttpGet("gallery-section")]
+        public async Task<ActionResult<GallerySectionOptions>> GetGallerySection()
+        {
+            try
+            {
+                return await brandingService.GetGallerySectionAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving gallery section");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve gallery section");
+            }
+        }
+
+        // PUT /api/branding/gallery-section
+        [HttpPut("gallery-section")]
+        public async Task<ActionResult> UpdateGallerySection([FromBody] GallerySectionOptions options)
+        {
+            try
+            {
+                await brandingService.SaveGallerySectionAsync(options);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error saving gallery section");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to save gallery section");
+            }
+        }
+
+        // === Gallery Photos CRUD ===
+
+        // GET /api/branding/gallery-photos
+        [HttpGet("gallery-photos")]
+        public async Task<ActionResult<List<GalleryPhotoOptions>>> GetGalleryPhotos()
+        {
+            try
+            {
+                return await brandingService.GetGalleryPhotosAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving gallery photos");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve gallery photos");
+            }
+        }
+
+        // POST /api/branding/gallery-photos
+        [HttpPost("gallery-photos")]
+        public async Task<ActionResult<GalleryPhotoOptions>> CreateGalleryPhoto([FromBody] GalleryPhotoOptions options)
+        {
+            try
+            {
+                var result = await brandingService.CreateGalleryPhotoAsync(options);
+                return CreatedAtAction(nameof(GetGalleryPhotos), result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error creating gallery photo");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create gallery photo");
+            }
+        }
+
+        // PUT /api/branding/gallery-photos/{id}
+        [HttpPut("gallery-photos/{id}")]
+        public async Task<ActionResult> UpdateGalleryPhoto(Guid id, [FromBody] GalleryPhotoOptions options)
+        {
+            try
+            {
+                await brandingService.UpdateGalleryPhotoAsync(id, options);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error updating gallery photo");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to update gallery photo");
+            }
+        }
+
+        // DELETE /api/branding/gallery-photos/{id}
+        [HttpDelete("gallery-photos/{id}")]
+        public async Task<ActionResult> DeleteGalleryPhoto(Guid id)
+        {
+            try
+            {
+                await brandingService.DeleteGalleryPhotoAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error deleting gallery photo");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to delete gallery photo");
+            }
+        }
+
+        // PUT /api/branding/gallery-photos/reorder
+        [HttpPut("gallery-photos/reorder")]
+        public async Task<ActionResult> ReorderGalleryPhotos([FromBody] List<Guid> orderedIds)
+        {
+            try
+            {
+                await brandingService.ReorderGalleryPhotosAsync(orderedIds);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error reordering gallery photos");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to reorder gallery photos");
+            }
+        }
+
+        // GET /api/branding/gallery-photos/{id}/image (public endpoint)
+        [AllowAnonymous]
+        [HttpGet("gallery-photos/{id}/image")]
+        public async Task<IActionResult> GetGalleryPhotoImage(Guid id)
+        {
+            try
+            {
+                var photo = await brandingService.GetGalleryPhotoByIdAsync(id);
+                if (photo == null || string.IsNullOrEmpty(photo.ImageBase64))
+                {
+                    return NotFound();
+                }
+
+                var bytes = Convert.FromBase64String(photo.ImageBase64);
+                return File(bytes, photo.ImageMimeType ?? "image/jpeg");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving gallery photo image");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve gallery photo image");
+            }
+        }
+
+        // === Social Links CRUD ===
+
+        // GET /api/branding/social-links
+        [HttpGet("social-links")]
+        public async Task<ActionResult<List<SocialLinkOptions>>> GetSocialLinks()
+        {
+            try
+            {
+                return await brandingService.GetSocialLinksAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving social links");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve social links");
+            }
+        }
+
+        // POST /api/branding/social-links
+        [HttpPost("social-links")]
+        public async Task<ActionResult<SocialLinkOptions>> CreateSocialLink([FromBody] SocialLinkOptions options)
+        {
+            try
+            {
+                var result = await brandingService.CreateSocialLinkAsync(options);
+                return CreatedAtAction(nameof(GetSocialLinks), result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error creating social link");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to create social link");
+            }
+        }
+
+        // PUT /api/branding/social-links/{id}
+        [HttpPut("social-links/{id}")]
+        public async Task<ActionResult> UpdateSocialLink(Guid id, [FromBody] SocialLinkOptions options)
+        {
+            try
+            {
+                await brandingService.UpdateSocialLinkAsync(id, options);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error updating social link");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to update social link");
+            }
+        }
+
+        // DELETE /api/branding/social-links/{id}
+        [HttpDelete("social-links/{id}")]
+        public async Task<ActionResult> DeleteSocialLink(Guid id)
+        {
+            try
+            {
+                await brandingService.DeleteSocialLinkAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error deleting social link");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to delete social link");
+            }
+        }
+
+        // PUT /api/branding/social-links/reorder
+        [HttpPut("social-links/reorder")]
+        public async Task<ActionResult> ReorderSocialLinks([FromBody] List<Guid> orderedIds)
+        {
+            try
+            {
+                await brandingService.ReorderSocialLinksAsync(orderedIds);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error reordering social links");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to reorder social links");
+            }
+        }
+
         // === Full Landing Content ===
 
         // GET /api/branding/landing-content

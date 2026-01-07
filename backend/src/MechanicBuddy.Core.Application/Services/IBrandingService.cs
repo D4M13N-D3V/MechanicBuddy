@@ -60,6 +60,31 @@ namespace MechanicBuddy.Core.Application.Services
         Task<ContactOptions> GetContactAsync();
         Task SaveContactAsync(ContactOptions options);
 
+        // Section Visibility
+        Task<SectionVisibilityOptions> GetSectionVisibilityAsync();
+        Task SaveSectionVisibilityAsync(SectionVisibilityOptions options);
+
+        // Gallery Section
+        Task<GallerySectionOptions> GetGallerySectionAsync();
+        Task SaveGallerySectionAsync(GallerySectionOptions options);
+
+        // Gallery Photos
+        Task<List<GalleryPhotoOptions>> GetGalleryPhotosAsync();
+        Task<GalleryPhotoOptions> GetGalleryPhotoByIdAsync(Guid id);
+        Task<GalleryPhotoOptions> CreateGalleryPhotoAsync(GalleryPhotoOptions options);
+        Task UpdateGalleryPhotoAsync(Guid id, GalleryPhotoOptions options);
+        Task DeleteGalleryPhotoAsync(Guid id);
+        Task ReorderGalleryPhotosAsync(List<Guid> orderedIds);
+        Task<byte[]> GetGalleryPhotoImageAsync(Guid id);
+
+        // Social Links
+        Task<List<SocialLinkOptions>> GetSocialLinksAsync();
+        Task<SocialLinkOptions> GetSocialLinkByIdAsync(Guid id);
+        Task<SocialLinkOptions> CreateSocialLinkAsync(SocialLinkOptions options);
+        Task UpdateSocialLinkAsync(Guid id, SocialLinkOptions options);
+        Task DeleteSocialLinkAsync(Guid id);
+        Task ReorderSocialLinksAsync(List<Guid> orderedIds);
+
         // Full Content
         Task<LandingContentOptions> GetLandingContentAsync();
         Task<PublicLandingData> GetPublicLandingDataAsync();

@@ -121,6 +121,47 @@ namespace MechanicBuddy.Core.Application.Configuration
         List<BusinessHoursEntry> BusinessHours
     );
 
+    // Section Visibility
+    public record SectionVisibilityOptions(
+        bool HeroVisible,
+        bool ServicesVisible,
+        bool AboutVisible,
+        bool StatsVisible,
+        bool TipsVisible,
+        bool GalleryVisible,
+        bool ContactVisible
+    );
+
+    // Gallery Section Settings
+    public record GallerySectionOptions(
+        string SectionLabel,
+        string Headline,
+        string Description
+    );
+
+    // Gallery Photo Item
+    public record GalleryPhotoOptions(
+        Guid? Id,
+        string ImageBase64,
+        string ImageMimeType,
+        string Caption,
+        int SortOrder,
+        bool IsActive
+    );
+
+    // Social Link Item
+    public record SocialLinkOptions(
+        Guid? Id,
+        string Platform,
+        string Url,
+        string DisplayName,
+        string IconName,
+        int SortOrder,
+        bool IsActive,
+        bool ShowInHeader,
+        bool ShowInFooter
+    );
+
     // Full Landing Content Options
     public record LandingContentOptions(
         HeroOptions Hero,
@@ -130,7 +171,11 @@ namespace MechanicBuddy.Core.Application.Configuration
         TipsSectionOptions TipsSection,
         List<TipItemOptions> Tips,
         FooterOptions Footer,
-        ContactOptions Contact
+        ContactOptions Contact,
+        SectionVisibilityOptions SectionVisibility,
+        GallerySectionOptions GallerySection,
+        List<GalleryPhotoOptions> GalleryPhotos,
+        List<SocialLinkOptions> SocialLinks
     );
 
     // Public Landing Page Data (for unauthenticated access)

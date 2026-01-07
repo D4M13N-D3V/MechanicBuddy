@@ -1294,14 +1294,14 @@
           "System.Xml.ReaderWriter": "4.3.0"
         }
       },
-      "carmasters.core.application": {
+      "mechanicbuddy.core.application": {
         "type": "Project",
         "dependencies": {
           "BCrypt.Net-Next": "[4.0.3, )",
-          "Carmasters.Core.Domain": "[1.0.0, )",
-          "Carmasters.Http.Api.Model": "[1.0.0, )",
           "Dapper": "[2.1.66, )",
           "FluentNHibernate": "[3.4.0, )",
+          "MechanicBuddy.Core.Domain": "[1.0.0, )",
+          "MechanicBuddy.Http.Api.Model": "[1.0.0, )",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.2, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[9.0.2, )",
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[9.0.2, )",
@@ -1312,27 +1312,27 @@
           "System.IdentityModel.Tokens.Jwt": "[8.4.0, )"
         }
       },
-      "carmasters.core.domain": {
+      "mechanicbuddy.core.domain": {
         "type": "Project"
       },
-      "carmasters.core.persistence.postgres": {
+      "mechanicbuddy.core.persistence.postgres": {
         "type": "Project",
         "dependencies": {
-          "Carmasters.Core.Application": "[1.0.0, )",
-          "Carmasters.Core.Domain": "[1.0.0, )",
-          "Carmasters.Http.Api.Model": "[1.0.0, )",
           "FluentNHibernate": "[3.4.0, )",
+          "MechanicBuddy.Core.Application": "[1.0.0, )",
+          "MechanicBuddy.Core.Domain": "[1.0.0, )",
+          "MechanicBuddy.Http.Api.Model": "[1.0.0, )",
           "Microsoft.Extensions.Configuration.Abstractions": "[9.0.2, )",
           "Microsoft.Extensions.Logging.Abstractions": "[9.0.2, )",
           "NHibernate": "[5.5.2, )",
           "Npgsql": "[9.0.2, )"
         }
       },
-      "carmasters.http.api.model": {
+      "mechanicbuddy.http.api.model": {
         "type": "Project",
         "dependencies": {
           "AutoMapper": "[13.0.1, )",
-          "Carmasters.Core.Domain": "[1.0.0, )"
+          "MechanicBuddy.Core.Domain": "[1.0.0, )"
         }
       }
     }

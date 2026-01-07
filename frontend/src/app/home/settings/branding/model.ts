@@ -116,6 +116,47 @@ export interface IContactOptions {
   businessHours: IBusinessHoursEntry[];
 }
 
+// Section Visibility
+export interface ISectionVisibilityOptions {
+  heroVisible: boolean;
+  servicesVisible: boolean;
+  aboutVisible: boolean;
+  statsVisible: boolean;
+  tipsVisible: boolean;
+  galleryVisible: boolean;
+  contactVisible: boolean;
+}
+
+// Gallery Section Settings
+export interface IGallerySectionOptions {
+  sectionLabel: string;
+  headline: string;
+  description: string | null;
+}
+
+// Gallery Photo Item
+export interface IGalleryPhotoItem {
+  id?: string;
+  imageBase64: string | null;
+  imageMimeType: string | null;
+  caption: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+// Social Link Item
+export interface ISocialLinkItem {
+  id?: string;
+  platform: string;
+  url: string;
+  displayName: string | null;
+  iconName: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  showInHeader: boolean;
+  showInFooter: boolean;
+}
+
 // Full Landing Content Options
 export interface ILandingContentOptions {
   hero: IHeroOptions;
@@ -126,6 +167,10 @@ export interface ILandingContentOptions {
   tips: ITipItem[];
   footer: IFooterOptions;
   contact: IContactOptions;
+  sectionVisibility: ISectionVisibilityOptions;
+  gallerySection: IGallerySectionOptions;
+  galleryPhotos: IGalleryPhotoItem[];
+  socialLinks: ISocialLinkItem[];
 }
 
 // Company Info (from requisites)

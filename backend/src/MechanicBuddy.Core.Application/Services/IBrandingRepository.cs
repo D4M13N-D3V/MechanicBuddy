@@ -51,5 +51,25 @@ namespace MechanicBuddy.Core.Application.Services
         // Contact
         Task<LandingContact> GetContactAsync();
         Task SaveContactAsync(LandingContact contact);
+
+        // Section Visibility
+        Task<LandingSectionVisibility> GetSectionVisibilityAsync();
+        Task SaveSectionVisibilityAsync(LandingSectionVisibility visibility);
+
+        // Gallery Section
+        Task<LandingGallerySection> GetGallerySectionAsync();
+        Task SaveGallerySectionAsync(LandingGallerySection gallerySection);
+
+        // Gallery Photos
+        Task<IList<LandingGalleryPhoto>> GetGalleryPhotosAsync();
+        Task<LandingGalleryPhoto> GetGalleryPhotoByIdAsync(Guid id);
+        Task SaveGalleryPhotoAsync(LandingGalleryPhoto photo);
+        Task DeleteGalleryPhotoAsync(Guid id);
+
+        // Social Links
+        Task<IList<LandingSocialLink>> GetSocialLinksAsync();
+        Task<LandingSocialLink> GetSocialLinkByIdAsync(Guid id);
+        Task SaveSocialLinkAsync(LandingSocialLink socialLink);
+        Task DeleteSocialLinkAsync(Guid id);
     }
 }
