@@ -69,12 +69,22 @@ namespace MechanicBuddy.Core.Repository.Postgres
                     return appFactory.OpenSession();
                 }
 
-                // For anonymous endpoints (like service request submission), use the default tenancy factory
+                // For anonymous endpoints (like service request submission), use the app factory with domain mappings
                 var endpoint = httpContext?.GetEndpoint();
                 var allowAnonymous = endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>() != null;
-                if (allowAnonymous && defaultFactory != null)
+                if (allowAnonymous)
                 {
-                    return defaultFactory.OpenSession();
+                    if (appFactory == null)
+                    {
+                        lock (lockObj)
+                        {
+                            if (appFactory == null)
+                            {
+                                appFactory = NNhibernateFactory.BuildSessionFactory(new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly });
+                            }
+                        }
+                    }
+                    return appFactory.OpenSession();
                 }
 
                 throw new System.Exception("Unable to open database session, user not authenticated.");

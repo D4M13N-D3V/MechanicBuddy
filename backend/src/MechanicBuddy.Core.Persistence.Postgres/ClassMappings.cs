@@ -262,7 +262,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
             References(x=>x.Work, "workid").Access.LowerCaseField();
             Map(x => x.OrderNr).Column("ordernr");
             Map(x => x.Notes).Column("notes");
-            Map(x => x.IsVehicleLinesOnEstimate).Column("isvehilelinesonestimate");
+            Map(x => x.IsVehicleLinesOnEstimate).Column("isvehilelesonestimate");
             Map(x => x.AcceptedOn).Column("acceptedon").CustomType<UtcDateType>();//.HasConversion<DateTimeUtcConverter>();
             Map(x => x.StartedOn).Column("startedon").CustomType<UtcDateType>();//.HasConversion<DateTimeUtcConverter>();
             References(x => x.Starter).Column("starterid").Access.BackingField();
