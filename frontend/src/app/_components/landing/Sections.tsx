@@ -29,7 +29,7 @@ function getIcon(iconName: string): React.ElementType {
 }
 
 export function HeroSection({ data }: { data: IPublicLandingData }) {
-    const { content, branding } = data;
+    const { content } = data;
     const hero = content.hero;
 
     return (

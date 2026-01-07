@@ -3,9 +3,8 @@ import { IBrandingOptions } from "./model";
 import SettingsTabs from "@/_components/SettingsTabs";
 import Main from "../../_components/Main";
 import Link from "next/link";
-import { DescriptionItem } from "@/_components/DescriptionItem";
 
-function ColorSwatch({ color, label }: { color: string; label: string }) {
+function ColorSwatch({ color }: { color: string }) {
     return (
         <div className="flex items-center gap-3">
             <div
@@ -56,37 +55,37 @@ export default async function Page() {
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Sidebar Background</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.portalColors.sidebarBg} label="Sidebar Background" />
+                            <ColorSwatch color={branding.portalColors.sidebarBg} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Sidebar Text</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.portalColors.sidebarText} label="Sidebar Text" />
+                            <ColorSwatch color={branding.portalColors.sidebarText} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Active Item Background</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.portalColors.sidebarActiveBg} label="Active Background" />
+                            <ColorSwatch color={branding.portalColors.sidebarActiveBg} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Active Item Text</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.portalColors.sidebarActiveText} label="Active Text" />
+                            <ColorSwatch color={branding.portalColors.sidebarActiveText} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Accent Color</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.portalColors.accentColor} label="Accent Color" />
+                            <ColorSwatch color={branding.portalColors.accentColor} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Content Background</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.portalColors.contentBg} label="Content Background" />
+                            <ColorSwatch color={branding.portalColors.contentBg} />
                         </dd>
                     </div>
                 </dl>
@@ -102,31 +101,31 @@ export default async function Page() {
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Primary Color</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.landingColors.primaryColor} label="Primary Color" />
+                            <ColorSwatch color={branding.landingColors.primaryColor} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Secondary Color</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.landingColors.secondaryColor} label="Secondary Color" />
+                            <ColorSwatch color={branding.landingColors.secondaryColor} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Accent Color</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.landingColors.accentColor} label="Accent Color" />
+                            <ColorSwatch color={branding.landingColors.accentColor} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Header Background</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.landingColors.headerBg} label="Header Background" />
+                            <ColorSwatch color={branding.landingColors.headerBg} />
                         </dd>
                     </div>
                     <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                         <dt className="text-sm/6 font-medium text-gray-900">Footer Background</dt>
                         <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                            <ColorSwatch color={branding.landingColors.footerBg} label="Footer Background" />
+                            <ColorSwatch color={branding.landingColors.footerBg} />
                         </dd>
                     </div>
                 </dl>

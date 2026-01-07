@@ -14,8 +14,6 @@ import Link from "next/link";
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function BusinessHoursRow({ day, open, close }: { day: string; open: string; close: string }) {
-    const isClosed = open === 'Closed' || close === 'Closed';
-
     return (
         <div className="grid grid-cols-4 gap-4 items-center py-2">
             <div className="text-sm font-medium text-gray-900">{day}</div>
