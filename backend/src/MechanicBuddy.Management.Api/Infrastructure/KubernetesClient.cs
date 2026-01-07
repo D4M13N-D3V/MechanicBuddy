@@ -221,7 +221,7 @@ public class KubernetesClient : IKubernetesClient
             StringData = new Dictionary<string, string>
             {
                 ["SERVER_SECRET"] = _consumerSecret,
-                ["SESSION_SECRET"] = Convert.ToBase64String(Guid.NewGuid().ToByteArray() + Guid.NewGuid().ToByteArray()),
+                ["SESSION_SECRET"] = Convert.ToBase64String([.. Guid.NewGuid().ToByteArray(), .. Guid.NewGuid().ToByteArray()]),
                 ["API_URL"] = $"http://{apiServiceName}:80",
                 ["NEXT_PUBLIC_API_URL"] = $"https://{tenantDomain}/api"
             }
