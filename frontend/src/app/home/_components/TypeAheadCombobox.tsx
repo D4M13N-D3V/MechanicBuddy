@@ -82,11 +82,10 @@ export default function TypeAheadCombobox<T>({
             onChange={(event) => {
                onSearch(event,applyDatasource);
             }}
-            onBlur={() =>   {
-              
-              setDatasource([])
-            }
-            }
+            onBlur={() => {
+              // Delay clearing datasource to allow click events on options to fire first
+              setTimeout(() => setDatasource([]), 200);
+            }}
             displayValue={(item) => {
               if (!item) return '';
               return displayFormatter(item);
