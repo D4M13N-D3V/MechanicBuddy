@@ -20,7 +20,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/mechanicbuddy
 
 jobs:
   # Build all images
@@ -31,12 +30,17 @@ jobs:
       packages: write
     outputs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
+      image_prefix: ${{ steps.vars.outputs.image_prefix }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Set variables
         id: vars
-        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          OWNER_LOWER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')
+          echo "image_prefix=${OWNER_LOWER}/mechanicbuddy" >> $GITHUB_OUTPUT
+          echo "IMAGE_PREFIX=${OWNER_LOWER}/mechanicbuddy" >> $GITHUB_ENV
 
       - name: Log in to Container Registry
         uses: docker/login-action@v3
@@ -155,9 +159,9 @@ jobs:
 
           # Update image tags using kustomize edit
           kustomize edit set image \
-            management-api=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-api:${{ needs.build.outputs.sha_short }} \
-            management-portal=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal:${{ needs.build.outputs.sha_short }} \
-            management-dbup=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-dbup:${{ needs.build.outputs.sha_short }}
+            management-api=${{ env.REGISTRY }}/${{ needs.build.outputs.image_prefix }}-management-api:${{ needs.build.outputs.sha_short }} \
+            management-portal=${{ env.REGISTRY }}/${{ needs.build.outputs.image_prefix }}-management-portal:${{ needs.build.outputs.sha_short }} \
+            management-dbup=${{ env.REGISTRY }}/${{ needs.build.outputs.image_prefix }}-management-dbup:${{ needs.build.outputs.sha_short }}
 
       - name: Commit and push changes
         run: |
