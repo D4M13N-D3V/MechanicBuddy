@@ -81,9 +81,9 @@ export default function TypeAheadCombobox<T>({
             onChange={(event) => {
                onSearch(event,applyDatasource);
             }}
-            displayValue={(item) => {
+            displayValue={(item: T | null) => {
               if (!item) return '';
-              return displayFormatter(item);
+              return displayFormatter(item as T);
             }}
           />
           {showLookingGlass && <MagnifyingGlassIcon
