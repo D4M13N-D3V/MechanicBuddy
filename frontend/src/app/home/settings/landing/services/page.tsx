@@ -5,8 +5,9 @@ import { ILandingContentOptions, IServiceItem } from "../../branding/model";
 import SettingsTabs from "@/_components/SettingsTabs";
 import Main from "../../../_components/Main";
 import Link from "next/link";
-import { PlusIcon, PencilIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
 import { deleteService, reorderServices } from "../../branding/actions";
+import DeleteServiceButton from "./_components/DeleteServiceButton";
 
 function ServiceRow({ service, index, total }: { service: IServiceItem; index: number; total: number }) {
     return (
@@ -64,17 +65,7 @@ function ServiceRow({ service, index, total }: { service: IServiceItem; index: n
                 </Link>
                 <form action={deleteService}>
                     <input type="hidden" name="id" value={service.id} />
-                    <button
-                        type="submit"
-                        className="p-2 text-gray-400 hover:text-red-600"
-                        onClick={(e) => {
-                            if (!confirm('Are you sure you want to delete this service?')) {
-                                e.preventDefault();
-                            }
-                        }}
-                    >
-                        <TrashIcon className="h-5 w-5" />
-                    </button>
+                    <DeleteServiceButton />
                 </form>
             </div>
         </div>
