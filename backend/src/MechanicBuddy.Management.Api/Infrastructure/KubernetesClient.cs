@@ -693,7 +693,8 @@ public class KubernetesClient : IKubernetesClient
                     Labels = new Dictionary<string, string>
                     {
                         ["app"] = "mechanicbuddy",
-                        ["copied-from"] = $"{sourceNamespace}/{secretName}"
+                        ["copied-from-namespace"] = sourceNamespace,
+                        ["copied-from-secret"] = secretName
                     }
                 },
                 Type = sourceSecret.Type,
