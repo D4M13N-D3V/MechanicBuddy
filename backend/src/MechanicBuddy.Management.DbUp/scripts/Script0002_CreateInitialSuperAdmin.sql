@@ -2,7 +2,6 @@
 -- Create Initial Super Admin
 -- =============================================================================
 -- Note: The password is pre-hashed using BCrypt.
--- Default password: admin123 (should be changed on first login)
 
 INSERT INTO management.super_admins (
     email,
@@ -12,8 +11,7 @@ INSERT INTO management.super_admins (
     is_active
 ) VALUES (
     'admin@mechanicbuddy.app',
-    -- BCrypt hash of 'admin123' - CHANGE THIS PASSWORD AFTER FIRST LOGIN
-    '$2b$11$sUWXt48bueT3svslqEKCKucG4S8OTOGxG7yljj/D6Yq6xdbFsQhDu',
+    '$2b$11$bS.b0IYaS22s83x/zuV1..t3MiR10ayvw64P3UnWJ2pFiDcX01Fve',
     'System Administrator',
     'owner',
     true
