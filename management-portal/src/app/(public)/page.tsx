@@ -56,11 +56,11 @@ export default function HomePage() {
                 </Button>
               </Link>
               <div className="flex justify-center gap-4">
-                <Link href="/demo">
+                <a href="https://docs.mechanicbuddy.app" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" size="lg" className="border-dark-600 text-white hover:bg-dark-800 hover:border-dark-500">
-                    Request a Demo
+                    View Documentation
                   </Button>
-                </Link>
+                </a>
                 <Link href="/pricing">
                   <Button variant="outline" size="lg" className="border-dark-600 text-white hover:bg-dark-800 hover:border-dark-500">
                     View Pricing
