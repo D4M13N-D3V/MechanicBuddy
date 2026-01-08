@@ -1,12 +1,16 @@
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
 import { Button } from "@/_components/ui/Button";
 import { formatDate, formatRelativeTime } from "@/_lib/utils";
 import { getTenants } from "@/_lib/api";
+import { getCurrentUser } from "@/_lib/auth";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { AddTenantButton } from "@/_components/TenantsPageClient";
+
+const ADMIN_ROLES = ["super_admin", "admin", "support"];
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   active: "success",
@@ -17,6 +21,12 @@ const statusColors: Record<string, "default" | "success" | "warning" | "danger" 
 };
 
 export default async function TenantsPage() {
+  // Check if user is admin
+  const user = await getCurrentUser();
+  if (!user || !ADMIN_ROLES.includes(user.role)) {
+    redirect("/dashboard/account");
+  }
+
   const response = await getTenants(1, 50);
 
   if (!response.success || !response.data) {

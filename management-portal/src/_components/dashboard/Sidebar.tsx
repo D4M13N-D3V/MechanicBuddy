@@ -8,20 +8,41 @@ import {
   Building2,
   Wrench,
   User,
-  CreditCard
+  CreditCard,
+  LucideIcon
 } from "lucide-react";
 import { cn } from "@/_lib/utils";
 
-const navigation = [
-  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Tenants", href: "/dashboard/tenants", icon: Building2 },
-  { name: "Demo Requests", href: "/dashboard/demos", icon: MessageSquare },
-  { name: "Account", href: "/dashboard/account", icon: User },
-  { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+}
+
+const navigation: NavItem[] = [
+  { name: "Overview", href: "/dashboard", icon: LayoutDashboard, adminOnly: true },
+  { name: "Tenants", href: "/dashboard/tenants", icon: Building2, adminOnly: true },
+  { name: "Demo Requests", href: "/dashboard/demos", icon: MessageSquare, adminOnly: true },
+  { name: "My Tenants", href: "/dashboard/account", icon: User, adminOnly: false },
+  { name: "Billing", href: "/dashboard/billing", icon: CreditCard, adminOnly: false },
 ];
 
-export function Sidebar() {
+const ADMIN_ROLES = ["super_admin", "admin", "support"];
+
+interface SidebarProps {
+  userRole?: string;
+}
+
+export function Sidebar({ userRole = "owner" }: SidebarProps) {
   const pathname = usePathname();
+  const isAdmin = ADMIN_ROLES.includes(userRole);
+
+  // Filter navigation based on role
+  const visibleNavigation = navigation.filter(item => {
+    if (item.adminOnly && !isAdmin) return false;
+    return true;
+  });
 
   return (
     <div className="flex h-full w-64 flex-col bg-dark-950 dark-scrollbar">
@@ -32,8 +53,8 @@ export function Sidebar() {
         <span className="ml-3 text-xl font-bold text-white">MechanicBuddy</span>
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
+        {visibleNavigation.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
           return (
             <Link

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { StatCard } from "@/_components/dashboard/StatCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
@@ -5,8 +6,17 @@ import { Badge } from "@/_components/ui/Badge";
 import { Building2, Users, DollarSign, MessageSquare, TrendingUp, AlertCircle } from "lucide-react";
 import { formatCurrency, formatDate } from "@/_lib/utils";
 import { getDashboardAnalytics } from "@/_lib/api";
+import { getCurrentUser } from "@/_lib/auth";
+
+const ADMIN_ROLES = ["super_admin", "admin", "support"];
 
 export default async function DashboardPage() {
+  // Check if user is admin
+  const user = await getCurrentUser();
+  if (!user || !ADMIN_ROLES.includes(user.role)) {
+    redirect("/dashboard/account");
+  }
+
   const response = await getDashboardAnalytics();
 
   if (!response.success || !response.data) {

@@ -1,11 +1,15 @@
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
 import { formatRelativeTime } from "@/_lib/utils";
 import { getDemoRequests } from "@/_lib/api";
+import { getCurrentUser } from "@/_lib/auth";
 import { AlertCircle } from "lucide-react";
 import { DemoActions } from "./DemoActions";
 import type { DemoRequestStatus } from "@/types";
+
+const ADMIN_ROLES = ["super_admin", "admin", "support"];
 
 const statusColors: Record<DemoRequestStatus, "default" | "success" | "warning" | "danger" | "info"> = {
   new: "info",
@@ -22,6 +26,12 @@ const statusLabels: Record<DemoRequestStatus, string> = {
 };
 
 export default async function DemosPage() {
+  // Check if user is admin
+  const user = await getCurrentUser();
+  if (!user || !ADMIN_ROLES.includes(user.role)) {
+    redirect("/dashboard/account");
+  }
+
   const response = await getDemoRequests(1, 50);
 
   if (!response.success || !response.data) {
