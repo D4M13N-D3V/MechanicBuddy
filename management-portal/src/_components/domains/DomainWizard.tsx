@@ -245,43 +245,85 @@ export function DomainWizard({ tenantId, existingVerification, onComplete }: Dom
 
   // Step 3: Success
   if (step === "success") {
+    // Extract subdomain for CNAME instructions
+    const domainParts = verification?.domain?.split(".") || [];
+    const subdomain = domainParts.length > 2 ? domainParts.slice(0, -2).join(".") : domainParts[0];
+
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center space-y-4">
-            <div className="flex justify-center">
-              <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
-                <svg
-                  className="h-8 w-8 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <svg
+                    className="h-8 w-8 text-emerald-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
               </div>
+              <h3 className="text-xl font-semibold text-dark-900">
+                Domain Verified Successfully!
+              </h3>
+              <p className="text-dark-500">
+                Your custom domain ownership has been verified.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-dark-900">
-              Domain Verified Successfully!
-            </h3>
-            <p className="text-dark-500">
-              Your custom domain{" "}
-              <span className="font-mono font-semibold">{verification?.domain}</span>{" "}
-              is now active. SSL certificate is being provisioned automatically.
-            </p>
-            <div className="pt-4 space-y-3">
+
+            {/* CNAME Instructions */}
+            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <h4 className="font-medium text-amber-900 mb-3 flex items-center gap-2">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Important: Add a CNAME Record
+              </h4>
+              <p className="text-sm text-amber-800 mb-3">
+                To make your domain work, you need to add a CNAME record pointing to our servers:
+              </p>
+              <div className="bg-white rounded border border-amber-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-b border-amber-100">
+                      <td className="px-3 py-2 bg-amber-50 font-medium text-amber-900 w-24">Type</td>
+                      <td className="px-3 py-2 text-amber-900">CNAME</td>
+                    </tr>
+                    <tr className="border-b border-amber-100">
+                      <td className="px-3 py-2 bg-amber-50 font-medium text-amber-900">Name</td>
+                      <td className="px-3 py-2 font-mono text-amber-900">{subdomain}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-3 py-2 bg-amber-50 font-medium text-amber-900">Target</td>
+                      <td className="px-3 py-2 font-mono text-amber-900">ingress.mechanicbuddy.app</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-amber-700 mt-2">
+                DNS changes may take a few minutes to propagate.
+              </p>
+            </div>
+
+            <div className="text-center space-y-3">
+              <p className="text-sm text-dark-500">
+                Once the CNAME is configured, your site will be available at:
+              </p>
               <a
                 href={`https://${verification?.domain}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
               >
-                Visit your site at https://{verification?.domain}
+                https://{verification?.domain}
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -297,7 +339,7 @@ export function DomainWizard({ tenantId, existingVerification, onComplete }: Dom
                 </svg>
               </a>
               <p className="text-sm text-dark-400">
-                Note: It may take a few minutes for the SSL certificate to be provisioned.
+                SSL certificate will be provisioned automatically once DNS is configured.
               </p>
             </div>
           </div>
