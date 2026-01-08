@@ -332,6 +332,7 @@ public class KubernetesClient : IKubernetesClient
                                 Env = new List<V1EnvVar>
                                 {
                                     new V1EnvVar { Name = "TENANT_ID", Value = tenantId },
+                                    new V1EnvVar { Name = "TENANT_TIER", Value = tier },
                                     new V1EnvVar { Name = "ASPNETCORE_ENVIRONMENT", Value = "Production" }
                                 }
                             }

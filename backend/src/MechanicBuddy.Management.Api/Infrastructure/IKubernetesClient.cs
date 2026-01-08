@@ -9,4 +9,5 @@ public interface IKubernetesClient
     Task DeleteNamespaceAsync(string tenantId);
     Task RestartDeploymentAsync(string tenantId, string deploymentType);
     Task<string> RunMigrationJobAsync(string tenantId);
+    Task UpdateTenantTierAsync(string tenantId, string tier);
 }

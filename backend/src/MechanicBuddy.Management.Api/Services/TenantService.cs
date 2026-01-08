@@ -18,6 +18,7 @@ public class TenantService
 {
     private readonly ITenantRepository _tenantRepository;
     private readonly IKubernetesClient _k8sClient;
+    private readonly ICloudflareClient _cloudflareClient;
     private readonly IEmailClient _emailClient;
     private readonly ILogger<TenantService> _logger;
 
@@ -27,11 +28,13 @@ public class TenantService
     public TenantService(
         ITenantRepository tenantRepository,
         IKubernetesClient k8sClient,
+        ICloudflareClient cloudflareClient,
         IEmailClient emailClient,
         ILogger<TenantService> logger)
     {
         _tenantRepository = tenantRepository;
         _k8sClient = k8sClient;
+        _cloudflareClient = cloudflareClient;
         _emailClient = emailClient;
         _logger = logger;
     }
@@ -172,7 +175,19 @@ public class TenantService
         tenant.Metadata["suspension_reason"] = reason;
         tenant.Metadata["suspended_at"] = DateTime.UtcNow;
 
+        // Scale down Kubernetes resources
         await _k8sClient.ScaleTenantInstanceAsync(tenantId, 0);
+
+        // Remove Cloudflare DNS entries
+        try
+        {
+            await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
+            _logger.LogInformation("Deleted Cloudflare DNS record for suspended tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete Cloudflare DNS record for tenant {TenantId}", tenantId);
+        }
 
         return await _tenantRepository.UpdateAsync(tenant);
     }
@@ -189,7 +204,19 @@ public class TenantService
         tenant.Metadata?.Remove("suspension_reason");
         tenant.Metadata?.Remove("suspended_at");
 
+        // Scale up Kubernetes resources
         await _k8sClient.ScaleTenantInstanceAsync(tenantId, 1);
+
+        // Recreate Cloudflare DNS entries
+        try
+        {
+            await _cloudflareClient.CreateTenantDnsRecordAsync(tenantId);
+            _logger.LogInformation("Created Cloudflare DNS record for resumed tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create Cloudflare DNS record for tenant {TenantId}", tenantId);
+        }
 
         return await _tenantRepository.UpdateAsync(tenant);
     }

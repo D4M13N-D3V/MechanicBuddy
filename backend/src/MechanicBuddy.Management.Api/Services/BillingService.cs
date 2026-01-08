@@ -237,26 +237,27 @@ public class BillingService
         var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
         if (session == null) return;
 
+        var tenantId = session.Metadata?.GetValueOrDefault("tenant_id");
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            _logger.LogWarning("Checkout session {SessionId} has no tenant_id in metadata", session.Id);
+            return;
+        }
+
+        var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
+        if (tenant == null)
+        {
+            _logger.LogWarning("Tenant {TenantId} not found for checkout session", tenantId);
+            return;
+        }
+
         // Check if this is a lifetime payment
         if (session.Metadata?.GetValueOrDefault("type") == "lifetime")
         {
-            var tenantId = session.Metadata.GetValueOrDefault("tenant_id");
-            if (string.IsNullOrEmpty(tenantId))
-            {
-                _logger.LogWarning("Checkout session {SessionId} has no tenant_id in metadata", session.Id);
-                return;
-            }
-
-            var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
-            if (tenant == null)
-            {
-                _logger.LogWarning("Tenant {TenantId} not found for checkout session", tenantId);
-                return;
-            }
-
             // Upgrade tenant to lifetime tier
             tenant.Tier = "lifetime";
             tenant.Status = "active";
+            tenant.MaxMechanics = 999; // Unlimited
             tenant.SubscriptionEndsAt = null; // Lifetime has no end date
             await _tenantRepository.UpdateAsync(tenant);
 
@@ -276,6 +277,33 @@ public class BillingService
             });
 
             _logger.LogInformation("Tenant {TenantId} upgraded to Lifetime tier", tenantId);
+        }
+        else if (session.Mode == "subscription")
+        {
+            // Team subscription checkout completed
+            // The subscription.updated webhook will handle tier update,
+            // but we ensure status is active here as well
+            if (tenant.Status == "suspended")
+            {
+                tenant.Status = "active";
+                await _tenantRepository.UpdateAsync(tenant);
+                _logger.LogInformation("Tenant {TenantId} unsuspended due to new subscription checkout", tenantId);
+            }
+
+            await _billingEventRepository.CreateAsync(new BillingEvent
+            {
+                TenantId = tenantId,
+                EventType = "subscription_checkout_completed",
+                Amount = (session.AmountTotal ?? 0) / 100m,
+                Currency = session.Currency?.ToUpperInvariant() ?? "USD",
+                StripeEventId = stripeEvent.Id,
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object>
+                {
+                    ["session_id"] = session.Id,
+                    ["subscription_id"] = session.Subscription?.ToString() ?? ""
+                }
+            });
         }
     }
 

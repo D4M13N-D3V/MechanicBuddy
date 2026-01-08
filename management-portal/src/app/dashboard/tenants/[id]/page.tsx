@@ -7,6 +7,7 @@ import { ArrowLeft, Building2, Users, Database, Activity, AlertCircle } from "lu
 import { getTenant } from "@/_lib/api";
 import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
 import { TenantOperationsButtons } from "@/_components/TenantOperationsButtons";
+import { getCurrentUser } from "@/_lib/auth";
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   active: "success",
@@ -22,7 +23,11 @@ export default async function TenantDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const response = await getTenant(id);
+  const [response, user] = await Promise.all([
+    getTenant(id),
+    getCurrentUser()
+  ]);
+  const isSuperAdmin = user?.role === "super_admin";
 
   if (!response.success || !response.data) {
     return (
@@ -68,10 +73,12 @@ export default async function TenantDetailPage({
           <h1 className="text-3xl font-bold text-gray-900">{tenant.companyName}</h1>
           <p className="text-gray-600 mt-1">Tenant ID: {tenant.tenantId}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">Suspend</Button>
-          <DeleteTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} />
-        </div>
+        {isSuperAdmin && (
+          <div className="flex gap-2">
+            <Button variant="outline">Suspend</Button>
+            <DeleteTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} />
+          </div>
+        )}
       </div>
 
       {/* Operations Card */}
