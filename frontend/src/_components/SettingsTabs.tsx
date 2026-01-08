@@ -1,6 +1,6 @@
 'use client';
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
-import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon } from '@heroicons/react/20/solid'
+import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon, UsersIcon } from '@heroicons/react/20/solid'
 import clsx from 'clsx'
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -9,7 +9,8 @@ const tabs = [
   { name: 'My Account', href: '/home/profile', icon: UserIcon, exact: true },
   { name: 'Invoice Options', href: '/home/settings', icon: BuildingOfficeIcon, exact: true },
   { name: 'Branding', href: '/home/settings/branding', icon: PaintBrushIcon, exact: false },
-  { name: 'Landing Page', href: '/home/settings/landing', icon: GlobeAltIcon, exact: false }
+  { name: 'Landing Page', href: '/home/settings/landing', icon: GlobeAltIcon, exact: false },
+  { name: 'Users', href: '/home/settings/users', icon: UsersIcon, exact: false }
 ]
 
 function isActiveTab(currentPath: string, tabHref: string, exact: boolean): boolean {

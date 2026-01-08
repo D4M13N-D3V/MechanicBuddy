@@ -6,7 +6,7 @@ import clsx from 'clsx'
 
 import { Button } from '@/_components/layout/Button'
 import { Container } from '@/_components/layout/Container'
-
+import { NavLink } from '@/_components/layout/NavLink'
 
 function MobileNavIcon({ open }: { open: boolean }) {
   return (
@@ -35,11 +35,7 @@ function MobileNavIcon({ open }: { open: boolean }) {
   )
 }
 
-interface MobileNavigationProps {
-  onTryDemoClick?: () => void;
-}
-
-function MobileNavigation({ onTryDemoClick }: MobileNavigationProps) {
+function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -64,9 +60,13 @@ function MobileNavigation({ onTryDemoClick }: MobileNavigationProps) {
       {/* Panel */}
       {isOpen && (
         <div className="absolute right-0 top-full z-50 mt-4 w-72 origin-top-right rounded-2xl bg-white p-4 text-lg tracking-tight text-slate-900 ring-1 shadow-xl ring-slate-900/5">
+          <div className="space-y-2 mb-4">
+            <a href="#features" className="block py-2 hover:text-blue-600" onClick={() => setIsOpen(false)}>Features</a>
+            <a href="#pricing" className="block py-2 hover:text-blue-600" onClick={() => setIsOpen(false)}>Pricing</a>
+          </div>
           <hr className="m-2 border-slate-300/40" />
           <Button
-            href="https://github.com/rene98c/carcareco"
+            href="https://github.com/d4m13n-de/MechanicBuddy"
             variant="outline"
             onClick={() => setIsOpen(false)}
           >
@@ -80,60 +80,40 @@ function MobileNavigation({ onTryDemoClick }: MobileNavigationProps) {
           >
             Log in
           </Button>
-          {onTryDemoClick && (
-            <button
-              onClick={() => {
-                setIsOpen(false)
-                onTryDemoClick()
-              }}
-              className="mt-2 w-full rounded-md bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs hover:bg-gray-300"
-            >
-              Try the demo
-            </button>
-          )}
         </div>
       )}
     </div>
   )
 }
 
-interface HeaderProps {
-  onTryDemoClick?: () => void;
-}
-
-export function Header({ onTryDemoClick }: HeaderProps) {
+export function Header() {
   return (
     <header className="py-10">
       <Container>
         <nav className="relative z-50 flex justify-between">
           <div className="flex items-center md:gap-x-12">
-            <Link href="#" aria-label="Home">
-
+            <Link href="/" aria-label="Home" className="flex items-center gap-2">
+              <span className="text-xl font-bold text-slate-900">MechanicBuddy</span>
             </Link>
             <div className="hidden md:flex md:gap-x-6">
-              {/* Add navigation links here if needed */}
+              <NavLink href="#features">Features</NavLink>
+              <NavLink href="#pricing">Pricing</NavLink>
             </div>
           </div>
           <div className="flex items-center gap-x-5 md:gap-x-8">
             <div className="hidden md:block">
               <Button
-                href="https://github.com/rene98c/carcareco"
+                href="https://github.com/d4m13n-de/MechanicBuddy"
                 variant="outline"
               >
                 View on GitHub
               </Button>
             </div>
-            {onTryDemoClick ? (
-              <Button href="/auth/login" color="blue">
-                <span>Log in</span>
-              </Button>
-            ) : (
-              <Button href="/auth/login" color="blue">
-                <span>Log in</span>
-              </Button>
-            )}
+            <Button href="/auth/login" color="blue">
+              <span>Log in</span>
+            </Button>
             <div className="-mr-1 md:hidden">
-              <MobileNavigation onTryDemoClick={onTryDemoClick} />
+              <MobileNavigation />
             </div>
           </div>
         </nav>

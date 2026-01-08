@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { Input } from "@/_components/ui/Input";
 import { Button } from "@/_components/ui/Button";
@@ -79,6 +80,15 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm text-dark-500">
+          <p>
+            Don't have an account?{" "}
+            <Link href="/signup" className="text-blue-600 hover:underline">
+              Sign up
+            </Link>
+          </p>
+        </div>
+
+        <div className="mt-4 text-center text-sm text-dark-500">
           <p>Default credentials:</p>
           <p className="font-mono text-xs mt-1">
             admin@mechanicbuddy.app / admin123

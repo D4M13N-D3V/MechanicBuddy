@@ -1,44 +1,6 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: metrics-collector
-  labels:
-    app.kubernetes.io/name: mechanicbuddy
-    app.kubernetes.io/component: metrics-collector
-spec:
-  schedule: "0 */4 * * *"  # Every 4 hours
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          restartPolicy: OnFailure
-          containers:
-            - name: metrics-collector
-              image: curlimages/curl:8.5.0
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  echo "Triggering metrics collection..."
-                  curl -X POST \
-                    -H "Authorization: Bearer $API_TOKEN" \
-                    -H "Content-Type: application/json" \
-                    http://management-api:15568/api/analytics/collect-metrics
-                  echo "Done"
-              env:
-                - name: API_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: cronjob-secrets
-                      key: api-token
-
----
-apiVersion: batch/v1
-kind: CronJob
-metadata:
   name: demo-cleanup
   labels:
     app.kubernetes.io/name: mechanicbuddy
@@ -65,44 +27,6 @@ spec:
                     -H "Authorization: Bearer $API_TOKEN" \
                     -H "Content-Type: application/json" \
                     http://management-api:15568/api/demo-requests/cleanup-expired
-                  echo "Done"
-              env:
-                - name: API_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: cronjob-secrets
-                      key: api-token
-
----
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: billing-sync
-  labels:
-    app.kubernetes.io/name: mechanicbuddy
-    app.kubernetes.io/component: billing-sync
-spec:
-  schedule: "0 0 * * *"  # Daily at midnight
-  concurrencyPolicy: Forbid
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 3
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          restartPolicy: OnFailure
-          containers:
-            - name: billing-sync
-              image: curlimages/curl:8.5.0
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  echo "Triggering billing sync..."
-                  curl -X POST \
-                    -H "Authorization: Bearer $API_TOKEN" \
-                    -H "Content-Type: application/json" \
-                    http://management-api:15568/api/billing/sync-all-mechanics
                   echo "Done"
               env:
                 - name: API_TOKEN

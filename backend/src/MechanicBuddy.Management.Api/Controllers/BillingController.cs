@@ -198,6 +198,59 @@ public class BillingController : ControllerBase
         return Ok(stats);
     }
 
+    [HttpPost("checkout/team")]
+    public async Task<IActionResult> CreateTeamCheckout([FromBody] CreateCheckoutRequest request)
+    {
+        try
+        {
+            var checkoutUrl = await _billingService.CreateTeamCheckoutSessionAsync(
+                request.TenantId,
+                request.ReturnUrl
+            );
+
+            return Ok(new { url = checkoutUrl });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Team checkout session for tenant {TenantId}", request.TenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("checkout/lifetime")]
+    public async Task<IActionResult> CreateLifetimeCheckout([FromBody] CreateCheckoutRequest request)
+    {
+        try
+        {
+            var checkoutUrl = await _billingService.CreateLifetimeCheckoutSessionAsync(
+                request.TenantId,
+                request.ReturnUrl
+            );
+
+            return Ok(new { url = checkoutUrl });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create Lifetime checkout session for tenant {TenantId}", request.TenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("subscription/{tenantId}")]
+    public async Task<IActionResult> GetSubscriptionStatus(string tenantId)
+    {
+        try
+        {
+            var status = await _billingService.GetSubscriptionStatusAsync(tenantId);
+            return Ok(status);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get subscription status for tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> Webhook()
@@ -230,3 +283,4 @@ public record CancelSubscriptionRequest(string TenantId);
 public record CreatePortalSessionRequest(string TenantId, string ReturnUrl);
 public record SyncMechanicsRequest(string TenantId, int MechanicCount);
 public record CreateCustomerAndSubscriptionRequest(string TenantId, string Email, string Name, int MechanicCount);
+public record CreateCheckoutRequest(string TenantId, string ReturnUrl);

@@ -200,7 +200,35 @@ public class StripeClient : IStripeClient
 
         _logger.LogInformation("Created checkout session {SessionId} for customer {CustomerId}", session.Id, customerId);
 
-        return session.Id;
+        return session.Url ?? session.Id;
+    }
+
+    public async Task<string> CreateOneTimeCheckoutSessionAsync(string customerId, string priceId, string successUrl, string cancelUrl, Dictionary<string, string>? metadata = null)
+    {
+        var options = new Stripe.Checkout.SessionCreateOptions
+        {
+            Customer = customerId,
+            PaymentMethodTypes = new List<string> { "card" },
+            LineItems = new List<Stripe.Checkout.SessionLineItemOptions>
+            {
+                new Stripe.Checkout.SessionLineItemOptions
+                {
+                    Price = priceId,
+                    Quantity = 1
+                }
+            },
+            Mode = "payment",
+            SuccessUrl = successUrl,
+            CancelUrl = cancelUrl,
+            Metadata = metadata
+        };
+
+        var service = new Stripe.Checkout.SessionService();
+        var session = await service.CreateAsync(options);
+
+        _logger.LogInformation("Created one-time checkout session {SessionId} for customer {CustomerId}", session.Id, customerId);
+
+        return session.Url ?? session.Id;
     }
 
     public async Task<string> CreateBillingPortalSessionAsync(string customerId, string returnUrl)

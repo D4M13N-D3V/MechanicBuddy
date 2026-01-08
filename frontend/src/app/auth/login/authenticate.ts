@@ -28,8 +28,15 @@ export async function authenticate(prevState: { error: string }, formData: FormD
   const jsonResponse = await res.json();
 
   if (jsonResponse.jwt && jsonResponse.publicJwt) {
-    await createSession(jsonResponse.jwt,jsonResponse.publicJwt);
-    // 5. Redirect user
+    const mustChangePassword = jsonResponse.mustChangePassword ?? false;
+    await createSession(jsonResponse.jwt, jsonResponse.publicJwt, mustChangePassword);
+
+    // Redirect to change password page if required
+    if (mustChangePassword) {
+      redirect('/auth/change-password');
+    }
+
+    // Otherwise redirect to home
     redirect('/home/work');
   }
   console.log("jwt missing");

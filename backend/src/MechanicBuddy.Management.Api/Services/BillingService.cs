@@ -148,6 +148,10 @@ public class BillingService
                 await HandlePaymentFailedEventAsync(stripeEvent);
                 break;
 
+            case "checkout.session.completed":
+                await HandleCheckoutSessionCompletedEventAsync(stripeEvent);
+                break;
+
             default:
                 _logger.LogInformation("Unhandled webhook event type: {EventType}", stripeEvent.Type);
                 break;
@@ -215,6 +219,53 @@ public class BillingService
         if (invoice == null) return;
 
         await HandlePaymentFailedAsync(invoice);
+    }
+
+    private async Task HandleCheckoutSessionCompletedEventAsync(Event stripeEvent)
+    {
+        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+        if (session == null) return;
+
+        // Check if this is a lifetime payment
+        if (session.Metadata?.GetValueOrDefault("type") == "lifetime")
+        {
+            var tenantId = session.Metadata.GetValueOrDefault("tenant_id");
+            if (string.IsNullOrEmpty(tenantId))
+            {
+                _logger.LogWarning("Checkout session {SessionId} has no tenant_id in metadata", session.Id);
+                return;
+            }
+
+            var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                _logger.LogWarning("Tenant {TenantId} not found for checkout session", tenantId);
+                return;
+            }
+
+            // Upgrade tenant to lifetime tier
+            tenant.Tier = "lifetime";
+            tenant.Status = "active";
+            tenant.SubscriptionEndsAt = null; // Lifetime has no end date
+            await _tenantRepository.UpdateAsync(tenant);
+
+            await _billingEventRepository.CreateAsync(new BillingEvent
+            {
+                TenantId = tenantId,
+                EventType = "lifetime_payment_succeeded",
+                Amount = (session.AmountTotal ?? 0) / 100m,
+                Currency = session.Currency?.ToUpperInvariant() ?? "USD",
+                StripeEventId = stripeEvent.Id,
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object>
+                {
+                    ["session_id"] = session.Id,
+                    ["payment_intent"] = session.PaymentIntent?.ToString() ?? ""
+                }
+            });
+
+            _logger.LogInformation("Tenant {TenantId} upgraded to Lifetime tier", tenantId);
+        }
     }
 
     public async Task<IEnumerable<BillingEvent>> GetTenantBillingHistoryAsync(string tenantId, int skip = 0, int take = 50)
@@ -635,5 +686,141 @@ public class BillingService
 
         _logger.LogError("Payment failed for tenant {TenantId} - Invoice {InvoiceId}, Amount: {Amount}",
             tenantId, invoice.Id, invoice.AmountDue / 100m);
+    }
+
+    /// <summary>
+    /// Creates a checkout session for Team subscription ($20/mo)
+    /// </summary>
+    public async Task<string> CreateTeamCheckoutSessionAsync(string tenantId, string returnUrl)
+    {
+        var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
+        if (tenant == null)
+        {
+            throw new InvalidOperationException("Tenant not found");
+        }
+
+        // Create customer if doesn't exist
+        if (string.IsNullOrEmpty(tenant.StripeCustomerId))
+        {
+            var customerId = await _stripeClient.CreateCustomerAsync(
+                tenant.OwnerEmail,
+                tenant.CompanyName,
+                new Dictionary<string, string> { ["tenant_id"] = tenantId }
+            );
+            tenant.StripeCustomerId = customerId;
+            await _tenantRepository.UpdateAsync(tenant);
+        }
+
+        var teamPriceId = _configuration["Stripe:PriceIds:Team"]
+            ?? throw new InvalidOperationException("Team price ID not configured");
+
+        var successUrl = $"{returnUrl}?session_id={{CHECKOUT_SESSION_ID}}&status=success";
+        var cancelUrl = $"{returnUrl}?status=cancelled";
+
+        var checkoutUrl = await _stripeClient.CreateCheckoutSessionAsync(
+            tenant.StripeCustomerId,
+            teamPriceId,
+            successUrl,
+            cancelUrl
+        );
+
+        _logger.LogInformation("Created Team checkout session for tenant {TenantId}", tenantId);
+
+        return checkoutUrl;
+    }
+
+    /// <summary>
+    /// Creates a checkout session for Lifetime payment ($250 one-time)
+    /// </summary>
+    public async Task<string> CreateLifetimeCheckoutSessionAsync(string tenantId, string returnUrl)
+    {
+        var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
+        if (tenant == null)
+        {
+            throw new InvalidOperationException("Tenant not found");
+        }
+
+        // Create customer if doesn't exist
+        if (string.IsNullOrEmpty(tenant.StripeCustomerId))
+        {
+            var customerId = await _stripeClient.CreateCustomerAsync(
+                tenant.OwnerEmail,
+                tenant.CompanyName,
+                new Dictionary<string, string> { ["tenant_id"] = tenantId }
+            );
+            tenant.StripeCustomerId = customerId;
+            await _tenantRepository.UpdateAsync(tenant);
+        }
+
+        var lifetimePriceId = _configuration["Stripe:PriceIds:Lifetime"]
+            ?? throw new InvalidOperationException("Lifetime price ID not configured");
+
+        var successUrl = $"{returnUrl}?session_id={{CHECKOUT_SESSION_ID}}&status=success";
+        var cancelUrl = $"{returnUrl}?status=cancelled";
+
+        var checkoutUrl = await _stripeClient.CreateOneTimeCheckoutSessionAsync(
+            tenant.StripeCustomerId,
+            lifetimePriceId,
+            successUrl,
+            cancelUrl,
+            new Dictionary<string, string>
+            {
+                ["tenant_id"] = tenantId,
+                ["type"] = "lifetime"
+            }
+        );
+
+        _logger.LogInformation("Created Lifetime checkout session for tenant {TenantId}", tenantId);
+
+        return checkoutUrl;
+    }
+
+    /// <summary>
+    /// Gets the current subscription status for a tenant
+    /// </summary>
+    public async Task<object> GetSubscriptionStatusAsync(string tenantId)
+    {
+        var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
+        if (tenant == null)
+        {
+            throw new InvalidOperationException("Tenant not found");
+        }
+
+        SubscriptionInfo? subscriptionInfo = null;
+        if (!string.IsNullOrEmpty(tenant.StripeSubscriptionId))
+        {
+            subscriptionInfo = await _stripeClient.GetSubscriptionAsync(tenant.StripeSubscriptionId);
+        }
+
+        IEnumerable<InvoiceInfo> invoices = Enumerable.Empty<InvoiceInfo>();
+        if (!string.IsNullOrEmpty(tenant.StripeCustomerId))
+        {
+            invoices = await _stripeClient.GetCustomerInvoicesAsync(tenant.StripeCustomerId, limit: 10);
+        }
+
+        return new
+        {
+            tenantId = tenant.TenantId,
+            tier = tenant.Tier,
+            status = tenant.Status,
+            hasSubscription = !string.IsNullOrEmpty(tenant.StripeSubscriptionId),
+            subscription = subscriptionInfo != null ? new
+            {
+                id = subscriptionInfo.Id,
+                status = subscriptionInfo.Status,
+                currentPeriodEnd = subscriptionInfo.CurrentPeriodEnd,
+                cancelAtPeriodEnd = subscriptionInfo.CancelAtPeriodEnd
+            } : null,
+            invoices = invoices.Select(inv => new
+            {
+                id = inv.Id,
+                amount = inv.AmountPaid,
+                currency = inv.Currency,
+                status = inv.Status,
+                date = inv.Created,
+                pdfUrl = inv.InvoicePdf,
+                hostedUrl = inv.HostedInvoiceUrl
+            })
+        };
     }
 }

@@ -95,12 +95,45 @@ export interface BillingTransaction {
   stripePaymentId?: string;
 }
 
+export interface SubscriptionStatus {
+  tenantId: string;
+  tier: string;
+  status: string;
+  hasSubscription: boolean;
+  subscription?: {
+    id: string;
+    status: string;
+    currentPeriodEnd?: string;
+    cancelAtPeriodEnd: boolean;
+  };
+  invoices: Invoice[];
+}
+
+export interface Invoice {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  date: string;
+  pdfUrl?: string;
+  hostedUrl?: string;
+}
+
 // Admin user types
 export interface AdminUser {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'support';
+  role: 'super_admin' | 'admin' | 'support' | 'user';
+  createdAt: string;
+}
+
+// Portal user types (for regular users who own tenants)
+export interface PortalUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'user' | 'super_admin' | 'support';
   createdAt: string;
 }
 
@@ -121,6 +154,11 @@ export interface DemoFormData {
   companyName: string;
   phoneNumber?: string;
   message: string;
+}
+
+export interface RequestTenantData {
+  companyName: string;
+  message?: string;
 }
 
 // API response types

@@ -4,12 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Users,
   MessageSquare,
-  CreditCard,
-  Settings,
   Building2,
-  Wrench
+  Wrench,
+  User,
+  CreditCard
 } from "lucide-react";
 import { cn } from "@/_lib/utils";
 
@@ -17,6 +16,7 @@ const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { name: "Tenants", href: "/dashboard/tenants", icon: Building2 },
   { name: "Demo Requests", href: "/dashboard/demos", icon: MessageSquare },
+  { name: "Account", href: "/dashboard/account", icon: User },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
 ];
 

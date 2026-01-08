@@ -20,6 +20,7 @@ public class Tenant
     public int MaxMechanics { get; set; } = 1;
     public int MaxStorage { get; set; } = 1024; // MB
     public bool IsDemo { get; set; }
+    public bool CanManageUsers { get; set; } = false;
     public string? K8sNamespace { get; set; }
     public string? DbConnectionString { get; set; }
     public string? ApiUrl { get; set; }

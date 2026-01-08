@@ -11,6 +11,7 @@ const encodedKey = new TextEncoder().encode(secretKey)
 
 interface SessionPayload extends JWTPayload{
   apiRootJwt:string
+  mustChangePassword?:boolean
 }
 
  async function encrypt(payload: SessionPayload) {
@@ -32,14 +33,14 @@ interface SessionPayload extends JWTPayload{
     console.log(error)
   }
 }
-export async function createSession(rootJwt: string,publicJwt: string) {
-    
+export async function createSession(rootJwt: string,publicJwt: string,mustChangePassword?: boolean) {
+
   if(!sessionTimeoutInSecondsString) throw new Error('NEXT_PUBLIC_SESSION_TIMEOUT env not set');
- 
-  const expiresAt = new Date(Date.now());   
-  expiresAt.setSeconds(expiresAt.getSeconds() + parseInt(sessionTimeoutInSecondsString)); 
-  const session = await encrypt({ apiRootJwt:rootJwt, expiresAt })
-  const cookieStore = await cookies() 
+
+  const expiresAt = new Date(Date.now());
+  expiresAt.setSeconds(expiresAt.getSeconds() + parseInt(sessionTimeoutInSecondsString));
+  const session = await encrypt({ apiRootJwt:rootJwt, expiresAt, mustChangePassword })
+  const cookieStore = await cookies()
   cookieStore.set('session', session, {
     httpOnly: true, //jwt not accessible by browser
     secure: false,
@@ -70,12 +71,39 @@ export async function deleteSession() {
   cookieStore.delete('jwt')
   cookieStore.delete('session_timestamp')
 }
-export async function getJwt() { 
+export async function getJwt() {
   const session = (await cookies()).get('session')?.value;
   const payload = await decrypt(session)
- 
+
   if (!session || !payload || !payload.apiRootJwt) {
     return null
   }
   return payload.apiRootJwt;
+}
+
+export async function getMustChangePassword(): Promise<boolean> {
+  const session = (await cookies()).get('session')?.value;
+  const payload = await decrypt(session) as SessionPayload | undefined;
+
+  return payload?.mustChangePassword ?? false;
+}
+
+export async function clearMustChangePassword() {
+  const session = (await cookies()).get('session')?.value;
+  const payload = await decrypt(session) as SessionPayload | undefined;
+
+  if (!payload || !payload.apiRootJwt) {
+    return;
+  }
+
+  // Create new session without mustChangePassword flag
+  const cookieStore = await cookies();
+  const publicJwt = cookieStore.get('jwt')?.value;
+
+  if (!publicJwt) {
+    return;
+  }
+
+  // Recreate session without mustChangePassword
+  await createSession(payload.apiRootJwt as string, publicJwt, false);
 }

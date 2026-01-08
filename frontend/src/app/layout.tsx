@@ -6,136 +6,69 @@ import '@fortawesome/fontawesome-svg-core/styles.css'
 config.autoAddCss = false
 
 import '@/_styles/tailwind.css'
-import { IPublicLandingData } from './home/settings/branding/model'
 
-// Default fallback values
-const defaultSiteName = 'MechanicBuddy'
-const defaultDescription = 'Professional auto repair and maintenance services.'
+const siteName = 'MechanicBuddy'
+const siteDescription = 'Workshop management made simple. MechanicBuddy is the all-in-one solution for auto repair shops to track work orders, manage clients and vehicles, handle inventory, and generate professional invoices.'
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3025'
-const apiUrl = process.env.API_URL || 'http://localhost:15567'
 
-async function getTenantData(): Promise<IPublicLandingData | null> {
-  try {
-    const response = await fetch(`${apiUrl}/api/publiclanding`, {
-      next: { revalidate: 60 }, // Cache for 60 seconds
-    })
-    if (!response.ok) return null
-    return response.json()
-  } catch {
-    return null
-  }
-}
-
-export async function generateMetadata(): Promise<Metadata> {
-  const data = await getTenantData()
-
-  // Extract tenant info or use defaults
-  const siteName = data?.companyInfo?.name || data?.content?.hero?.companyName || defaultSiteName
-  const tagline = data?.content?.hero?.tagline
-  const subtitle = data?.content?.hero?.subtitle
-  const aboutDescription = data?.content?.about?.description
-  const footerDescription = data?.content?.footer?.companyDescription
-  const phone = data?.companyInfo?.phone
-  const address = data?.companyInfo?.address
-
-  // Build description from available content
-  let siteDescription = defaultDescription
-  if (tagline || subtitle || aboutDescription || footerDescription) {
-    const parts = [tagline, subtitle, aboutDescription, footerDescription]
-      .filter(Boolean)
-      .slice(0, 2) // Use first 2 available pieces
-    siteDescription = parts.join(' - ') || defaultDescription
-  }
-  // Append contact info if available
-  if (phone) {
-    siteDescription += ` Call ${phone}.`
-  }
-
-  // Build keywords from company info and services
-  const keywords: string[] = [
-    'auto repair',
-    'mechanic',
-    'car service',
-    'vehicle maintenance',
-    siteName,
-  ]
-  if (address) {
-    // Extract city/location from address for local SEO
-    const addressParts = address.split(',').map(p => p.trim())
-    if (addressParts.length > 1) {
-      keywords.push(`auto repair ${addressParts[1]}`)
-      keywords.push(`mechanic ${addressParts[1]}`)
-    }
-  }
-  // Add services to keywords if available
-  if (data?.content?.services) {
-    data.content.services
-      .filter(s => s.isActive)
-      .slice(0, 5)
-      .forEach(s => keywords.push(s.title.toLowerCase()))
-  }
-
-  // Logo URL - use the public API endpoint
-  const logoUrl = `${siteUrl}/backend-api/branding/logo`
-
-  return {
-    metadataBase: new URL(siteUrl),
-    title: {
-      template: `%s | ${siteName}`,
-      default: siteName,
-    },
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    template: `%s | ${siteName}`,
+    default: `${siteName} - Workshop Management for Auto Repair Shops`,
+  },
+  description: siteDescription,
+  keywords: [
+    'workshop management',
+    'auto repair software',
+    'mechanic software',
+    'garage management',
+    'work order tracking',
+    'vehicle service',
+    'invoicing software',
+    'inventory management',
+    'MechanicBuddy',
+  ],
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
+  formatDetection: {
+    telephone: true,
+    address: true,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName: siteName,
+    title: `${siteName} - Workshop Management Made Simple`,
     description: siteDescription,
-    keywords,
-    authors: [{ name: siteName }],
-    creator: siteName,
-    publisher: siteName,
-    formatDetection: {
-      telephone: true,
-      address: true,
-    },
-    openGraph: {
-      type: 'website',
-      locale: 'en_US',
-      url: siteUrl,
-      siteName: siteName,
-      title: tagline ? `${siteName} | ${tagline}` : siteName,
-      description: siteDescription,
-      images: [
-        {
-          url: logoUrl,
-          width: 636,
-          height: 636,
-          alt: `${siteName} Logo`,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: tagline ? `${siteName} | ${tagline}` : siteName,
-      description: siteDescription,
-      images: [logoUrl],
-    },
-    icons: {
-      icon: '/icon.ico',
-      apple: '/apple-touch-icon.png',
-    },
-    manifest: '/manifest.json',
-    robots: {
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${siteName} - Workshop Management Made Simple`,
+    description: siteDescription,
+  },
+  icons: {
+    icon: '/icon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/manifest.json',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
       index: true,
       follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
     },
-    alternates: {
-      canonical: siteUrl,
-    },
-    category: 'automotive',
-  }
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  category: 'software',
 }
 
 const inter = Inter({

@@ -88,7 +88,8 @@ All authenticated user operations; decorate the whole class with [TenantRateLimi
         public async Task<IActionResult> Authenticate(LoginDto model)
         {
             const int SecondsToWaitOnFailedLogonAttempt = 3;
-            
+            const string DefaultPasswordHash = "$2a$11$zsTS62pGn5Cfca4CgqRJxebx45je/3nJj.puxIArFwtAjHew67m6i"; // "carcare"
+
             if (jwtOptions.Value.ConsumerSecret != model.ServerSecret )
             {
                 await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt)); // wait on failure
@@ -111,16 +112,49 @@ All authenticated user operations; decorate the whole class with [TenantRateLimi
                 return Unauthorized();
             }
 
+            // Check if user must change password
+            var mustChangePassword = false;
+
+            // Check if using default password hash
+            var isUsingDefaultPassword = user.Password == DefaultPasswordHash;
+
+            // Also check the must_change_password field from database
+            var databaseName = dbOptions.MultiTenancy?.Enabled == true
+                ? new MultiTenancyDbName(dbOptions, DbKind.Tenancy)
+                : dbOptions.Name;
+
+            var connectionBuilder = new Npgsql.NpgsqlConnectionStringBuilder
+            {
+                Host = dbOptions.Host,
+                Port = dbOptions.Port,
+                Username = dbOptions.UserId,
+                Password = dbOptions.Password,
+                Database = databaseName
+            };
+
+            using (var connection = new Npgsql.NpgsqlConnection(connectionBuilder.ToString()))
+            {
+                await connection.OpenAsync();
+                var result = await connection.QuerySingleOrDefaultAsync<bool?>(
+                    @"SELECT must_change_password
+                      FROM public.user
+                      WHERE tenantname = @TenantName AND employeeid = @EmployeeId",
+                    new { TenantName = user.Id.TenantName, EmployeeId = user.Id.EmployeeId });
+
+                var mustChangePasswordFromDb = result ?? false;
+                mustChangePassword = isUsingDefaultPassword || mustChangePasswordFromDb;
+            }
+
             var fullName = repository.GetFullName(model.Username);
             var internalUsePrincipal = ClaimsPrincipalBuilder.Build(user, fullName, false);
-            var publicUsePrincipal = ClaimsPrincipalBuilder.Build(user, fullName, true); 
+            var publicUsePrincipal = ClaimsPrincipalBuilder.Build(user, fullName, true);
 
-            return Ok(new
-            {
-                Jwt = AppJwtToken.Generate(jwtOptions.Value, internalUsePrincipal),
-                PublicJwt = AppJwtToken.Generate(jwtOptions.Value, publicUsePrincipal),
-                Timeout = (int)jwtOptions.Value.SessionTimeout.TotalSeconds
-            }); 
+            return Ok(new AuthenticateResponseDto(
+                Jwt: AppJwtToken.Generate(jwtOptions.Value, internalUsePrincipal),
+                PublicJwt: AppJwtToken.Generate(jwtOptions.Value, publicUsePrincipal),
+                Timeout: (int)jwtOptions.Value.SessionTimeout.TotalSeconds,
+                MustChangePassword: mustChangePassword
+            ));
         }
 
         [AllowAnonymous, LimitRequests(MaxRequests = 60, TimeWindow = 60)]

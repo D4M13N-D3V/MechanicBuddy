@@ -125,20 +125,20 @@ export function Pricing() {
               <SwirlyDoodle className="absolute top-1/2 left-0 h-[1em] w-full fill-blue-400" />
               <span className="relative">Simple pricing,</span>
             </span>{' '}
-            for everyone.
+            for every shop.
           </h2>
           <p className="mt-4 text-lg text-slate-400">
-            It doesn’t matter what size your business is, our software won’t
-            work well for you.
+            Start free and scale as your business grows. No hidden fees, no surprises.
           </p>
         </div>
         <div className="-mx-4 mt-16 grid max-w-2xl grid-cols-1 gap-y-10 sm:mx-auto lg:-mx-8 lg:max-w-none lg:grid-cols-3 xl:mx-0 xl:gap-x-8">
           <Plan
-            name="Starter"
+            name="Solo"
             price="$0"
-            description="Good for anyone who is self-employed and just getting started."
-            href="/register"
+            description="Perfect for independent mechanics just getting started."
+            href="/auth/login"
             features={[
+              '1 user account',
               'Unlimited quotes and invoices',
               'Unlimited clients and vehicles',
               'Full inventory management',
@@ -148,11 +148,12 @@ export function Pricing() {
           />
           <Plan
             featured
-            name="Small business"
-            price="$15"
-            description="Perfect for small / medium sized businesses."
-            href="/register"
+            name="Team"
+            price="$20/mo"
+            description="For growing shops that need unlimited team access."
+            href="/auth/login"
             features={[
+              'Unlimited users',
               'Unlimited quotes and invoices',
               'Unlimited clients and vehicles',
               'Full inventory management',
@@ -161,16 +162,18 @@ export function Pricing() {
             ]}
           />
           <Plan
-            name="Enterprise"
-            price="$39"
-            description="For even the biggest enterprise companies."
-            href="/register"
+            name="Lifetime"
+            price="$250"
+            description="One-time payment for unlimited access forever."
+            href="/auth/login"
             features={[
+              'Unlimited users',
               'Unlimited quotes and invoices',
               'Unlimited clients and vehicles',
               'Full inventory management',
               'PDF generation',
-              'Dedicated support',
+              'Lifetime updates',
+              'Priority support',
             ]}
           />
         </div>

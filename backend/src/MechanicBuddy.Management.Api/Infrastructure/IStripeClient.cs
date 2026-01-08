@@ -14,6 +14,7 @@ public interface IStripeClient
 
     // Payment methods and checkout
     Task<string> CreateCheckoutSessionAsync(string customerId, string priceId, string successUrl, string cancelUrl);
+    Task<string> CreateOneTimeCheckoutSessionAsync(string customerId, string priceId, string successUrl, string cancelUrl, Dictionary<string, string>? metadata = null);
     Task<string> CreateBillingPortalSessionAsync(string customerId, string returnUrl);
 
     // Invoices and payment history

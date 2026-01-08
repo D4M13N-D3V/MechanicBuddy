@@ -7,6 +7,8 @@ import type {
   DemoRequest,
   DashboardAnalytics,
   BillingTransaction,
+  PortalUser,
+  RequestTenantData,
 } from "@/types";
 import { getAuthToken } from "./auth";
 
@@ -224,6 +226,31 @@ export async function getBillingStats(): Promise<ApiResponse<{
   return fetchApi("/api/billing/stats");
 }
 
+export async function createTeamCheckout(tenantId: string, returnUrl: string): Promise<ApiResponse<{url: string}>> {
+  return fetchApi<{url: string}>("/api/billing/checkout/team", {
+    method: "POST",
+    body: JSON.stringify({ tenantId, returnUrl }),
+  });
+}
+
+export async function createLifetimeCheckout(tenantId: string, returnUrl: string): Promise<ApiResponse<{url: string}>> {
+  return fetchApi<{url: string}>("/api/billing/checkout/lifetime", {
+    method: "POST",
+    body: JSON.stringify({ tenantId, returnUrl }),
+  });
+}
+
+export async function getSubscriptionStatus(tenantId: string): Promise<ApiResponse<import("@/types").SubscriptionStatus>> {
+  return fetchApi<import("@/types").SubscriptionStatus>(`/api/billing/subscription/${tenantId}`);
+}
+
+export async function createBillingPortalSession(tenantId: string, returnUrl: string): Promise<ApiResponse<{url: string}>> {
+  return fetchApi<{url: string}>("/api/billing/portal-session", {
+    method: "POST",
+    body: JSON.stringify({ tenantId, returnUrl }),
+  });
+}
+
 // Health check
 export async function getHealthStatus(): Promise<ApiResponse<{ status: string; timestamp: string }>> {
   return fetchApi<{ status: string; timestamp: string }>("/api/health");
@@ -250,5 +277,21 @@ export async function restartTenantFrontend(tenantId: string): Promise<ApiRespon
 export async function runTenantMigration(tenantId: string): Promise<ApiResponse<TenantOperationResponse>> {
   return fetchApi<TenantOperationResponse>(`/api/tenants/${tenantId}/run-migration`, {
     method: "POST",
+  });
+}
+
+// User API
+export async function getCurrentUser(): Promise<ApiResponse<PortalUser>> {
+  return fetchApi<PortalUser>("/api/user/me");
+}
+
+export async function getMyTenants(): Promise<ApiResponse<Tenant[]>> {
+  return fetchApi<Tenant[]>("/api/user/tenants");
+}
+
+export async function requestNewTenant(data: RequestTenantData): Promise<ApiResponse<Tenant>> {
+  return fetchApi<Tenant>("/api/user/request-tenant", {
+    method: "POST",
+    body: JSON.stringify(data),
   });
 }

@@ -6,7 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 export default function PricingPage() {
   const plans = [
     {
-      name: "Free",
+      name: "Solo",
       price: "$0",
       interval: "forever",
       description: "Perfect for solo mechanics getting started",
@@ -22,40 +22,39 @@ export default function PricingPage() {
       href: "/demo",
     },
     {
-      name: "Standard",
+      name: "Team",
       price: "$20",
-      interval: "per user/month",
-      description: "For growing workshops with 2-9 users",
+      interval: "per month",
+      description: "For growing shops that need unlimited team access",
       features: [
-        "2-9 user accounts",
-        "Everything in Free, plus:",
-        "Advanced reporting & analytics",
+        "Unlimited users",
+        "Everything in Solo, plus:",
+        "Advanced reporting",
         "Inventory management",
-        "PDF generation & customization",
-        "10GB storage per user",
-        "Priority email support",
-        "API access",
+        "PDF customization",
+        "10GB storage",
+        "Priority support",
       ],
       popular: true,
-      cta: "Request Demo",
+      cta: "Get Started",
       href: "/demo",
     },
     {
-      name: "Volume",
-      price: "$10",
-      interval: "per user/month",
-      description: "Best value for teams of 10 or more",
+      name: "Lifetime",
+      price: "$250",
+      interval: "one-time",
+      description: "Unlimited access forever with lifetime updates",
       features: [
-        "10+ user accounts",
-        "Everything in Standard, plus:",
-        "Volume discount pricing",
-        "Custom branding",
-        "Multi-location support",
-        "20GB storage per user",
-        "Phone & email support",
-        "Dedicated account manager",
+        "Unlimited users",
+        "Everything in Team",
+        "Lifetime updates included",
+        "Advanced reporting",
+        "Inventory management",
+        "PDF customization",
+        "10GB storage",
+        "Priority support",
       ],
-      cta: "Request Demo",
+      cta: "Get Started",
       href: "/demo",
     },
   ];
@@ -136,11 +135,11 @@ export default function PricingPage() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-dark-900 mb-2">
-                How does the volume discount work?
+                What's the difference between Team and Lifetime?
               </h3>
               <p className="text-dark-500">
-                Once you have 10 or more users, all users are billed at $10/month instead of $20/month.
-                The discount applies automatically.
+                Team is a monthly subscription at $20/month with unlimited users. Lifetime is a one-time payment
+                of $250 for the same features with lifetime updates included - perfect if you want to own the software forever.
               </p>
             </div>
             <div>

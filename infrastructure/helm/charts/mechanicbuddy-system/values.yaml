@@ -144,23 +144,6 @@ ingress:
     clusterIssuer: "letsencrypt-prod"
 
 # -----------------------------------------------------------------------------
-# Metrics Collector (CronJob)
-# -----------------------------------------------------------------------------
-metricsCollector:
-  enabled: true
-  schedule: "0 */4 * * *"  # Every 4 hours
-  image:
-    repository: "ghcr.io/mechanicbuddy/metrics-collector"
-    tag: "latest"
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "50m"
-    limits:
-      memory: "256Mi"
-      cpu: "250m"
-
-# -----------------------------------------------------------------------------
 # Demo Cleanup (CronJob)
 # -----------------------------------------------------------------------------
 demoCleanup:
