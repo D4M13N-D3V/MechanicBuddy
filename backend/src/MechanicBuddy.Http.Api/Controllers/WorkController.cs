@@ -157,6 +157,16 @@ namespace MechanicBuddy.Http.Api.Controllers
         [HttpPost]
         public OkObjectResult Post([FromBody]PostOrPutWork model)
         {
+            // Check work order limit for free tier
+            var tier = Environment.GetEnvironmentVariable("TENANT_TIER")?.ToLowerInvariant() ?? "solo";
+            if (tier == "solo" || tier == "free")
+            {
+                var workCount = session.QueryOver<Work>().RowCount();
+                if (workCount >= 1000)
+                {
+                    throw new UserException("Work order limit reached. Upgrade to Team or Lifetime plan for unlimited work orders.");
+                }
+            }
 
             var starter = session.Get<Employee>(this.EmployeeId());
             var work = Work.Start(

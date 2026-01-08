@@ -3,14 +3,22 @@ import { ChevronDownIcon } from '@heroicons/react/16/solid'
 import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon, UsersIcon } from '@heroicons/react/20/solid'
 import clsx from 'clsx'
 import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
+interface Tab {
+  name: string;
+  href: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  exact: boolean;
+  requiresUserManagement?: boolean;
+}
 
-const tabs = [
+const allTabs: Tab[] = [
   { name: 'My Account', href: '/home/profile', icon: UserIcon, exact: true },
   { name: 'Invoice Options', href: '/home/settings', icon: BuildingOfficeIcon, exact: true },
   { name: 'Branding', href: '/home/settings/branding', icon: PaintBrushIcon, exact: false },
   { name: 'Landing Page', href: '/home/settings/landing', icon: GlobeAltIcon, exact: false },
-  { name: 'Users', href: '/home/settings/users', icon: UsersIcon, exact: false }
+  { name: 'Users', href: '/home/settings/users', icon: UsersIcon, exact: false, requiresUserManagement: true }
 ]
 
 function isActiveTab(currentPath: string, tabHref: string, exact: boolean): boolean {
@@ -21,11 +29,31 @@ function isActiveTab(currentPath: string, tabHref: string, exact: boolean): bool
 }
 
 export default function SettingsTabs() {
-
   const currentPath = usePathname();
   const router = useRouter();
-  return (
+  const [canManageUsers, setCanManageUsers] = useState(false);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    async function checkCanManageUsers() {
+      try {
+        const response = await fetch('/api/usermanagement/canmanage');
+        if (response.ok) {
+          const data = await response.json();
+          setCanManageUsers(data.canManageUsers);
+        }
+      } catch (error) {
+        console.error('Failed to check user management permissions:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    checkCanManageUsers();
+  }, []);
+
+  const tabs = allTabs.filter(tab => !tab.requiresUserManagement || canManageUsers);
+
+  return (
     <div className="pt-4  px-2  xl:px-5" >
 
       <div className="grid grid-cols-1 sm:hidden">

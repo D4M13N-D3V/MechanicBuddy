@@ -58,5 +58,9 @@ namespace MechanicBuddy.Http.Api.Models
     public class CanManageUsersDto
     {
         public bool CanManageUsers { get; set; }
+        public string Tier { get; set; }
+        public int WorkOrderCount { get; set; }
+        public int WorkOrderLimit { get; set; }
+        public bool HasWorkOrderLimit { get; set; }
     }
 }

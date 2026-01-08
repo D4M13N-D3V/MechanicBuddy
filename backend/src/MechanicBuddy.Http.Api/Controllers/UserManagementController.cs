@@ -395,13 +395,26 @@ namespace MechanicBuddy.Http.Api.Controllers
         }
 
         /// <summary>
-        /// Check if the current tenant can manage users
+        /// Check if the current tenant can manage users (team or lifetime tier only)
         /// </summary>
         [HttpGet("canmanage")]
         public ActionResult<CanManageUsersDto> CanManageUsers()
         {
-            // For now, return true - this will be wired up to check tenant tier/features later
-            return Ok(new CanManageUsersDto { CanManageUsers = true });
+            // Check tenant tier from environment variable set during deployment
+            var tier = Environment.GetEnvironmentVariable("TENANT_TIER")?.ToLowerInvariant() ?? "solo";
+            var canManage = tier == "team" || tier == "lifetime";
+            var hasWorkOrderLimit = tier == "solo" || tier == "free";
+            var workOrderLimit = hasWorkOrderLimit ? 1000 : 0;
+            var workOrderCount = session.QueryOver<Core.Domain.Work>().RowCount();
+
+            return Ok(new CanManageUsersDto
+            {
+                CanManageUsers = canManage,
+                Tier = tier,
+                WorkOrderCount = workOrderCount,
+                WorkOrderLimit = workOrderLimit,
+                HasWorkOrderLimit = hasWorkOrderLimit
+            });
         }
 
         /// <summary>
