@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 const API_URL = process.env.API_URL || 'http://localhost:15567';
@@ -7,7 +7,7 @@ const API_URL = process.env.API_URL || 'http://localhost:15567';
  * Security: Fetches profile image using httpOnly JWT cookie
  * This prevents exposing the JWT in URLs
  */
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const jwt = cookieStore.get('jwt')?.value;
