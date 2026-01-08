@@ -303,7 +303,7 @@ export function DomainWizard({ tenantId, existingVerification, onComplete }: Dom
                     </tr>
                     <tr>
                       <td className="px-3 py-2 bg-amber-50 font-medium text-amber-900">Target</td>
-                      <td className="px-3 py-2 font-mono text-amber-900">ingress.mechanicbuddy.app</td>
+                      <td className="px-3 py-2 font-mono text-amber-900">mechanicbuddy.app</td>
                     </tr>
                   </tbody>
                 </table>
