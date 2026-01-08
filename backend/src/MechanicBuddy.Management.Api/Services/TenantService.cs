@@ -51,6 +51,11 @@ public class TenantService
         return await _tenantRepository.GetAllAsync(skip, take);
     }
 
+    public async Task<IEnumerable<Tenant>> GetTenantsByOwnerEmailAsync(string ownerEmail)
+    {
+        return await _tenantRepository.GetByOwnerEmailAsync(ownerEmail);
+    }
+
     public async Task<Tenant> CreateTenantAsync(string companyName, string ownerEmail, string ownerName, string tier = "free", bool isDemo = false)
     {
         // Generate unique tenant ID

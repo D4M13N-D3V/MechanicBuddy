@@ -60,6 +60,13 @@ public class TenantRepository : ITenantRepository
         return await connection.QueryAsync<Tenant>(sql, new { Status = status });
     }
 
+    public async Task<IEnumerable<Tenant>> GetByOwnerEmailAsync(string ownerEmail)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = "SELECT * FROM management.tenants WHERE owner_email = @OwnerEmail ORDER BY created_at DESC";
+        return await connection.QueryAsync<Tenant>(sql, new { OwnerEmail = ownerEmail });
+    }
+
     public async Task<int> CreateAsync(Tenant tenant)
     {
         using var connection = new NpgsqlConnection(_connectionString);

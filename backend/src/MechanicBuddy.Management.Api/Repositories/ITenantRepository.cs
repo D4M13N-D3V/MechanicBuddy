@@ -10,6 +10,7 @@ public interface ITenantRepository
     Task<Tenant?> GetByCustomDomainAsync(string domain);
     Task<IEnumerable<Tenant>> GetAllAsync(int skip = 0, int take = 50);
     Task<IEnumerable<Tenant>> GetByStatusAsync(string status);
+    Task<IEnumerable<Tenant>> GetByOwnerEmailAsync(string ownerEmail);
     Task<int> CreateAsync(Tenant tenant);
     Task<bool> UpdateAsync(Tenant tenant);
     Task<bool> DeleteAsync(int id);

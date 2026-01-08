@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
 import { formatDate } from "@/_lib/utils";
-import { getTenants, getSubscriptionStatus } from "@/_lib/api";
+import { getMyTenants, getSubscriptionStatus } from "@/_lib/api";
 import { AlertCircle, CreditCard, DollarSign, FileText } from "lucide-react";
 import { BillingActions } from "./BillingActions";
 
@@ -16,7 +16,7 @@ const tierColors: Record<string, "default" | "success" | "warning" | "danger" | 
 };
 
 export default async function BillingPage() {
-  const tenantsResponse = await getTenants(1, 100);
+  const tenantsResponse = await getMyTenants();
 
   if (!tenantsResponse.success || !tenantsResponse.data) {
     return (
