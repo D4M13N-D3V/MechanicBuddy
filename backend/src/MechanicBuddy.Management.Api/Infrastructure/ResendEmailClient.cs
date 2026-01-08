@@ -137,6 +137,60 @@ public class ResendEmailClient : IEmailClient
         await SendEmailAsync(email, subject, html);
     }
 
+    public async Task SendAccountCreatedEmailAsync(string email, string companyName, string tenantUrl, string adminUsername, string adminPassword, string tier)
+    {
+        var tierDisplay = tier switch
+        {
+            "solo" or "free" => "Solo (Free)",
+            "team" => "Team ($20/month)",
+            "lifetime" => "Lifetime",
+            _ => tier
+        };
+
+        var subject = "Welcome to MechanicBuddy - Your Account is Ready!";
+        var html = $@"
+            <h1>Welcome to MechanicBuddy, {companyName}!</h1>
+            <p>Your workshop management system is now ready to use.</p>
+
+            <h2>Your Account Details:</h2>
+            <div style=""background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;"">
+                <p><strong>URL:</strong> <a href=""{tenantUrl}"" style=""color: #007bff; text-decoration: none;"">{tenantUrl}</a></p>
+                <p><strong>Username:</strong> {adminUsername}</p>
+                <p><strong>Password:</strong> {adminPassword}</p>
+                <p><strong>Plan:</strong> {tierDisplay}</p>
+                <p style=""color: #dc3545; margin-top: 10px;""><strong>Important:</strong> Please change your password after first login for security.</p>
+            </div>
+
+            <h2>What You Can Do:</h2>
+            <ul>
+                <li>Manage work orders and track repairs</li>
+                <li>Keep client and vehicle records organized</li>
+                <li>Track your inventory and spare parts</li>
+                <li>Generate professional invoices with PDF export</li>
+                <li>View reports and analytics</li>
+            </ul>
+
+            <h2>Getting Started:</h2>
+            <ol>
+                <li>Log in with the credentials above</li>
+                <li>Update your password for security</li>
+                <li>Add your first client and vehicle</li>
+                <li>Create your first work order</li>
+            </ol>
+
+            <h2>Need Help?</h2>
+            <p>If you have any questions or need assistance, our support team is here to help:</p>
+            <ul>
+                <li>Email: support@mechanicbuddy.com</li>
+                <li>Documentation: <a href=""https://docs.mechanicbuddy.com"">docs.mechanicbuddy.com</a></li>
+            </ul>
+
+            <p style=""margin-top: 30px;"">Best regards,<br/>The MechanicBuddy Team</p>
+        ";
+
+        await SendEmailAsync(email, subject, html);
+    }
+
     public async Task SendDemoExpiringSoonEmailAsync(string email, string companyName, string apiUrl, DateTime expiresAt, string tenantId)
     {
         var daysRemaining = (expiresAt - DateTime.UtcNow).Days;
@@ -177,9 +231,9 @@ public class ResendEmailClient : IEmailClient
             <h2>Convert to a Paid Plan</h2>
             <p>Keep all your work and continue where you left off by upgrading to a paid plan:</p>
             <ul>
-                <li><strong>Starter Plan</strong> - Perfect for small workshops ($29/month)</li>
-                <li><strong>Professional Plan</strong> - For growing businesses ($79/month)</li>
-                <li><strong>Enterprise Plan</strong> - Custom solutions for large operations</li>
+                <li><strong>Solo Plan</strong> - Free forever for 1 user with limited work orders</li>
+                <li><strong>Team Plan</strong> - Unlimited users and work orders ($20/month)</li>
+                <li><strong>Lifetime Plan</strong> - Pay once, use forever ($250 one-time)</li>
             </ul>
             <p><a href=""{conversionUrl}"" style=""display: inline-block; padding: 12px 24px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px;"">Upgrade Now and Keep Your Data</a></p>
             <h2>What Happens Next?</h2>

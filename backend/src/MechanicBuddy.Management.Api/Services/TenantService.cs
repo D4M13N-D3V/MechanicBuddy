@@ -78,7 +78,7 @@ public class TenantService
             Status = isDemo ? "trial" : "active",
             IsDemo = isDemo,
             CreatedAt = DateTime.UtcNow,
-            TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(7) : DateTime.UtcNow.AddDays(30),
+            TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(7) : null, // No expiration for regular signups
             MaxMechanics = GetMaxMechanicsForTier(tier),
             MaxStorage = GetMaxStorageForTier(tier)
         };
@@ -106,14 +106,28 @@ public class TenantService
             // Send welcome email with credentials (non-blocking)
             try
             {
-                await _emailClient.SendWelcomeEmailAsync(
-                    ownerEmail,
-                    companyName,
-                    tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.com",
-                    DefaultAdminUsername,
-                    DefaultAdminPassword,
-                    tenant.TrialEndsAt ?? DateTime.UtcNow.AddDays(30)
-                );
+                if (isDemo)
+                {
+                    await _emailClient.SendWelcomeEmailAsync(
+                        ownerEmail,
+                        companyName,
+                        tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.com",
+                        DefaultAdminUsername,
+                        DefaultAdminPassword,
+                        tenant.TrialEndsAt ?? DateTime.UtcNow.AddDays(7)
+                    );
+                }
+                else
+                {
+                    await _emailClient.SendAccountCreatedEmailAsync(
+                        ownerEmail,
+                        companyName,
+                        tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.com",
+                        DefaultAdminUsername,
+                        DefaultAdminPassword,
+                        tier
+                    );
+                }
             }
             catch (Exception emailEx)
             {
@@ -267,19 +281,17 @@ public class TenantService
 
     private static int GetMaxMechanicsForTier(string tier) => tier switch
     {
-        "free" => 1,
-        "starter" => 5,
-        "professional" => 20,
-        "enterprise" => 100,
+        "solo" or "free" => 1,
+        "team" => int.MaxValue,      // Unlimited
+        "lifetime" => int.MaxValue,  // Unlimited
         _ => 1
     };
 
     private static int GetMaxStorageForTier(string tier) => tier switch
     {
-        "free" => 1024,        // 1 GB
-        "starter" => 10240,    // 10 GB
-        "professional" => 51200, // 50 GB
-        "enterprise" => 512000,  // 500 GB
-        _ => 1024
+        "solo" or "free" => 5120,     // 5 GB
+        "team" => 102400,             // 100 GB
+        "lifetime" => 102400,         // 100 GB
+        _ => 5120
     };
 }
