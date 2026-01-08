@@ -88,7 +88,7 @@ export async function httpDelete({
   body
 }:{
   url:string,
-  body:any,// eslint-disable-line @typescript-eslint/no-explicit-any 
+  body?:any,// eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
   return apiCall({
     url,
