@@ -54,12 +54,12 @@ public class SignupController : ControllerBase
                 return Conflict(new { message = "An account with this email already exists" });
             }
 
-            // Create user account with "user" role (not super_admin)
+            // Create user account with "owner" role (tenant owner)
             var admin = await _superAdminService.CreateAdminAsync(
                 request.Email,
                 request.Password,
                 request.Name,
-                role: "user"
+                role: "owner"
             );
 
             _logger.LogInformation("Created new user account: {Email}", request.Email);
