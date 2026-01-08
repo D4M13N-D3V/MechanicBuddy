@@ -23,6 +23,8 @@ export async function changePasswordOnLogin(
     return { error: "Password cannot be empty" };
   }
 
+  let success = false;
+
   try {
     const body = {
       currentPassword,
@@ -43,10 +45,16 @@ export async function changePasswordOnLogin(
     // Clear the mustChangePassword flag
     await clearMustChangePassword();
 
-    // Redirect to home
-    redirect('/home/work');
+    success = true;
   } catch (error) {
     console.error('Error changing password:', error);
     return { error: "An error occurred while changing password" };
   }
+
+  // Redirect outside try-catch to avoid catching Next.js redirect error
+  if (success) {
+    redirect('/home/work');
+  }
+
+  return { error: "" };
 }

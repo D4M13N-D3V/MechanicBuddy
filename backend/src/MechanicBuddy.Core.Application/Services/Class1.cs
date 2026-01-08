@@ -20,7 +20,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
         public async Task<TenantRequisites> GetRequisitesAsync()
         {
             // Get the first record (should only be one per tenant)
-            var requisites = session.QueryOver<TenantRequisites>().List<TenantRequisites>().Single();
+            var requisites = session.QueryOver<TenantRequisites>().List<TenantRequisites>().FirstOrDefault();
                
 
             if (requisites == null)
@@ -45,7 +45,7 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
         public async Task<TenantPricing> GetPricingAsync()
         {
             // Get the first record (should only be one per tenant)
-            var pricing =   session.QueryOver<TenantPricing>().List<TenantPricing>().Single();
+            var pricing = session.QueryOver<TenantPricing>().List<TenantPricing>().FirstOrDefault();
                 
 
             if (pricing == null)
