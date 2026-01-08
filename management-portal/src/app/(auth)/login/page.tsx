@@ -87,13 +87,6 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-
-        <div className="mt-4 text-center text-sm text-dark-500">
-          <p>Default credentials:</p>
-          <p className="font-mono text-xs mt-1">
-            admin@mechanicbuddy.app / admin123
-          </p>
-        </div>
       </CardContent>
     </Card>
   );

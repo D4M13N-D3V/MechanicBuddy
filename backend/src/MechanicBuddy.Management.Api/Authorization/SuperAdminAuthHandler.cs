@@ -9,12 +9,14 @@ public class SuperAdminRequirement : IAuthorizationRequirement
 
 public class SuperAdminAuthHandler : AuthorizationHandler<SuperAdminRequirement>
 {
+    private static readonly string[] AllowedRoles = { "admin", "support", "owner" };
+
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         SuperAdminRequirement requirement)
     {
         var roleClaim = context.User.FindFirst(ClaimTypes.Role);
-        if (roleClaim != null && roleClaim.Value == "owner")
+        if (roleClaim != null && AllowedRoles.Contains(roleClaim.Value))
         {
             context.Succeed(requirement);
         }
