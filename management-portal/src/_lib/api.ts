@@ -9,8 +9,10 @@ import type {
   BillingTransaction,
   PortalUser,
   RequestTenantData,
+  DomainVerification,
+  DomainVerificationResult,
 } from "@/types";
-import { getAuthToken } from "./auth";
+import { getAuthToken, logout } from "./auth";
 
 const API_URL = process.env.MANAGEMENT_API_URL || "http://localhost:15568";
 
@@ -38,6 +40,15 @@ async function fetchApi<T>(
     });
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - clear session so middleware redirects to login
+      if (response.status === 401) {
+        await logout();
+        return {
+          success: false,
+          error: "Session expired. Please log in again.",
+        };
+      }
+
       const text = await response.text();
       let errorMessage = `HTTP ${response.status}`;
 
@@ -336,4 +347,52 @@ export async function suspendTenant(tenantId: string, reason: string): Promise<A
     method: "POST",
     body: JSON.stringify({ reason }),
   });
+}
+
+// Domain Management API (for tenant owners)
+export async function initiateDomainVerification(
+  tenantId: number,
+  domain: string
+): Promise<ApiResponse<DomainVerification>> {
+  return fetchApi<DomainVerification>(`/api/user/tenants/${tenantId}/domains`, {
+    method: "POST",
+    body: JSON.stringify({ domain }),
+  });
+}
+
+export async function getTenantDomains(
+  tenantId: number
+): Promise<ApiResponse<{ domains: DomainVerification[] }>> {
+  return fetchApi<{ domains: DomainVerification[] }>(
+    `/api/user/tenants/${tenantId}/domains`
+  );
+}
+
+export async function verifyDomain(
+  tenantId: number,
+  domain: string
+): Promise<ApiResponse<DomainVerificationResult>> {
+  return fetchApi<DomainVerificationResult>(
+    `/api/user/tenants/${tenantId}/domains/${encodeURIComponent(domain)}/verify`,
+    { method: "POST" }
+  );
+}
+
+export async function getDomainStatus(
+  tenantId: number,
+  domain: string
+): Promise<ApiResponse<DomainVerification>> {
+  return fetchApi<DomainVerification>(
+    `/api/user/tenants/${tenantId}/domains/${encodeURIComponent(domain)}/status`
+  );
+}
+
+export async function removeDomain(
+  tenantId: number,
+  domain: string
+): Promise<ApiResponse<void>> {
+  return fetchApi<void>(
+    `/api/user/tenants/${tenantId}/domains/${encodeURIComponent(domain)}`,
+    { method: "DELETE" }
+  );
 }
