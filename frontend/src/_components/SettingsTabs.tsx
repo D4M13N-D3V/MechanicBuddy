@@ -32,7 +32,6 @@ export default function SettingsTabs() {
   const currentPath = usePathname();
   const router = useRouter();
   const [canManageUsers, setCanManageUsers] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkCanManageUsers() {
@@ -44,8 +43,6 @@ export default function SettingsTabs() {
         }
       } catch (error) {
         console.error('Failed to check user management permissions:', error);
-      } finally {
-        setLoading(false);
       }
     }
     checkCanManageUsers();
