@@ -28,7 +28,7 @@ export default async function TenantDetailPage({
     getTenant(id),
     getCurrentUser()
   ]);
-  const isSuperAdmin = user?.role === "super_admin";
+  const isSuperAdmin = user?.role === "admin" || user?.role === "owner";
 
   if (!response.success || !response.data) {
     return (

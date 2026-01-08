@@ -28,7 +28,7 @@ export default async function TenantsPage() {
   if (!user || !ADMIN_ROLES.includes(user.role)) {
     redirect("/dashboard/account");
   }
-  const isSuperAdmin = user.role === "super_admin";
+  const isSuperAdmin = user.role === "admin" || user.role === "owner";
 
   const response = await getTenants(1, 50);
 

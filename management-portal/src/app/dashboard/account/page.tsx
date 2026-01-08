@@ -85,8 +85,8 @@ export default async function AccountPage() {
               <div>
                 <label className="text-sm font-medium text-dark-700">Role</label>
                 <div className="mt-1">
-                  <Badge variant={user.role === 'super_admin' ? 'success' : 'default'}>
-                    {user.role === 'super_admin' ? 'Super Admin' : user.role === 'support' ? 'Support' : 'User'}
+                  <Badge variant={user.role === 'admin' || user.role === 'owner' ? 'success' : 'default'}>
+                    {user.role === 'admin' ? 'Admin' : user.role === 'owner' ? 'Owner' : user.role === 'support' ? 'Support' : 'User'}
                   </Badge>
                 </div>
               </div>
