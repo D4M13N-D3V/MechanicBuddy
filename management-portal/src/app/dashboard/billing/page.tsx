@@ -40,7 +40,7 @@ export default async function BillingPage() {
     );
   }
 
-  const { items: tenants } = tenantsResponse.data;
+  const tenants = tenantsResponse.data;
 
   // Fetch subscription status for each tenant
   const tenantsWithBilling = await Promise.all(
