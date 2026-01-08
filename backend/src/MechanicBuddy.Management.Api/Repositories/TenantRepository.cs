@@ -196,4 +196,19 @@ public class TenantRepository : ITenantRepository
         var sql = "SELECT COUNT(*) FROM management.tenants WHERE created_at >= @Start AND created_at < @End";
         return await connection.ExecuteScalarAsync<int>(sql, new { Start = start, End = end });
     }
+
+    public async Task<IEnumerable<Tenant>> GetExpiredSubscriptionsAsync()
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        // Get tenants where:
+        // - subscription_ends_at has passed
+        // - no active subscription (stripe_subscription_id is null)
+        // - tier is not already solo/free/lifetime
+        var sql = @"SELECT * FROM management.tenants
+                    WHERE subscription_ends_at IS NOT NULL
+                    AND subscription_ends_at < @Now
+                    AND stripe_subscription_id IS NULL
+                    AND tier NOT IN ('solo', 'free', 'lifetime')";
+        return await connection.QueryAsync<Tenant>(sql, new { Now = DateTime.UtcNow });
+    }
 }

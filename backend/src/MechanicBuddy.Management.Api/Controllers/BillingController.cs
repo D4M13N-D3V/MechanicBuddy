@@ -276,6 +276,33 @@ public class BillingController : ControllerBase
             return BadRequest();
         }
     }
+
+    /// <summary>
+    /// Process expired subscriptions and downgrade to solo tier.
+    /// Called by scheduled CronJob.
+    /// </summary>
+    [HttpPost("process-expired")]
+    [AllowAnonymous] // Protected by API key in header instead
+    public async Task<IActionResult> ProcessExpiredSubscriptions([FromHeader(Name = "X-API-Key")] string? apiKey)
+    {
+        var expectedKey = _configuration["CronJob:ApiKey"];
+        if (string.IsNullOrEmpty(expectedKey) || apiKey != expectedKey)
+        {
+            _logger.LogWarning("Unauthorized attempt to process expired subscriptions");
+            return Unauthorized();
+        }
+
+        try
+        {
+            var processedCount = await _billingService.ProcessExpiredSubscriptionsAsync();
+            return Ok(new { processed = processedCount, timestamp = DateTime.UtcNow });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process expired subscriptions");
+            return StatusCode(500, new { message = "Failed to process expired subscriptions" });
+        }
+    }
 }
 
 public record CreateCustomerRequest(string TenantId, string Email, string Name);

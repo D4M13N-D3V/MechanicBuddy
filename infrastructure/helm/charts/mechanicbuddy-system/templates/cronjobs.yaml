@@ -47,3 +47,53 @@ spec:
                   memory: "256Mi"
                   cpu: "250m"
 {{- end }}
+---
+{{- if .Values.subscriptionExpiry.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "mechanicbuddy-system.fullname" . }}-subscription-expiry
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "mechanicbuddy-system.labels" . | nindent 4 }}
+    app.kubernetes.io/component: subscription-expiry
+spec:
+  schedule: {{ .Values.subscriptionExpiry.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            {{- include "mechanicbuddy-system.labels" . | nindent 12 }}
+            app.kubernetes.io/component: subscription-expiry
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: subscription-expiry
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  curl -X POST \
+                    -H "X-API-Key: ${CRONJOB_API_KEY}" \
+                    -H "Content-Type: application/json" \
+                    "http://management-api.{{ .Values.namespace }}.svc.cluster.local:80/api/billing/process-expired"
+              env:
+                - name: CRONJOB_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "mechanicbuddy-system.fullname" . }}-secrets
+                      key: cronjob-api-key
+              resources:
+                requests:
+                  memory: "32Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "64Mi"
+                  cpu: "50m"
+{{- end }}

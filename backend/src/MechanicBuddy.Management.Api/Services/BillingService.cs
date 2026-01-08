@@ -848,4 +848,51 @@ public class BillingService
             })
         };
     }
+
+    /// <summary>
+    /// Checks for expired subscriptions and downgrades them to solo tier.
+    /// Should be called by a scheduled job (e.g., daily CronJob).
+    /// </summary>
+    public async Task<int> ProcessExpiredSubscriptionsAsync()
+    {
+        var expiredTenants = await _tenantRepository.GetExpiredSubscriptionsAsync();
+        var processedCount = 0;
+
+        foreach (var tenant in expiredTenants)
+        {
+            // Skip if already on free/solo tier or lifetime
+            if (tenant.Tier == "solo" || tenant.Tier == "free" || tenant.Tier == "lifetime")
+            {
+                continue;
+            }
+
+            // Downgrade to solo tier
+            var previousTier = tenant.Tier;
+            tenant.Tier = "solo";
+            tenant.MaxMechanics = 1;
+            await _tenantRepository.UpdateAsync(tenant);
+
+            await _billingEventRepository.CreateAsync(new BillingEvent
+            {
+                TenantId = tenant.TenantId,
+                EventType = "subscription_expired",
+                Amount = 0,
+                CreatedAt = DateTime.UtcNow,
+                Metadata = new Dictionary<string, object>
+                {
+                    ["previous_tier"] = previousTier,
+                    ["new_tier"] = "solo",
+                    ["expired_at"] = tenant.SubscriptionEndsAt?.ToString("o") ?? ""
+                }
+            });
+
+            _logger.LogInformation("Tenant {TenantId} downgraded from {PreviousTier} to solo due to expired subscription",
+                tenant.TenantId, previousTier);
+
+            processedCount++;
+        }
+
+        _logger.LogInformation("Processed {Count} expired subscriptions", processedCount);
+        return processedCount;
+    }
 }
