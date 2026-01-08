@@ -48,18 +48,25 @@ export default function HomePage() {
               MechanicBuddy is a self-hosted workshop management system for vehicle
               service centers. Handle work orders, inventory, invoicing, and more.
             </p>
-            <div className="flex justify-center gap-4">
-              <Link href="/demo">
-                <Button size="lg" className="gap-2">
-                  Request a Demo
-                  <ArrowRight className="h-4 w-4" />
+            <div className="flex flex-col items-center gap-4">
+              <Link href="/signup">
+                <Button size="lg" className="gap-2 px-8 py-6 text-lg">
+                  Get Started Free
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
-              <Link href="/pricing">
-                <Button variant="outline" size="lg" className="border-dark-600 text-white hover:bg-dark-800 hover:border-dark-500">
-                  View Pricing
-                </Button>
-              </Link>
+              <div className="flex justify-center gap-4">
+                <Link href="/demo">
+                  <Button variant="outline" size="lg" className="border-dark-600 text-white hover:bg-dark-800 hover:border-dark-500">
+                    Request a Demo
+                  </Button>
+                </Link>
+                <Link href="/pricing">
+                  <Button variant="outline" size="lg" className="border-dark-600 text-white hover:bg-dark-800 hover:border-dark-500">
+                    View Pricing
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -147,14 +154,21 @@ export default function HomePage() {
             Ready to Get Started?
           </h2>
           <p className="text-lg text-dark-300 mb-10">
-            Request a demo and see how MechanicBuddy can transform your workshop
+            Sign up for free and see how MechanicBuddy can transform your workshop
           </p>
-          <Link href="/demo">
-            <Button size="lg" className="gap-2">
-              Request a Demo
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/signup">
+              <Button size="lg" className="gap-2 px-8">
+                Get Started Free
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/demo">
+              <Button variant="outline" size="lg" className="border-dark-600 text-white hover:bg-dark-800 hover:border-dark-500">
+                Request a Demo
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>
