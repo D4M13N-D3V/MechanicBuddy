@@ -56,6 +56,7 @@ export default function LoginPage() {
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
             autoComplete="email"
+            disabled={isSubmitting}
           />
 
           <Input
@@ -66,6 +67,7 @@ export default function LoginPage() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             required
             autoComplete="current-password"
+            disabled={isSubmitting}
           />
 
           {error && (
