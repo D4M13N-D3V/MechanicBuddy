@@ -17,9 +17,12 @@ const statusColors: Record<string, "default" | "success" | "warning" | "danger" 
   provisioning: "info",
 };
 
+const ADMIN_ROLES = ["super_admin", "admin", "support"];
+
 export default async function AccountPage() {
   // Get user from auth session
   const user = await getCurrentUserAuth();
+  const isAdmin = user ? ADMIN_ROLES.includes(user.role) : false;
 
   if (!user) {
     return (
@@ -114,7 +117,7 @@ export default async function AccountPage() {
                 <p className="text-sm text-dark-500 mt-1">Workshops you own or manage</p>
               </div>
             </div>
-            <RequestTenantButton />
+            {isAdmin && <RequestTenantButton />}
           </div>
         </CardHeader>
         <CardContent>
@@ -194,7 +197,7 @@ export default async function AccountPage() {
               <p className="text-dark-500 mb-6">
                 You don&apos;t have any workshop tenants. Request one to get started.
               </p>
-              <RequestTenantButton />
+              {isAdmin && <RequestTenantButton />}
             </div>
           )}
         </CardContent>
