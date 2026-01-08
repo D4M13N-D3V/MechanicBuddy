@@ -70,6 +70,7 @@ namespace MechanicBuddy.Core.Application.Services
 
         // Gallery Photos
         Task<List<GalleryPhotoOptions>> GetGalleryPhotosAsync();
+        Task<List<GalleryPhotoMetadata>> GetGalleryPhotoMetadataListAsync(); // Lightweight - no image data
         Task<GalleryPhotoOptions> GetGalleryPhotoByIdAsync(Guid id);
         Task<GalleryPhotoOptions> CreateGalleryPhotoAsync(GalleryPhotoOptions options);
         Task UpdateGalleryPhotoAsync(Guid id, GalleryPhotoOptions options);

@@ -134,12 +134,20 @@ export interface IGallerySectionOptions {
   description: string | null;
 }
 
-// Gallery Photo Item (for admin with full image data)
+// Gallery Photo Item (for admin with full image data - used for create/update)
 export interface IGalleryPhotoItem {
   id?: string;
   imageBase64: string | null;
   imageMimeType: string | null;
   caption: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+// Gallery Photo Metadata (lightweight for list view - no image data)
+export interface IGalleryPhotoMetadata {
+  id: string;
+  caption: string;
   sortOrder: number;
   isActive: boolean;
 }

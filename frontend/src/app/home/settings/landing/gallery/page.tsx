@@ -1,7 +1,7 @@
 'use server'
 
 import { httpGet } from "@/_lib/server/query-api";
-import { ILandingContentOptions, IGalleryPhotoItem } from "../../branding/model";
+import { ILandingContentOptions, IGalleryPhotoMetadata } from "../../branding/model";
 import SettingsTabs from "@/_components/SettingsTabs";
 import Main from "../../../_components/Main";
 import Link from "next/link";
@@ -9,8 +9,8 @@ import { PlusIcon, PencilIcon, ArrowUpIcon, ArrowDownIcon } from "@heroicons/rea
 import { deleteGalleryPhoto, reorderGalleryPhotos, updateGallerySection } from "../../branding/actions";
 import DeletePhotoButton from "./_components/DeletePhotoButton";
 
-function PhotoRow({ photo, index, total }: { photo: IGalleryPhotoItem; index: number; total: number }) {
-    const imageUrl = photo.id ? `/api/branding/gallery-photos/${photo.id}/image` : null;
+function PhotoRow({ photo, index, total }: { photo: IGalleryPhotoMetadata; index: number; total: number }) {
+    const imageUrl = `/api/branding/gallery-photos/${photo.id}/image`;
 
     return (
         <div className="flex items-center justify-between py-4 border-b border-gray-100 last:border-0">
@@ -41,15 +41,13 @@ function PhotoRow({ photo, index, total }: { photo: IGalleryPhotoItem; index: nu
                         </button>
                     </form>
                 </div>
-                {imageUrl && (
-                    <div className="h-16 w-24 rounded-md overflow-hidden bg-gray-100">
-                        <img
-                            src={imageUrl}
-                            alt={photo.caption || 'Gallery photo'}
-                            className="h-full w-full object-cover"
-                        />
-                    </div>
-                )}
+                <div className="h-16 w-24 rounded-md overflow-hidden bg-gray-100">
+                    <img
+                        src={imageUrl}
+                        alt={photo.caption || 'Gallery photo'}
+                        className="h-full w-full object-cover"
+                    />
+                </div>
                 <div>
                     <div className="flex items-center gap-2">
                         <h4 className="text-sm font-medium text-gray-900">
@@ -80,10 +78,14 @@ function PhotoRow({ photo, index, total }: { photo: IGalleryPhotoItem; index: nu
 }
 
 export default async function Page() {
-    const data = await httpGet('branding/landing-content');
-    const content = await data.json() as ILandingContentOptions;
-    const photos = (content.galleryPhotos || []).sort((a, b) => a.sortOrder - b.sortOrder);
+    // Fetch gallery section from landing content (lightweight, no photo data)
+    const contentData = await httpGet('branding/landing-content');
+    const content = await contentData.json() as ILandingContentOptions;
     const gallerySection = content.gallerySection;
+
+    // Fetch gallery photos metadata separately (no image data, avoids OOM)
+    const photosData = await httpGet('branding/gallery-photos');
+    const photos = ((await photosData.json()) as IGalleryPhotoMetadata[]).sort((a, b) => a.sortOrder - b.sortOrder);
 
     return (
         <Main header={<SettingsTabs />} narrow={true}>

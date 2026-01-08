@@ -644,12 +644,13 @@ namespace MechanicBuddy.Http.Api.Controllers
         // === Gallery Photos CRUD ===
 
         // GET /api/branding/gallery-photos
+        // Returns metadata only (no image data) to avoid OOM - use /gallery-photos/{id}/image for images
         [HttpGet("gallery-photos")]
-        public async Task<ActionResult<List<GalleryPhotoOptions>>> GetGalleryPhotos()
+        public async Task<ActionResult<List<GalleryPhotoMetadata>>> GetGalleryPhotos()
         {
             try
             {
-                return await brandingService.GetGalleryPhotosAsync();
+                return await brandingService.GetGalleryPhotoMetadataListAsync();
             }
             catch (Exception ex)
             {

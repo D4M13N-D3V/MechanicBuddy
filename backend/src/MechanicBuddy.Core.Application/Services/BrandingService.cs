@@ -555,6 +555,12 @@ namespace MechanicBuddy.Core.Application.Services
             )).ToList();
         }
 
+        // Gallery Photo Metadata (lightweight - no image data)
+        public async Task<List<GalleryPhotoMetadata>> GetGalleryPhotoMetadataListAsync()
+        {
+            return (await repository.GetGalleryPhotoMetadataAsync()).ToList();
+        }
+
         public async Task<GalleryPhotoOptions> GetGalleryPhotoByIdAsync(Guid id)
         {
             var photo = await repository.GetGalleryPhotoByIdAsync(id);
@@ -749,6 +755,7 @@ namespace MechanicBuddy.Core.Application.Services
         }
 
         // Full Content
+        // Note: Gallery photos are NOT included to avoid OOM - fetch them separately via GetGalleryPhotoMetadataAsync
         public async Task<LandingContentOptions> GetLandingContentAsync()
         {
             var hero = await GetHeroAsync();
@@ -761,7 +768,9 @@ namespace MechanicBuddy.Core.Application.Services
             var contact = await GetContactAsync();
             var sectionVisibility = await GetSectionVisibilityAsync();
             var gallerySection = await GetGallerySectionAsync();
-            var galleryPhotos = await GetGalleryPhotosAsync();
+            // Don't load gallery photos here - they can be huge and cause OOM
+            // Frontend should fetch gallery photo list separately
+            var galleryPhotos = new List<GalleryPhotoOptions>();
             var socialLinks = await GetSocialLinksAsync();
 
             return new LandingContentOptions(
