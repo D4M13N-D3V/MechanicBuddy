@@ -20,6 +20,7 @@
     "clsx": "^2.1.1",
     "cookies-next": "^5.1.0",
     "countries-and-timezones": "^3.7.2",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.3.1",
     "jose": "^5.9.6",
     "jwt-decode": "^4.0.0",
