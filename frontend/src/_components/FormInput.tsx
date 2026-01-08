@@ -19,6 +19,8 @@ export default function FormInput({
     onInputChange,
     step,
     className,
+    required,
+    disabled,
 }: {
     name: string,
     label?: string | undefined,
@@ -29,7 +31,9 @@ export default function FormInput({
     placeholder?: string | undefined,
     onInputChange?: IInputOnChange,
     step?: string | undefined,
-    className?: string | undefined
+    className?: string | undefined,
+    required?: boolean | undefined,
+    disabled?: boolean | undefined,
 }) {
      
     let hasError = false;
@@ -44,11 +48,12 @@ export default function FormInput({
                     id={name}
                     name={name}
                     type={type}
-                    step={step} 
+                    step={step}
                     onChange={onInputChange}
                     defaultValue={defaultValue}
                     value={value}
-
+                    required={required}
+                    disabled={disabled}
                     placeholder={placeholder}
                     autoComplete={name}
                     aria-invalid={hasError}
