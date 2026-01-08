@@ -13,6 +13,11 @@ RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
+
+# Version build args
+ARG VERSION=0.0.0
+ARG BUILD_SHA=unknown
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -21,15 +26,24 @@ COPY . .
 ENV SESSION_SECRET=build-time-placeholder-secret-32chars
 ENV NEXT_PUBLIC_MANAGEMENT_API_URL=http://localhost:15568
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
+ENV NEXT_PUBLIC_APP_VERSION=${VERSION}
+ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 
 # Build the application
 RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
+
+# Version build args
+ARG VERSION=0.0.0
+ARG BUILD_SHA=unknown
+
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_APP_VERSION=${VERSION}
+ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

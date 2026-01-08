@@ -77,6 +77,12 @@ export default function Nav({
                             Settings
                         </a>
                         <ProfileMenu fullName={fullName} imageUrl={imageUrl} onSmallScreen={false}></ProfileMenu>
+                        <p className="mt-4 text-xs opacity-50" style={{ color: 'var(--portal-sidebar-text, #9ca3af)' }}>
+                            v{process.env.NEXT_PUBLIC_APP_VERSION || "dev"}
+                            {process.env.NEXT_PUBLIC_BUILD_SHA && process.env.NEXT_PUBLIC_BUILD_SHA !== "unknown" && (
+                                <span className="opacity-60"> ({process.env.NEXT_PUBLIC_BUILD_SHA})</span>
+                            )}
+                        </p>
                     </li>}
                 </ul>
             </nav>

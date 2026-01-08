@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
+# Version build args
+ARG VERSION=0.0.0
+ARG BUILD_SHA=unknown
+
 # Copy all source files (needed for project references)
 COPY backend/src/ ./
 
@@ -12,7 +16,15 @@ RUN dotnet publish MechanicBuddy.Management.Api/MechanicBuddy.Management.Api.csp
 
 # ---------- runtime ----------
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
+# Version build args
+ARG VERSION=0.0.0
+ARG BUILD_SHA=unknown
+
 ENV ASPNETCORE_URLS=http://+:15568
+ENV App__Version=${VERSION}
+ENV App__BuildSha=${BUILD_SHA}
+
 WORKDIR /app
 COPY --from=build /app/publish .
 

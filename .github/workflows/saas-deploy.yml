@@ -8,6 +8,7 @@ on:
       - "frontend/**"
       - "management-portal/**"
       - "infrastructure/helm/**"
+      - "VERSION"
   workflow_dispatch:
     inputs:
       deploy_environment:
@@ -23,8 +24,28 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  # Get version from VERSION file
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      short_sha: ${{ steps.version.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "Version: ${VERSION}"
+          echo "Short SHA: ${SHORT_SHA}"
+
   # Build Main App API
   build-api:
+    needs: get-version
     if: "!contains(github.event.head_commit.message, '[skip-api]')"
     runs-on: ubuntu-latest
     permissions:
@@ -53,8 +74,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api
           tags: |
+            type=raw,value=${{ needs.get-version.outputs.version }}
+            type=raw,value=${{ needs.get-version.outputs.version }}-${{ needs.get-version.outputs.short_sha }}
             type=sha,prefix=
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build and push API image
@@ -65,9 +87,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.get-version.outputs.version }}
+            BUILD_SHA=${{ needs.get-version.outputs.short_sha }}
 
   # Build Main App Frontend
   build-web:
+    needs: get-version
     if: "!contains(github.event.head_commit.message, '[skip-web]')"
     runs-on: ubuntu-latest
     permissions:
@@ -96,8 +122,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web
           tags: |
+            type=raw,value=${{ needs.get-version.outputs.version }}
+            type=raw,value=${{ needs.get-version.outputs.version }}-${{ needs.get-version.outputs.short_sha }}
             type=sha,prefix=
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build and push Web image
@@ -108,9 +135,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.get-version.outputs.version }}
+            BUILD_SHA=${{ needs.get-version.outputs.short_sha }}
 
   # Build DbUp Migrations
   build-dbup:
+    needs: get-version
     if: "!contains(github.event.head_commit.message, '[skip-dbup]')"
     runs-on: ubuntu-latest
     permissions:
@@ -137,8 +168,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dbup
           tags: |
+            type=raw,value=${{ needs.get-version.outputs.version }}
+            type=raw,value=${{ needs.get-version.outputs.version }}-${{ needs.get-version.outputs.short_sha }}
             type=sha,prefix=
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build and push DbUp image
@@ -152,6 +184,7 @@ jobs:
 
   # Build Management API
   build-management-api:
+    needs: get-version
     if: "!contains(github.event.head_commit.message, '[skip-management]')"
     runs-on: ubuntu-latest
     permissions:
@@ -178,8 +211,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-api
           tags: |
+            type=raw,value=${{ needs.get-version.outputs.version }}
+            type=raw,value=${{ needs.get-version.outputs.version }}-${{ needs.get-version.outputs.short_sha }}
             type=sha,prefix=
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build and push Management API image
@@ -190,9 +224,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.get-version.outputs.version }}
+            BUILD_SHA=${{ needs.get-version.outputs.short_sha }}
 
   # Build Management Portal
   build-management-portal:
+    needs: get-version
     if: "!contains(github.event.head_commit.message, '[skip-management]')"
     runs-on: ubuntu-latest
     permissions:
@@ -219,8 +257,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal
           tags: |
+            type=raw,value=${{ needs.get-version.outputs.version }}
+            type=raw,value=${{ needs.get-version.outputs.version }}-${{ needs.get-version.outputs.short_sha }}
             type=sha,prefix=
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build and push Management Portal image
@@ -231,9 +270,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.get-version.outputs.version }}
+            BUILD_SHA=${{ needs.get-version.outputs.short_sha }}
 
   # Build Management DbUp
   build-management-dbup:
+    needs: get-version
     if: "!contains(github.event.head_commit.message, '[skip-management]')"
     runs-on: ubuntu-latest
     permissions:
@@ -260,8 +303,9 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-dbup
           tags: |
+            type=raw,value=${{ needs.get-version.outputs.version }}
+            type=raw,value=${{ needs.get-version.outputs.version }}-${{ needs.get-version.outputs.short_sha }}
             type=sha,prefix=
-            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
       - name: Build and push Management DbUp image

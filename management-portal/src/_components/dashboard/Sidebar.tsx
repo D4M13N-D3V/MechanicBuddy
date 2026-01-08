@@ -86,7 +86,12 @@ export function Sidebar({ userRole = "owner" }: SidebarProps) {
         })}
       </nav>
       <div className="border-t border-dark-800 p-4">
-        <p className="text-xs text-dark-500">Management Portal v1.0</p>
+        <p className="text-xs text-dark-500">
+          v{process.env.NEXT_PUBLIC_APP_VERSION || "dev"}
+          {process.env.NEXT_PUBLIC_BUILD_SHA && process.env.NEXT_PUBLIC_BUILD_SHA !== "unknown" && (
+            <span className="text-dark-600"> ({process.env.NEXT_PUBLIC_BUILD_SHA})</span>
+          )}
+        </p>
       </div>
     </div>
   );
