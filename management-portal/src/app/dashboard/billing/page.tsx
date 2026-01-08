@@ -183,7 +183,7 @@ export default async function BillingPage() {
                                     {formatDate(invoice.date)}
                                   </TableCell>
                                   <TableCell className="text-sm font-medium">
-                                    ${(invoice.amount / 100).toFixed(2)} {invoice.currency.toUpperCase()}
+                                    ${invoice.amount.toFixed(2)} {invoice.currency.toUpperCase()}
                                   </TableCell>
                                   <TableCell>
                                     <Badge variant={invoice.status === 'paid' ? 'success' : 'default'}>
