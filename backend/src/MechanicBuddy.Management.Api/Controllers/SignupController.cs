@@ -47,8 +47,11 @@ public class SignupController : ControllerBase
                 return BadRequest(new { message = "Password must be at least 8 characters long" });
             }
 
+            // Normalize email to lowercase
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
             // Check if email already exists
-            var existingAdmin = await _superAdminService.GetByEmailAsync(request.Email);
+            var existingAdmin = await _superAdminService.GetByEmailAsync(normalizedEmail);
             if (existingAdmin != null)
             {
                 return Conflict(new { message = "An account with this email already exists" });
@@ -56,18 +59,18 @@ public class SignupController : ControllerBase
 
             // Create user account with "owner" role (tenant owner)
             var admin = await _superAdminService.CreateAdminAsync(
-                request.Email,
+                normalizedEmail,
                 request.Password,
                 request.Name,
                 role: "owner"
             );
 
-            _logger.LogInformation("Created new user account: {Email}", request.Email);
+            _logger.LogInformation("Created new user account: {Email}", normalizedEmail);
 
             // Auto-provision a free tier tenant
             var tenant = await _tenantService.CreateTenantAsync(
                 companyName: request.CompanyName,
-                ownerEmail: request.Email,
+                ownerEmail: normalizedEmail,
                 ownerName: request.Name,
                 tier: "free",
                 isDemo: false
@@ -76,7 +79,7 @@ public class SignupController : ControllerBase
             _logger.LogInformation(
                 "Auto-provisioned free tenant {TenantId} for user {Email}",
                 tenant.TenantId,
-                request.Email
+                normalizedEmail
             );
 
             // Generate JWT token for auto-login
@@ -104,12 +107,12 @@ public class SignupController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Signup failed for {Email}", request.Email);
+            _logger.LogWarning(ex, "Signup failed for {Email}", request.Email?.Trim().ToLowerInvariant());
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during signup for {Email}", request.Email);
+            _logger.LogError(ex, "Error during signup for {Email}", request.Email?.Trim().ToLowerInvariant());
             return StatusCode(500, new { message = "An error occurred during signup. Please try again later." });
         }
     }

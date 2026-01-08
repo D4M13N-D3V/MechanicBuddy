@@ -25,7 +25,10 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var admin = await _superAdminService.AuthenticateAsync(request.Email, request.Password);
+        // Normalize email to lowercase for case-insensitive login
+        var normalizedEmail = request.Email?.Trim().ToLowerInvariant() ?? string.Empty;
+
+        var admin = await _superAdminService.AuthenticateAsync(normalizedEmail, request.Password);
         if (admin == null)
         {
             return Unauthorized(new { message = "Invalid credentials" });
