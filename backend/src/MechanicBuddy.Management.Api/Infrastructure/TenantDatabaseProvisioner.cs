@@ -154,12 +154,12 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         await using var connection = new NpgsqlConnection(tenancyConnectionString);
         await connection.OpenAsync();
 
-        // Set validated = false for all users except the default admin
+        // Set validated = false for all users except the default admin (username = 'admin')
         await using var cmd = new NpgsqlCommand(@"
             UPDATE public.""user""
             SET validated = false
             WHERE tenantname = @tenantId
-              AND COALESCE(is_default_admin, false) = false", connection);
+              AND username != 'admin'", connection);
         cmd.Parameters.AddWithValue("tenantId", tenantId);
 
         var rowsAffected = await cmd.ExecuteNonQueryAsync();
