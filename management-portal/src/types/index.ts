@@ -124,7 +124,7 @@ export interface AdminUser {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'admin' | 'support' | 'user';
+  role: 'admin' | 'owner' | 'support' | 'user';
   createdAt: string;
 }
 
@@ -133,7 +133,7 @@ export interface PortalUser {
   id: string;
   email: string;
   name: string;
-  role: 'user' | 'super_admin' | 'support';
+  role: 'admin' | 'owner' | 'support' | 'user';
   createdAt: string;
 }
 

@@ -7,7 +7,7 @@ import { getTenants, getSubscriptionStatus } from "@/_lib/api";
 import { getCurrentUser } from "@/_lib/auth";
 import { AlertCircle, CreditCard, DollarSign, FileText, TrendingUp } from "lucide-react";
 
-const ADMIN_ROLES = ["super_admin", "admin", "support"];
+const ADMIN_ROLES = ["admin", "owner", "support"];
 
 const tierColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   free: "default",

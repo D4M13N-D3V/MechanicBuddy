@@ -17,7 +17,7 @@ const statusColors: Record<string, "default" | "success" | "warning" | "danger" 
   provisioning: "info",
 };
 
-const ADMIN_ROLES = ["super_admin", "admin", "support"];
+const ADMIN_ROLES = ["admin", "owner", "support"];
 
 export default async function AccountPage() {
   // Get user from auth session
