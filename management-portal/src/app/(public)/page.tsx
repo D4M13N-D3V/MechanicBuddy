@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/_components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/_components/ui/Card";
-import { Users, FileText, Package, BarChart, ArrowRight } from "lucide-react";
+import { Users, FileText, Package, BarChart, ArrowRight, Github } from "lucide-react";
 
 export default function HomePage() {
   const features = [
@@ -67,6 +67,15 @@ export default function HomePage() {
                   </Button>
                 </Link>
               </div>
+              <a
+                href="https://github.com/D4m13n-d3v/mechanicbuddy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-dark-400 hover:text-white transition-colors mt-4"
+              >
+                <Github className="h-5 w-5" />
+                <span>Open Source on GitHub</span>
+              </a>
             </div>
           </div>
         </div>
