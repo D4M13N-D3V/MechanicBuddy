@@ -262,7 +262,8 @@ public class BillingController : ControllerBase
             var stripeEvent = EventUtility.ConstructEvent(
                 json,
                 Request.Headers["Stripe-Signature"],
-                _configuration["Stripe:WebhookSecret"]
+                _configuration["Stripe:WebhookSecret"],
+                throwOnApiVersionMismatch: false
             );
 
             await _billingService.HandleWebhookAsync(stripeEvent);
