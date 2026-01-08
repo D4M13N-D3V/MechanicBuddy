@@ -176,7 +176,7 @@ public class StripeClient : IStripeClient
     }
 
     // Payment methods and checkout
-    public async Task<string> CreateCheckoutSessionAsync(string customerId, string priceId, string successUrl, string cancelUrl)
+    public async Task<string> CreateCheckoutSessionAsync(string customerId, string priceId, string successUrl, string cancelUrl, Dictionary<string, string>? metadata = null)
     {
         var options = new Stripe.Checkout.SessionCreateOptions
         {
@@ -192,7 +192,12 @@ public class StripeClient : IStripeClient
             },
             Mode = "subscription",
             SuccessUrl = successUrl,
-            CancelUrl = cancelUrl
+            CancelUrl = cancelUrl,
+            Metadata = metadata,
+            SubscriptionData = metadata != null ? new Stripe.Checkout.SessionSubscriptionDataOptions
+            {
+                Metadata = metadata
+            } : null
         };
 
         var service = new Stripe.Checkout.SessionService();

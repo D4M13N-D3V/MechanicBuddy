@@ -721,7 +721,8 @@ public class BillingService
             tenant.StripeCustomerId,
             teamPriceId,
             successUrl,
-            cancelUrl
+            cancelUrl,
+            new Dictionary<string, string> { ["tenant_id"] = tenantId }
         );
 
         _logger.LogInformation("Created Team checkout session for tenant {TenantId}", tenantId);
