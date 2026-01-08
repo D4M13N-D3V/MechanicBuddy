@@ -4,118 +4,117 @@ kind: Kustomization
 namespace: mechanicbuddy-system
 
 resources:
-  - ../../base
+- ../../base
   # NOTE: All secrets are defined in base and overridden via patches below
   # Do NOT add secrets.yaml here to avoid ID conflicts
 
 # Staging-specific patches
-patches:
   # Override DB credentials
-  - target:
-      kind: Secret
-      name: management-db-credentials
-    patch: |
-      - op: replace
-        path: /stringData/password
-        value: "StagingDBPassword123!"
   # Override API secrets
-  - target:
-      kind: Secret
-      name: management-api-secrets
-    patch: |
-      - op: replace
-        path: /stringData/connection-string
-        value: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=StagingDBPassword123!"
-      - op: replace
-        path: /stringData/jwt-secret
-        value: "StagingJwtSecretKey32CharactersMinimum!"
-      - op: replace
-        path: /stringData/stripe-secret-key
-        value: "REDACTED_STRIPE_SK"
-      - op: replace
-        path: /stringData/stripe-webhook-secret
-        value: "whsec_STAGING_WEBHOOK_SECRET"
-      - op: replace
-        path: /stringData/resend-api-key
-        value: "REDACTED_RESEND_KEY"
   # Override portal secrets
-  - target:
-      kind: Secret
-      name: management-portal-secrets
-    patch: |
-      - op: replace
-        path: /stringData/session-secret
-        value: "StagingSessionSecret32CharactersMin!"
-      - op: replace
-        path: /stringData/stripe-publishable-key
-        value: "REDACTED_STRIPE_PK"
   # Override cronjob secrets
-  - target:
-      kind: Secret
-      name: cronjob-secrets
-    patch: |
-      - op: replace
-        path: /stringData/api-token
-        value: "staging-cronjob-api-token-123"
   # Reduce replicas for staging
-  - target:
-      kind: Deployment
-      name: management-api
-    patch: |
-      - op: replace
-        path: /spec/replicas
-        value: 1
-  - target:
-      kind: Deployment
-      name: management-portal
-    patch: |
-      - op: replace
-        path: /spec/replicas
-        value: 1
 
   # Use staging domain
-  - target:
-      kind: Ingress
-      name: mechanicbuddy-system
-    patch: |
-      - op: replace
-        path: /spec/rules/0/host
-        value: staging.mechanicbuddy.app
-      - op: replace
-        path: /spec/rules/1/host
-        value: www.staging.mechanicbuddy.app
-      - op: replace
-        path: /spec/rules/2/host
-        value: api.staging.mechanicbuddy.app
-      - op: replace
-        path: /spec/tls/0/hosts
-        value:
-          - staging.mechanicbuddy.app
-          - www.staging.mechanicbuddy.app
-      - op: replace
-        path: /spec/tls/1/hosts
-        value:
-          - api.staging.mechanicbuddy.app
+patches:
+- patch: |
+    - op: replace
+      path: /stringData/password
+      value: "StagingDBPassword123!"
+  target:
+    kind: Secret
+    name: management-db-credentials
+- patch: |
+    - op: replace
+      path: /stringData/connection-string
+      value: "Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=StagingDBPassword123!"
+    - op: replace
+      path: /stringData/jwt-secret
+      value: "StagingJwtSecretKey32CharactersMinimum!"
+    - op: replace
+      path: /stringData/stripe-secret-key
+      value: "REDACTED_STRIPE_SK"
+    - op: replace
+      path: /stringData/stripe-webhook-secret
+      value: "whsec_STAGING_WEBHOOK_SECRET"
+    - op: replace
+      path: /stringData/resend-api-key
+      value: "REDACTED_RESEND_KEY"
+  target:
+    kind: Secret
+    name: management-api-secrets
+- patch: |
+    - op: replace
+      path: /stringData/session-secret
+      value: "StagingSessionSecret32CharactersMin!"
+    - op: replace
+      path: /stringData/stripe-publishable-key
+      value: "REDACTED_STRIPE_PK"
+  target:
+    kind: Secret
+    name: management-portal-secrets
+- patch: |
+    - op: replace
+      path: /stringData/api-token
+      value: "staging-cronjob-api-token-123"
+  target:
+    kind: Secret
+    name: cronjob-secrets
+- patch: |
+    - op: replace
+      path: /spec/replicas
+      value: 1
+  target:
+    kind: Deployment
+    name: management-api
+- patch: |
+    - op: replace
+      path: /spec/replicas
+      value: 1
+  target:
+    kind: Deployment
+    name: management-portal
+- patch: |
+    - op: replace
+      path: /spec/rules/0/host
+      value: staging.mechanicbuddy.app
+    - op: replace
+      path: /spec/rules/1/host
+      value: www.staging.mechanicbuddy.app
+    - op: replace
+      path: /spec/rules/2/host
+      value: api.staging.mechanicbuddy.app
+    - op: replace
+      path: /spec/tls/0/hosts
+      value:
+        - staging.mechanicbuddy.app
+        - www.staging.mechanicbuddy.app
+    - op: replace
+      path: /spec/tls/1/hosts
+      value:
+        - api.staging.mechanicbuddy.app
+  target:
+    kind: Ingress
+    name: mechanicbuddy-system
 
 configMapGenerator:
-  - name: mechanicbuddy-config
-    behavior: merge
-    literals:
-      - BASE_DOMAIN=staging.mechanicbuddy.app
+- behavior: merge
+  literals:
+  - BASE_DOMAIN=staging.mechanicbuddy.app
+  name: mechanicbuddy-config
 
 # Image tags - updated by CI/CD
 images:
-  - name: management-api
-    newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-api
-    newTag: latest  # CI updates this
-  - name: management-portal
-    newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-portal
-    newTag: latest  # CI updates this
-  - name: management-dbup
-    newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-dbup
-    newTag: latest  # CI updates this
+- name: management-api
+  newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-api
+  newTag: 1a8bf58
+- name: management-dbup
+  newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-dbup
+  newTag: 1a8bf58
+- name: management-portal
+  newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-portal
+  newTag: 1a8bf58
 
 labels:
-  - pairs:
-      environment: staging
-    includeSelectors: false
+- pairs:
+    environment: staging
