@@ -10,7 +10,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     private readonly int _postgresPort;
     private readonly string _postgresUser;
     private readonly string _postgresPassword;
-    private readonly string _baseDbName;
+    private readonly string _tenantDbPrefix;
     private readonly string _templateDbName;
     private readonly string _tenancyDbName;
 
@@ -31,7 +31,9 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         _postgresPort = int.TryParse(configuration["Database:PostgresPort"], out var port) ? port : 5432;
         _postgresUser = configuration["Database:PostgresUser"] ?? "postgres";
         _postgresPassword = configuration["Database:PostgresPassword"] ?? "postgres";
-        _baseDbName = configuration["Database:PostgresDatabase"] ?? "mechanicbuddy";
+        // Tenant databases are named: mechanicbuddy-{tenantId}
+        // Use dedicated config key to avoid confusion with management database
+        _tenantDbPrefix = configuration["Database:TenantDatabasePrefix"] ?? "mechanicbuddy";
         _templateDbName = configuration["Database:TemplateDatabase"] ?? "mechanicbuddy-testt";
         _tenancyDbName = configuration["Database:TenancyDatabase"] ?? "mechanicbuddy-tenancy";
     }
@@ -146,7 +148,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     private string GetTenantDbName(string tenantId)
     {
         // Database naming: mechanicbuddy-{tenantId}
-        return $"{_baseDbName}-{tenantId}";
+        return $"{_tenantDbPrefix}-{tenantId}";
     }
 
     private async Task UpdateTenantUserTableAsync(string tenantId, string tenantDbName)

@@ -129,7 +129,6 @@ public class KubernetesClient : IKubernetesClient
         var frontendServiceName = $"frontend-{tenantId}";
         var apiSecretName = $"api-secrets-{tenantId}";
         var frontendSecretName = $"frontend-secrets-{tenantId}";
-        var schemaName = $"tenant_{tenantId.Replace("-", "_")}";
         var imagePullSecretName = "ghcr-credentials";
 
         // Get resource limits based on tier
@@ -139,6 +138,8 @@ public class KubernetesClient : IKubernetesClient
         await CopyImagePullSecretAsync(namespaceName, imagePullSecretName);
 
         // Create appsettings.Secrets.json content for tenant
+        // Each tenant gets a dedicated database: mechanicbuddy-{tenantId}
+        var tenantDbName = $"mechanicbuddy-{tenantId}";
         var secretsJson = System.Text.Json.JsonSerializer.Serialize(new
         {
             PdfDirectory = "/var/mechanicbuddy/pdf",
@@ -154,13 +155,12 @@ public class KubernetesClient : IKubernetesClient
                 Port = 5432,
                 UserId = _postgresUser,
                 Password = _postgresPassword,
-                Name = "mechanicbuddy",
-                Schema = schemaName,
+                Name = tenantDbName,
+                Schema = "domain",
                 MultiTenancy = new
                 {
-                    Enabled = true,
-                    TenantId = tenantId,
-                    Suffix = new { Tenancy = "tenancy", Template = "testt" }
+                    Enabled = false,
+                    TenantId = tenantId
                 }
             },
             SmtpOptions = new
