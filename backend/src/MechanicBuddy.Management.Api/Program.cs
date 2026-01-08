@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using MechanicBuddy.Management.Api.Authorization;
 using MechanicBuddy.Management.Api.Configuration;
 using MechanicBuddy.Management.Api.Infrastructure;
+using MechanicBuddy.Management.Api.Middleware;
 using MechanicBuddy.Management.Api.Repositories;
 using MechanicBuddy.Management.Api.Services;
 
@@ -120,6 +121,7 @@ builder.Services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
 builder.Services.AddScoped<IDomainVerificationRepository, DomainVerificationRepository>();
 builder.Services.AddScoped<ITenantMetricsRepository, TenantMetricsRepository>();
 builder.Services.AddScoped<IBillingEventRepository, BillingEventRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
 // Configure Provisioning Options
 builder.Services.Configure<ProvisioningOptions>(
@@ -252,6 +254,7 @@ else
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AuditLoggingMiddleware>();
 
 app.MapControllers();
 

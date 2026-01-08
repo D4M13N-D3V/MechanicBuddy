@@ -6,6 +6,29 @@ using DnsClient;
 
 namespace MechanicBuddy.Management.Api.Services;
 
+/// <summary>
+/// Result of a domain verification attempt with detailed error information
+/// </summary>
+public class DomainVerificationResult
+{
+    public bool Success { get; set; }
+    public string? ErrorCode { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DnsCheckResult? DnsCheck { get; set; }
+}
+
+/// <summary>
+/// Detailed DNS check results for debugging
+/// </summary>
+public class DnsCheckResult
+{
+    public bool RecordFound { get; set; }
+    public string? ActualValue { get; set; }
+    public string ExpectedValue { get; set; } = string.Empty;
+    public string Host { get; set; } = string.Empty;
+    public List<string> AllRecordsFound { get; set; } = new();
+}
+
 public class DomainService
 {
     private readonly IDomainVerificationRepository _domainVerificationRepository;
@@ -110,6 +133,147 @@ public class DomainService
         }
 
         return isVerified;
+    }
+
+    /// <summary>
+    /// Verify domain with detailed results for debugging
+    /// </summary>
+    public async Task<DomainVerificationResult> VerifyDomainWithDetailsAsync(string domain)
+    {
+        var verification = await _domainVerificationRepository.GetByDomainAsync(domain);
+        if (verification == null)
+        {
+            return new DomainVerificationResult
+            {
+                Success = false,
+                ErrorCode = "DOMAIN_NOT_FOUND",
+                ErrorMessage = "Domain verification record not found"
+            };
+        }
+
+        if (verification.IsVerified)
+        {
+            return new DomainVerificationResult
+            {
+                Success = true
+            };
+        }
+
+        if (verification.ExpiresAt.HasValue && verification.ExpiresAt.Value < DateTime.UtcNow)
+        {
+            return new DomainVerificationResult
+            {
+                Success = false,
+                ErrorCode = "VERIFICATION_EXPIRED",
+                ErrorMessage = "Verification token has expired. Please remove this domain and add it again."
+            };
+        }
+
+        // Only DNS verification for now
+        var dnsResult = await VerifyDnsTxtRecordWithDetailsAsync(domain, verification.VerificationToken);
+
+        if (dnsResult.Success)
+        {
+            // Mark as verified
+            verification.IsVerified = true;
+            verification.VerifiedAt = DateTime.UtcNow;
+            await _domainVerificationRepository.UpdateAsync(verification);
+
+            // Update tenant
+            var tenant = await _tenantRepository.GetByIdAsync(verification.TenantId);
+            if (tenant != null)
+            {
+                tenant.CustomDomain = domain;
+                tenant.DomainVerified = true;
+                await _tenantRepository.UpdateAsync(tenant);
+
+                // Update Kubernetes Ingress with custom domain
+                await UpdateTenantIngressAsync(tenant.TenantId, domain);
+            }
+
+            _logger.LogInformation("Successfully verified domain {Domain} for tenant {TenantId}", domain, verification.TenantId);
+        }
+
+        return dnsResult;
+    }
+
+    /// <summary>
+    /// Verify DNS TXT record with detailed results
+    /// </summary>
+    private async Task<DomainVerificationResult> VerifyDnsTxtRecordWithDetailsAsync(string domain, string expectedToken)
+    {
+        var verificationHost = $"_mechanicbuddy-verify.{domain}";
+        var result = new DomainVerificationResult
+        {
+            Success = false,
+            DnsCheck = new DnsCheckResult
+            {
+                Host = verificationHost,
+                ExpectedValue = expectedToken,
+                AllRecordsFound = new List<string>()
+            }
+        };
+
+        try
+        {
+            _logger.LogInformation("Checking DNS TXT record for {Host}", verificationHost);
+
+            var dnsResult = await _dnsClient.QueryAsync(verificationHost, DnsClient.QueryType.TXT);
+
+            if (dnsResult.HasError)
+            {
+                _logger.LogWarning("DNS query failed for {Host}: {Error}", verificationHost, dnsResult.ErrorMessage);
+
+                result.ErrorCode = "DNS_QUERY_FAILED";
+                result.ErrorMessage = $"DNS lookup failed: {dnsResult.ErrorMessage}. This may be because the record hasn't propagated yet.";
+                return result;
+            }
+
+            var txtRecords = dnsResult.Answers.TxtRecords().ToList();
+
+            if (!txtRecords.Any())
+            {
+                result.DnsCheck.RecordFound = false;
+                result.ErrorCode = "DNS_RECORD_NOT_FOUND";
+                result.ErrorMessage = $"No TXT record found at {verificationHost}. Please add the TXT record and wait for DNS propagation (this can take a few minutes to 48 hours).";
+                return result;
+            }
+
+            // Collect all found records for debugging
+            foreach (var txtRecord in txtRecords)
+            {
+                foreach (var txtValue in txtRecord.Text)
+                {
+                    result.DnsCheck.AllRecordsFound.Add(txtValue);
+
+                    // Check if the value matches
+                    if (txtValue == expectedToken || txtValue == $"mechanicbuddy-verification={expectedToken}")
+                    {
+                        result.Success = true;
+                        result.DnsCheck.RecordFound = true;
+                        result.DnsCheck.ActualValue = txtValue;
+                        _logger.LogInformation("DNS verification successful for {Domain}", domain);
+                        return result;
+                    }
+                }
+            }
+
+            // Record found but value doesn't match
+            result.DnsCheck.RecordFound = true;
+            result.DnsCheck.ActualValue = result.DnsCheck.AllRecordsFound.FirstOrDefault();
+            result.ErrorCode = "DNS_VALUE_MISMATCH";
+            result.ErrorMessage = $"TXT record found but the value doesn't match. Expected: {expectedToken}, Found: {result.DnsCheck.ActualValue}";
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to verify DNS record for {Domain}", domain);
+
+            result.ErrorCode = "DNS_CHECK_ERROR";
+            result.ErrorMessage = "An error occurred while checking DNS records. Please try again later.";
+            return result;
+        }
     }
 
     public async Task<DomainVerification?> GetVerificationStatusAsync(string domain)

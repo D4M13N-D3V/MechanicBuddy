@@ -10,6 +10,7 @@ import {
   User,
   CreditCard,
   Receipt,
+  FileText,
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/_lib/utils";
@@ -27,6 +28,7 @@ const navigation: NavItem[] = [
   { name: "Tenants", href: "/dashboard/tenants", icon: Building2, adminOnly: true },
   { name: "Demo Requests", href: "/dashboard/demos", icon: MessageSquare, adminOnly: true },
   { name: "Subscriptions", href: "/dashboard/admin-billing", icon: Receipt, adminOnly: true },
+  { name: "Audit Logs", href: "/dashboard/audit-logs", icon: FileText, adminOnly: true },
   { name: "My Tenants", href: "/dashboard/account", icon: User, adminOnly: false },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard, adminOnly: false },
 ];

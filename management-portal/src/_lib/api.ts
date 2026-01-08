@@ -396,3 +396,65 @@ export async function removeDomain(
     { method: "DELETE" }
   );
 }
+
+// Audit Logs API
+export interface AuditLog {
+  id: number;
+  adminId: number | null;
+  adminEmail: string;
+  adminRole: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  actionType: string;
+  httpMethod: string;
+  endpoint: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  tenantId: string | null;
+  actionDescription: string | null;
+  timestamp: string;
+  durationMs: number | null;
+  statusCode: number;
+  wasSuccessful: boolean;
+}
+
+export interface AuditLogStats {
+  totalRequests: number;
+  uniqueAdmins: number;
+  tenantOperations: number;
+  authEvents: number;
+  failedRequests: number;
+}
+
+export interface AuditLogPageResult {
+  items: AuditLog[];
+  total: number;
+  hasMore: boolean;
+}
+
+export async function getAuditLogs(
+  params: {
+    searchText?: string;
+    actionType?: string;
+    tenantId?: string;
+    fromDate?: string;
+    toDate?: string;
+    limit?: number;
+    offset?: number;
+  } = {}
+): Promise<ApiResponse<AuditLogPageResult>> {
+  const queryParams = new URLSearchParams();
+  if (params.searchText) queryParams.set("searchText", params.searchText);
+  if (params.actionType) queryParams.set("actionType", params.actionType);
+  if (params.tenantId) queryParams.set("tenantId", params.tenantId);
+  if (params.fromDate) queryParams.set("fromDate", params.fromDate);
+  if (params.toDate) queryParams.set("toDate", params.toDate);
+  if (params.limit) queryParams.set("limit", params.limit.toString());
+  if (params.offset) queryParams.set("offset", params.offset.toString());
+
+  return fetchApi<AuditLogPageResult>(`/api/auditlogs?${queryParams.toString()}`);
+}
+
+export async function getAuditLogStats(days = 7): Promise<ApiResponse<AuditLogStats>> {
+  return fetchApi<AuditLogStats>(`/api/auditlogs/stats?days=${days}`);
+}

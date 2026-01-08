@@ -3,8 +3,8 @@ import { Badge } from "@/_components/ui/Badge";
 import { Button } from "@/_components/ui/Button";
 import { formatDate } from "@/_lib/utils";
 import Link from "next/link";
-import { ArrowLeft, Building2, Users, Database, Activity, AlertCircle } from "lucide-react";
-import { getTenant } from "@/_lib/api";
+import { ArrowLeft, Building2, Users, Database, Activity, AlertCircle, Globe } from "lucide-react";
+import { getTenant, getTenantDomains } from "@/_lib/api";
 import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
 import { SuspendTenantButton } from "@/_components/SuspendTenantButton";
 import { TenantOperationsButtons } from "@/_components/TenantOperationsButtons";
@@ -24,11 +24,17 @@ export default async function TenantDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [response, user] = await Promise.all([
+  const tenantId = parseInt(id, 10);
+  const [response, user, domainsResponse] = await Promise.all([
     getTenant(id),
-    getCurrentUser()
+    getCurrentUser(),
+    getTenantDomains(tenantId),
   ]);
   const isSuperAdmin = user?.role === "admin" || user?.role === "owner";
+  const domains = domainsResponse.success && domainsResponse.data ? domainsResponse.data.domains : [];
+  const verifiedDomain = domains.find((d) => d.isVerified);
+  const pendingDomain = domains.find((d) => !d.isVerified);
+  const customDomain = verifiedDomain || pendingDomain;
 
   if (!response.success || !response.data) {
     return (
@@ -238,6 +244,52 @@ export default async function TenantDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {/* Custom Domain Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
+              <Globe className="h-5 w-5 text-primary-600" />
+            </div>
+            <div>
+              <CardTitle>Custom Domain</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                Use your own domain for this workshop
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {customDomain ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-mono font-semibold text-gray-900">{customDomain.domain}</p>
+                <div className="mt-1">
+                  <Badge variant={customDomain.isVerified ? "success" : "warning"}>
+                    {customDomain.isVerified ? "Active" : "Pending Verification"}
+                  </Badge>
+                </div>
+              </div>
+              <Link href={`/dashboard/tenants/${id}/domains`}>
+                <Button variant="outline" size="sm">Manage</Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                No custom domain configured. Add one to give your workshop a professional URL.
+              </p>
+              <Link href={`/dashboard/tenants/${id}/domains`}>
+                <Button variant="primary" size="sm">
+                  <Globe className="h-4 w-4 mr-2" />
+                  Configure Domain
+                </Button>
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

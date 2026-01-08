@@ -161,6 +161,46 @@ export interface RequestTenantData {
   message?: string;
 }
 
+// Domain types
+export interface DomainVerification {
+  id: number;
+  domain: string;
+  verificationToken: string;
+  verificationMethod: 'dns';
+  isVerified: boolean;
+  createdAt: string;
+  verifiedAt?: string;
+  expiresAt?: string;
+  isExpired?: boolean;
+  instructions?: DomainVerificationInstructions;
+}
+
+export interface DomainVerificationInstructions {
+  type: string;
+  host: string;
+  value: string;
+  alternativeHost?: string;
+  description: string;
+}
+
+export interface DomainVerificationResult {
+  success: boolean;
+  status: 'verified' | 'pending' | 'expired' | 'not_found' | 'error';
+  domain?: string;
+  verifiedAt?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  dnsCheck?: DnsCheckResult;
+}
+
+export interface DnsCheckResult {
+  recordFound: boolean;
+  actualValue?: string;
+  expectedValue: string;
+  host: string;
+  allRecordsFound: string[];
+}
+
 // API response types
 export interface ApiResponse<T> {
   success: boolean;

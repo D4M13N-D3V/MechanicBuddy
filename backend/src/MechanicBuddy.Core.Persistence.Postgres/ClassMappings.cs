@@ -974,4 +974,40 @@ namespace MechanicBuddy.Core.Persistence.Postgres.Repositories
             Map(x => x.UpdatedAt).Column("updated_at").Access.BackingField();
         }
     }
+
+    public class AuditLogMapping : ClassMap<AuditLog>
+    {
+        public AuditLogMapping()
+        {
+            Schema("domain");
+            Table("audit_logs");
+
+            Id(x => x.Id)
+                .Column("id")
+                .GeneratedBy
+                .DefaultGeneratedBy();
+
+            // Who made the request
+            Map(x => x.UserName).Column("user_name").Access.BackingField();
+            Map(x => x.EmployeeId).Column("employee_id").Access.BackingField();
+            Map(x => x.IpAddress).Column("ip_address").Access.BackingField();
+            Map(x => x.UserAgent).Column("user_agent").Access.BackingField();
+
+            // What action was performed
+            Map(x => x.ActionType).Column("action_type").Access.BackingField();
+            Map(x => x.HttpMethod).Column("http_method").Access.BackingField();
+            Map(x => x.Endpoint).Column("endpoint").Access.BackingField();
+            Map(x => x.ResourceType).Column("resource_type").Access.BackingField();
+            Map(x => x.ResourceId).Column("resource_id").Access.BackingField();
+            Map(x => x.ActionDescription).Column("action_description").Access.BackingField();
+
+            // When it happened
+            Map(x => x.Timestamp).Column("timestamp").Access.BackingField().CustomType<UtcDateType>();
+            Map(x => x.DurationMs).Column("duration_ms").Access.BackingField();
+
+            // Result
+            Map(x => x.StatusCode).Column("status_code").Access.BackingField();
+            Map(x => x.WasSuccessful).Column("was_successful").Access.BackingField();
+        }
+    }
 }

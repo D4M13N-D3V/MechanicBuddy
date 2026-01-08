@@ -1,10 +1,11 @@
 'use client';
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
-import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon, UsersIcon } from '@heroicons/react/20/solid'
+import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon, UsersIcon, ClipboardDocumentListIcon } from '@heroicons/react/20/solid'
 import clsx from 'clsx'
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { checkCanManageUsers } from '@/_lib/server/actions/userManagementActions';
+import { checkCanViewAuditLogs } from '@/_lib/server/actions/auditLogActions';
 
 interface Tab {
   name: string;
@@ -12,6 +13,7 @@ interface Tab {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   exact: boolean;
   requiresUserManagement?: boolean;
+  requiresDefaultAdmin?: boolean;
 }
 
 const allTabs: Tab[] = [
@@ -19,7 +21,8 @@ const allTabs: Tab[] = [
   { name: 'Invoice Options', href: '/home/settings', icon: BuildingOfficeIcon, exact: true },
   { name: 'Branding', href: '/home/settings/branding', icon: PaintBrushIcon, exact: false },
   { name: 'Landing Page', href: '/home/settings/landing', icon: GlobeAltIcon, exact: false },
-  { name: 'Users', href: '/home/settings/users', icon: UsersIcon, exact: false, requiresUserManagement: true }
+  { name: 'Users', href: '/home/settings/users', icon: UsersIcon, exact: false, requiresUserManagement: true },
+  { name: 'Audit Logs', href: '/home/settings/audit-logs', icon: ClipboardDocumentListIcon, exact: false, requiresDefaultAdmin: true }
 ]
 
 function isActiveTab(currentPath: string, tabHref: string, exact: boolean): boolean {
@@ -33,20 +36,29 @@ export default function SettingsTabs() {
   const currentPath = usePathname();
   const router = useRouter();
   const [canManageUsers, setCanManageUsers] = useState(false);
+  const [canViewAuditLogs, setCanViewAuditLogs] = useState(false);
 
   useEffect(() => {
-    async function fetchCanManageUsers() {
+    async function fetchPermissions() {
       try {
-        const result = await checkCanManageUsers();
-        setCanManageUsers(result.canManageUsers);
+        const [userManageResult, auditLogsResult] = await Promise.all([
+          checkCanManageUsers(),
+          checkCanViewAuditLogs()
+        ]);
+        setCanManageUsers(userManageResult.canManageUsers);
+        setCanViewAuditLogs(auditLogsResult.canView);
       } catch (error) {
-        console.error('Failed to check user management permissions:', error);
+        console.error('Failed to check permissions:', error);
       }
     }
-    fetchCanManageUsers();
+    fetchPermissions();
   }, []);
 
-  const tabs = allTabs.filter(tab => !tab.requiresUserManagement || canManageUsers);
+  const tabs = allTabs.filter(tab => {
+    if (tab.requiresUserManagement && !canManageUsers) return false;
+    if (tab.requiresDefaultAdmin && !canViewAuditLogs) return false;
+    return true;
+  });
 
   return (
     <div className="pt-4  px-2  xl:px-5" >
