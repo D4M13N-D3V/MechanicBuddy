@@ -11,6 +11,7 @@ public class BillingService
     private readonly IBillingEventRepository _billingEventRepository;
     private readonly Infrastructure.IStripeClient _stripeClient;
     private readonly Infrastructure.IKubernetesClient _kubernetesClient;
+    private readonly Infrastructure.ICloudflareClient _cloudflareClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BillingService> _logger;
 
@@ -27,6 +28,7 @@ public class BillingService
         IBillingEventRepository billingEventRepository,
         Infrastructure.IStripeClient stripeClient,
         Infrastructure.IKubernetesClient kubernetesClient,
+        Infrastructure.ICloudflareClient cloudflareClient,
         IConfiguration configuration,
         ILogger<BillingService> logger)
     {
@@ -34,6 +36,7 @@ public class BillingService
         _billingEventRepository = billingEventRepository;
         _stripeClient = stripeClient;
         _kubernetesClient = kubernetesClient;
+        _cloudflareClient = cloudflareClient;
         _configuration = configuration;
         _logger = logger;
     }
@@ -893,7 +896,7 @@ public class BillingService
     }
 
     /// <summary>
-    /// Checks for expired subscriptions and downgrades them to solo tier.
+    /// Checks for expired subscriptions and suspends the tenant.
     /// Should be called by a scheduled job (e.g., daily CronJob).
     /// </summary>
     public async Task<int> ProcessExpiredSubscriptionsAsync()
@@ -909,14 +912,43 @@ public class BillingService
                 continue;
             }
 
-            // Downgrade to solo tier
             var previousTier = tenant.Tier;
+            var previousStatus = tenant.Status;
+
+            // Suspend the tenant and downgrade to solo tier
             tenant.Tier = "solo";
+            tenant.Status = "suspended";
             tenant.MaxMechanics = 1;
             await _tenantRepository.UpdateAsync(tenant);
 
-            // Update the running K8s deployment with new tier
-            await _kubernetesClient.UpdateTenantTierAsync(tenant.TenantId, "solo");
+            // Delete the K8s namespace (removes all tenant resources)
+            try
+            {
+                await _kubernetesClient.DeleteNamespaceAsync(tenant.TenantId);
+                _logger.LogInformation("Deleted K8s namespace for suspended tenant {TenantId}", tenant.TenantId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete K8s namespace for tenant {TenantId}", tenant.TenantId);
+            }
+
+            // Delete Cloudflare DNS record
+            try
+            {
+                var dnsDeleted = await _cloudflareClient.DeleteTenantDnsRecordAsync(tenant.TenantId);
+                if (dnsDeleted)
+                {
+                    _logger.LogInformation("Deleted Cloudflare DNS record for suspended tenant {TenantId}", tenant.TenantId);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to delete Cloudflare DNS record for tenant {TenantId}", tenant.TenantId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete Cloudflare DNS for tenant {TenantId}", tenant.TenantId);
+            }
 
             await _billingEventRepository.CreateAsync(new BillingEvent
             {
@@ -927,12 +959,16 @@ public class BillingService
                 Metadata = new Dictionary<string, object>
                 {
                     ["previous_tier"] = previousTier,
+                    ["previous_status"] = previousStatus,
                     ["new_tier"] = "solo",
-                    ["expired_at"] = tenant.SubscriptionEndsAt?.ToString("o") ?? ""
+                    ["new_status"] = "suspended",
+                    ["expired_at"] = tenant.SubscriptionEndsAt?.ToString("o") ?? "",
+                    ["k8s_deleted"] = true,
+                    ["dns_deleted"] = true
                 }
             });
 
-            _logger.LogInformation("Tenant {TenantId} downgraded from {PreviousTier} to solo due to expired subscription",
+            _logger.LogInformation("Tenant {TenantId} suspended and downgraded from {PreviousTier} to solo due to expired subscription",
                 tenant.TenantId, previousTier);
 
             processedCount++;
