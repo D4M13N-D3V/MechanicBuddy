@@ -8,6 +8,8 @@ namespace MechanicBuddy.Http.Api.Models
     public class UserManagementDto
     {
         public Guid EmployeeId { get; set; }
+        // Frontend expects "id" field for routing
+        public Guid Id => EmployeeId;
         public string UserName { get; set; }
         public string Email { get; set; }
         public string FirstName { get; set; }
