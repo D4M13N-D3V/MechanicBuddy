@@ -1,2 +1,49 @@
 backend/src/Carmasters.Http.Api/dist/
 backend/src/DbUp/dist/
+
+# Secrets and credentials - NEVER commit these
+**/appsettings.Secrets.json
+**/*.Secrets.json
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Kubernetes configs with credentials
+**/kubeconfig
+**/kubeconfig.yaml
+**/kubeconfig.yml
+**/*.kubeconfig
+
+# Ansible vault (unencrypted)
+**/vault.yml.decrypted
+**/vault_password
+**/vault_pass.txt
+
+# SSH keys
+**/*.pem
+**/*.key
+**/id_rsa
+**/id_ed25519
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build outputs
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+**/.next/
+
+# Logs
+*.log
+**/logs/
+
+# Local development
+*.local
