@@ -59,11 +59,6 @@ export default async function Layout({ children }: { children: React.ReactNode }
     // Use proxy path for profile picture to avoid NEXT_PUBLIC_API_URL build-time issues
     const imageUrl = `/backend-api/users/profilepicture/${jwt}`
 
-    // Build logo URL - use branding logo if available
-    const logoUrl = branding?.logoBase64
-        ? `data:${branding.logoMimeType};base64,${branding.logoBase64}`
-        : '/logo.png';
-
     return (
         <PortalThemeProvider colors={branding?.portalColors || null}>
             {/* <Timeout></Timeout> */}
@@ -73,10 +68,10 @@ export default async function Layout({ children }: { children: React.ReactNode }
                 <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-62 lg:flex-col">
                     {/* Sidebar component, swap this element with another sidebar if you like */}
                     <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6" style={{ backgroundColor: 'var(--portal-sidebar-bg, #111827)' }}>
-                      <Nav imageUrl={imageUrl} fullName={fullName} onSmallScreen={false} logoUrl={logoUrl}></Nav>
+                      <Nav imageUrl={imageUrl} fullName={fullName} onSmallScreen={false}></Nav>
                     </div>
                 </div>
-                 <NavDialog imageUrl={imageUrl} fullName={fullName} logoUrl={logoUrl}></NavDialog>
+                 <NavDialog imageUrl={imageUrl} fullName={fullName}></NavDialog>
                 <main style={{ backgroundColor: 'var(--portal-content-bg, #f9fafb)' }}>
                     {children}
                 </main>

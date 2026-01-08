@@ -1,5 +1,4 @@
 'use client'
-import Image from 'next/image';
 import { authenticate } from './authenticate'
 import { useActionState } from 'react'
 
@@ -7,32 +6,28 @@ const initialState = {
   error: '',
 };
 
-const PURPLE = "#7c3aed"
-
 export default function LoginPage() {
- 
+
   const [state, action] = useActionState(authenticate, initialState);
- 
+
   return (
     <>
-      <div className="bg-white flex min-h-full flex-1">
+      <div className="bg-slate-900 flex min-h-full flex-1">
         <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
           <div className="mx-auto w-full max-w-sm lg:w-96">
             <div>
-              <Image alt="3Js Auto Repairs" width="60" height="60" className="h-14 w-auto" src="/3js-logo.png" />
-
-              <h2 className="mt-8 text-2xl/9 font-bold tracking-tight text-gray-900">Mechanic Portal</h2>
-              <p className="mt-2 text-sm/6 text-gray-500">
-                Sign in to access the 3J&apos;s Auto Repairs management system
+              <h2 className="mt-8 text-2xl/9 font-bold tracking-tight text-white">Mechanic Portal</h2>
+              <p className="mt-2 text-sm/6 text-slate-400">
+                Sign in to access the management system
               </p>
             </div>
 
             <div className="mt-10">
               <div>
-                {state?.error && <p className="text-red-600 text-sm mb-4">{state.error}</p>}
+                {state?.error && <p className="text-red-400 text-sm mb-4">{state.error}</p>}
                 <form action={action} className="space-y-6">
                   <div>
-                    <label htmlFor="username" className="block text-sm/6 font-medium text-gray-900">
+                    <label htmlFor="username" className="block text-sm/6 font-medium text-slate-200">
                       Username
                     </label>
                     <div className="mt-2">
@@ -41,13 +36,13 @@ export default function LoginPage() {
                         name="username"
                         type="text"
                         required
-                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-purple-600 text-sm/6"
+                        className="block w-full rounded-md bg-slate-800 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-slate-600 placeholder:text-slate-500 focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 text-sm/6"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm/6 font-medium text-gray-900">
+                    <label htmlFor="password" className="block text-sm/6 font-medium text-slate-200">
                       Password
                     </label>
                     <div className="mt-2">
@@ -57,7 +52,7 @@ export default function LoginPage() {
                         type="password"
                         required
                         autoComplete="current-password"
-                        className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-purple-600 text-sm/6"
+                        className="block w-full rounded-md bg-slate-800 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-slate-600 placeholder:text-slate-500 focus:outline-2 focus:-outline-offset-2 focus:outline-blue-500 text-sm/6"
                       />
                     </div>
                   </div>
@@ -70,12 +65,12 @@ export default function LoginPage() {
                             id="remember-me"
                             name="remember-me"
                             type="checkbox"
-                            className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-purple-600 checked:bg-purple-600 indeterminate:border-purple-600 indeterminate:bg-purple-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 forced-colors:appearance-auto"
+                            className="col-start-1 row-start-1 appearance-none rounded-sm border border-slate-600 bg-slate-800 checked:border-blue-500 checked:bg-blue-500 indeterminate:border-blue-500 indeterminate:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 disabled:border-slate-600 disabled:bg-slate-700 disabled:checked:bg-slate-700 forced-colors:appearance-auto"
                           />
                           <svg
                             fill="none"
                             viewBox="0 0 14 14"
-                            className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25"
+                            className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-slate-400"
                           >
                             <path
                               d="M3 8L6 11L11 3.5"
@@ -94,7 +89,7 @@ export default function LoginPage() {
                           </svg>
                         </div>
                       </div>
-                      <label htmlFor="remember-me" className="block text-sm/6 text-gray-900">
+                      <label htmlFor="remember-me" className="block text-sm/6 text-slate-300">
                         Remember me
                       </label>
                     </div>
@@ -103,8 +98,7 @@ export default function LoginPage() {
                   <div>
                     <button
                       type="submit"
-                      style={{ backgroundColor: PURPLE }}
-                      className="flex w-full justify-center rounded-md px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600"
+                      className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
                     >
                       Sign in
                     </button>
@@ -114,15 +108,13 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-        <div className="relative hidden w-0 flex-1 lg:block">
-          <Image 
-            alt="Dodge Charger Interior" 
-            src="/charger-interior.jpg" 
-            width="1840" 
-            height="1380" 
-            className="absolute inset-0 size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-purple-900/30" />
+        <div className="relative hidden w-0 flex-1 lg:block bg-slate-800">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-6xl font-bold text-slate-700">MB</div>
+              <div className="text-slate-600 mt-2">MechanicBuddy</div>
+            </div>
+          </div>
         </div>
       </div>
     </>

@@ -8,11 +8,9 @@ import ProfileMenu from './ProfileMenu';
 export default function NavDialog({
   fullName,
   imageUrl,
-  logoUrl,
 }:{
   fullName: string,
   imageUrl: string,
-  logoUrl: string,
 })
 {
  
@@ -39,7 +37,7 @@ export default function NavDialog({
                         </TransitionChild>
                         {/* Sidebar component, swap this element with another sidebar if you like */}
                         <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-2 ring-1 ring-white/10" style={{ backgroundColor: 'var(--portal-sidebar-bg, #111827)' }}>
-                          <Nav fullName={fullName} imageUrl={imageUrl} onSmallScreen={true} logoUrl={logoUrl}></Nav>
+                          <Nav fullName={fullName} imageUrl={imageUrl} onSmallScreen={true}></Nav>
                         </div>
                       </DialogPanel>
                     </div>

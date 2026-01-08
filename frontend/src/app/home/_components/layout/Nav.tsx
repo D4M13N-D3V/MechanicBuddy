@@ -1,5 +1,4 @@
 'use client'
-import Image from "next/image"
 import ProfileMenu from "./ProfileMenu"
 import { InboxIcon,
     Cog6ToothIcon,
@@ -26,36 +25,16 @@ export default function Nav({
     onSmallScreen,
     fullName,
     imageUrl,
-    logoUrl,
 }:{
     onSmallScreen: boolean,
     fullName: string,
     imageUrl: string,
-    logoUrl: string,
 }) {
     const currentPath = usePathname();
 
     return (
         <>
-            <div className="flex h-16 shrink-0 items-center">
-                {logoUrl.startsWith('data:') ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        alt="Logo"
-                        className="h-8 w-auto"
-                        src={logoUrl}
-                    />
-                ) : (
-                    <Image
-                        alt="Logo"
-                        width="50"
-                        height="50"
-                        className="h-8 w-auto"
-                        src={logoUrl}
-                        unoptimized
-                    />
-                )}
-            </div>
+            <div className="h-8 shrink-0"></div>
             <nav className="flex flex-1 flex-col">
                 <ul role="list" className="flex flex-1 flex-col gap-y-7">
                     <li>
