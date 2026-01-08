@@ -1,0 +1,210 @@
+apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy
+      tenant-id: damien
+    name: ingress-damien
+    namespace: mb-damien
+    resourceVersion: "471678"
+    uid: 8cc14951-acee-4a61-86ea-b06d8a24aaa3
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: damien.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: api-damien
+              port:
+                number: 80
+          path: /api
+          pathType: Prefix
+        - backend:
+            service:
+              name: frontend-damien
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - damien.mechanicbuddy.app
+      secretName: tls-wildcard-mechanicbuddy-app
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    creationTimestamp: "2026-01-07T19:54:12Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy
+      tenant-id: demo
+    name: ingress-demo
+    namespace: mb-demo
+    resourceVersion: "383515"
+    uid: f4c97af0-8d25-4ff3-a290-e6cb629084ea
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: demo.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: api-demo
+              port:
+                number: 80
+          path: /api
+          pathType: Prefix
+        - backend:
+            service:
+              name: frontend-demo
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - demo.mechanicbuddy.app
+      secretName: tls-wildcard-mechanicbuddy-app
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy
+      tenant-id: temp-test
+    name: ingress-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491566"
+    uid: be41b7f7-c8ed-4360-8ce7-196b861cc455
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: temp-test.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: api-temp-test
+              port:
+                number: 80
+          path: /api
+          pathType: Prefix
+        - backend:
+            service:
+              name: frontend-temp-test
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - temp-test.mechanicbuddy.app
+      secretName: tls-wildcard-mechanicbuddy-app
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:networking.k8s.io/Ingress:mechanicbuddy-system/mechanicbuddy-system
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:networking.k8s.io/Ingress:mechanicbuddy-system/mechanicbuddy-system","cert-manager.io/cluster-issuer":"letsencrypt-prod","nginx.ingress.kubernetes.io/proxy-body-size":"50m","nginx.ingress.kubernetes.io/proxy-read-timeout":"300","nginx.ingress.kubernetes.io/proxy-send-timeout":"300","nginx.ingress.kubernetes.io/ssl-redirect":"false"},"labels":{"app.kubernetes.io/component":"ingress","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"mechanicbuddy-system","namespace":"mechanicbuddy-system"},"spec":{"ingressClassName":"nginx","rules":[{"host":"mechanicbuddy.app","http":{"paths":[{"backend":{"service":{"name":"management-portal","port":{"number":3026}}},"path":"/","pathType":"Prefix"}]}},{"host":"www.mechanicbuddy.app","http":{"paths":[{"backend":{"service":{"name":"management-portal","port":{"number":3026}}},"path":"/","pathType":"Prefix"}]}},{"host":"api.mechanicbuddy.app","http":{"paths":[{"backend":{"service":{"name":"management-api","port":{"number":15568}}},"path":"/","pathType":"Prefix"}]}}],"tls":[{"hosts":["mechanicbuddy.app","www.mechanicbuddy.app"],"secretName":"mechanicbuddy-app-tls"},{"hosts":["api.mechanicbuddy.app"],"secretName":"mechanicbuddy-api-tls"}]}}
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: ingress
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: mechanicbuddy-system
+    namespace: mechanicbuddy-system
+    resourceVersion: "47181"
+    uid: 80341615-d09c-4b0b-a5bf-0fca20c1563d
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: management-portal
+              port:
+                number: 3026
+          path: /
+          pathType: Prefix
+    - host: www.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: management-portal
+              port:
+                number: 3026
+          path: /
+          pathType: Prefix
+    - host: api.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: management-api
+              port:
+                number: 15568
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - mechanicbuddy.app
+      - www.mechanicbuddy.app
+      secretName: mechanicbuddy-app-tls
+    - hosts:
+      - api.mechanicbuddy.app
+      secretName: mechanicbuddy-api-tls
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+kind: List
+metadata:
+  resourceVersion: ""

@@ -1,0 +1,1489 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:apps/Deployment:mechanicbuddy-system/management-api
+      deployment.kubernetes.io/revision: "13"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:apps/Deployment:mechanicbuddy-system/management-api"},"labels":{"app.kubernetes.io/component":"management-api","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"management-api","namespace":"mechanicbuddy-system"},"spec":{"replicas":3,"selector":{"matchLabels":{"app.kubernetes.io/component":"management-api","app.kubernetes.io/name":"mechanicbuddy"}},"template":{"metadata":{"labels":{"app.kubernetes.io/component":"management-api","app.kubernetes.io/name":"mechanicbuddy"}},"spec":{"containers":[{"env":[{"name":"ASPNETCORE_ENVIRONMENT","value":"Production"},{"name":"ConnectionStrings__Management","valueFrom":{"secretKeyRef":{"key":"connection-string","name":"management-api-secrets"}}},{"name":"Jwt__SecretKey","valueFrom":{"secretKeyRef":{"key":"jwt-secret","name":"management-api-secrets"}}},{"name":"Stripe__SecretKey","valueFrom":{"secretKeyRef":{"key":"stripe-secret-key","name":"management-api-secrets"}}},{"name":"Stripe__WebhookSecret","valueFrom":{"secretKeyRef":{"key":"stripe-webhook-secret","name":"management-api-secrets"}}},{"name":"Email__ResendApiKey","valueFrom":{"secretKeyRef":{"key":"resend-api-key","name":"management-api-secrets"}}},{"name":"Provisioning__BaseDomain","valueFrom":{"configMapKeyRef":{"key":"BASE_DOMAIN","name":"mechanicbuddy-config-c47796mkh4"}}},{"name":"Provisioning__NamespacePrefix","valueFrom":{"configMapKeyRef":{"key":"NAMESPACE_PREFIX","name":"mechanicbuddy-config-c47796mkh4"}}},{"name":"Provisioning__ClusterIssuer","valueFrom":{"configMapKeyRef":{"key":"CLUSTER_ISSUER","name":"mechanicbuddy-config-c47796mkh4"}}},{"name":"Provisioning__HelmChartPath","value":"/app/charts/mechanicbuddy-tenant"},{"name":"Database__PostgresHost","value":"mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local"},{"name":"Database__PostgresPort","value":"5432"},{"name":"Database__PostgresUser","valueFrom":{"secretKeyRef":{"key":"username","name":"management-db-credentials"}}},{"name":"Database__PostgresPassword","valueFrom":{"secretKeyRef":{"key":"password","name":"management-db-credentials"}}},{"name":"Database__PostgresDatabase","value":"mechanicbuddy-tenancy"},{"name":"Cloudflare__ApiToken","valueFrom":{"secretKeyRef":{"key":"api-token","name":"cloudflare-credentials"}}},{"name":"Cloudflare__ZoneId","valueFrom":{"secretKeyRef":{"key":"zone-id","name":"cloudflare-credentials"}}},{"name":"Cloudflare__BaseDomain","value":"mechanicbuddy.app"},{"name":"Cloudflare__IngressTarget","value":"mechanicbuddy.app"},{"name":"Npm__BaseUrl","valueFrom":{"secretKeyRef":{"key":"base-url","name":"npm-credentials"}}},{"name":"Npm__Email","valueFrom":{"secretKeyRef":{"key":"email","name":"npm-credentials"}}},{"name":"Npm__Password","valueFrom":{"secretKeyRef":{"key":"password","name":"npm-credentials"}}},{"name":"Npm__ForwardHost","value":"192.168.1.100"},{"name":"Npm__ForwardPort","value":"31840"},{"name":"Npm__WildcardCertificateId","value":"17"}],"image":"ghcr.io/d4m13n-d3v/mechanicbuddy-management-api:latest","imagePullPolicy":"Always","livenessProbe":{"httpGet":{"path":"/health/live","port":"http"},"initialDelaySeconds":30,"periodSeconds":10},"name":"api","ports":[{"containerPort":15568,"name":"http","protocol":"TCP"}],"readinessProbe":{"httpGet":{"path":"/health/ready","port":"http"},"initialDelaySeconds":10,"periodSeconds":5},"resources":{"limits":{"cpu":"1000m","memory":"1Gi"},"requests":{"cpu":"250m","memory":"512Mi"}}}],"imagePullSecrets":[{"name":"ghcr-credentials"}],"initContainers":[{"command":["sh","-c","echo \"Waiting for PostgreSQL...\"\nuntil nc -z mechanicbuddy-management-db-rw 5432; do\n  sleep 2\ndone\necho \"PostgreSQL is ready\"\n"],"image":"busybox:1.36","name":"wait-for-db"},{"env":[{"name":"ConnectionStrings__Management","valueFrom":{"secretKeyRef":{"key":"connection-string","name":"management-api-secrets"}}}],"image":"ghcr.io/d4m13n-d3v/mechanicbuddy-management-dbup:latest","imagePullPolicy":"Always","name":"run-migrations"}],"securityContext":{"fsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"serviceAccountName":"management-api"}}}}
+    creationTimestamp: "2026-01-07T01:00:26Z"
+    generation: 27
+    labels:
+      app.kubernetes.io/component: management-api
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: management-api
+    namespace: mechanicbuddy-system
+    resourceVersion: "490320"
+    uid: 2ea4aae6-5b66-43c2-9a2f-ce41cee2aff0
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: management-api
+        app.kubernetes.io/name: mechanicbuddy
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-01-08T00:31:10-05:00"
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: management-api
+          app.kubernetes.io/name: mechanicbuddy
+      spec:
+        containers:
+        - env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          - name: ConnectionStrings__Management
+            valueFrom:
+              secretKeyRef:
+                key: connection-string
+                name: management-api-secrets
+          - name: Jwt__SecretKey
+            valueFrom:
+              secretKeyRef:
+                key: jwt-secret
+                name: management-api-secrets
+          - name: Stripe__SecretKey
+            valueFrom:
+              secretKeyRef:
+                key: stripe-secret-key
+                name: management-api-secrets
+          - name: Stripe__WebhookSecret
+            valueFrom:
+              secretKeyRef:
+                key: stripe-webhook-secret
+                name: management-api-secrets
+          - name: Email__ResendApiKey
+            valueFrom:
+              secretKeyRef:
+                key: resend-api-key
+                name: management-api-secrets
+          - name: Provisioning__BaseDomain
+            valueFrom:
+              configMapKeyRef:
+                key: BASE_DOMAIN
+                name: mechanicbuddy-config-c47796mkh4
+          - name: Provisioning__NamespacePrefix
+            valueFrom:
+              configMapKeyRef:
+                key: NAMESPACE_PREFIX
+                name: mechanicbuddy-config-c47796mkh4
+          - name: Provisioning__ClusterIssuer
+            valueFrom:
+              configMapKeyRef:
+                key: CLUSTER_ISSUER
+                name: mechanicbuddy-config-c47796mkh4
+          - name: Provisioning__HelmChartPath
+            value: /app/charts/mechanicbuddy-tenant
+          - name: Database__PostgresHost
+            value: mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local
+          - name: Database__PostgresPort
+            value: "5432"
+          - name: Database__PostgresUser
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: management-db-credentials
+          - name: Database__PostgresPassword
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: management-db-credentials
+          - name: Database__PostgresDatabase
+            value: mechanicbuddy-tenancy
+          - name: Cloudflare__ApiToken
+            valueFrom:
+              secretKeyRef:
+                key: api-token
+                name: cloudflare-credentials
+          - name: Cloudflare__ZoneId
+            valueFrom:
+              secretKeyRef:
+                key: zone-id
+                name: cloudflare-credentials
+          - name: Cloudflare__BaseDomain
+            value: mechanicbuddy.app
+          - name: Cloudflare__IngressTarget
+            value: mechanicbuddy.app
+          - name: Npm__BaseUrl
+            valueFrom:
+              secretKeyRef:
+                key: base-url
+                name: npm-credentials
+          - name: Npm__Email
+            valueFrom:
+              secretKeyRef:
+                key: email
+                name: npm-credentials
+          - name: Npm__Password
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: npm-credentials
+          - name: Npm__ForwardHost
+            value: 192.168.1.100
+          - name: Npm__ForwardPort
+            value: "31840"
+          - name: Npm__WildcardCertificateId
+            value: "17"
+          - name: Stripe__PriceIds__Team
+            value: price_1Sn9SWJvphG89shpTUvJppUP
+          - name: Stripe__PriceIds__Lifetime
+            value: price_1Sn9StJvphG89shpfOaKxMUP
+          - name: CronJob__ApiKey
+            value: BbEwxc4r5qv/c7T5UXvnYF+2zrbjNCi0obYqGaAFw7I=
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-management-api:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health/live
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: api
+          ports:
+          - containerPort: 15568
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health/ready
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        initContainers:
+        - command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for PostgreSQL..."
+            until nc -z mechanicbuddy-management-db-rw 5432; do
+              sleep 2
+            done
+            echo "PostgreSQL is ready"
+          env:
+          - name: Stripe__PriceIds__Team
+            value: price_1Sn9SWJvphG89shpTUvJppUP
+          - name: Stripe__PriceIds__Lifetime
+            value: price_1Sn9StJvphG89shpfOaKxMUP
+          - name: CronJob__ApiKey
+            value: BbEwxc4r5qv/c7T5UXvnYF+2zrbjNCi0obYqGaAFw7I=
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          name: wait-for-db
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        - env:
+          - name: ConnectionStrings__Management
+            valueFrom:
+              secretKeyRef:
+                key: connection-string
+                name: management-api-secrets
+          - name: Stripe__PriceIds__Team
+            value: price_1Sn9SWJvphG89shpTUvJppUP
+          - name: Stripe__PriceIds__Lifetime
+            value: price_1Sn9StJvphG89shpfOaKxMUP
+          - name: CronJob__ApiKey
+            value: BbEwxc4r5qv/c7T5UXvnYF+2zrbjNCi0obYqGaAFw7I=
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-management-dbup:latest
+          imagePullPolicy: Always
+          name: run-migrations
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        serviceAccount: management-api
+        serviceAccountName: management-api
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 3
+    conditions:
+    - lastTransitionTime: "2026-01-08T05:33:50Z"
+      lastUpdateTime: "2026-01-08T05:33:50Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-01-07T04:48:58Z"
+      lastUpdateTime: "2026-01-08T05:42:56Z"
+      message: ReplicaSet "management-api-5d98b78677" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 27
+    readyReplicas: 3
+    replicas: 3
+    updatedReplicas: 3
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:apps/Deployment:mechanicbuddy-system/management-portal
+      deployment.kubernetes.io/revision: "10"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:apps/Deployment:mechanicbuddy-system/management-portal"},"labels":{"app.kubernetes.io/component":"management-portal","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"management-portal","namespace":"mechanicbuddy-system"},"spec":{"replicas":3,"selector":{"matchLabels":{"app.kubernetes.io/component":"management-portal","app.kubernetes.io/name":"mechanicbuddy"}},"template":{"metadata":{"labels":{"app.kubernetes.io/component":"management-portal","app.kubernetes.io/name":"mechanicbuddy"}},"spec":{"containers":[{"env":[{"name":"NODE_ENV","value":"production"},{"name":"MANAGEMENT_API_URL","value":"http://management-api:15568"},{"name":"NEXT_PUBLIC_MANAGEMENT_API_URL","value":"https://api.mechanicbuddy.app"},{"name":"SESSION_SECRET","valueFrom":{"secretKeyRef":{"key":"session-secret","name":"management-portal-secrets"}}},{"name":"NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY","valueFrom":{"secretKeyRef":{"key":"stripe-publishable-key","name":"management-portal-secrets"}}}],"image":"ghcr.io/d4m13n-d3v/mechanicbuddy-management-portal:latest","imagePullPolicy":"Always","livenessProbe":{"httpGet":{"path":"/api/health","port":"http"},"initialDelaySeconds":15,"periodSeconds":10},"name":"portal","ports":[{"containerPort":3026,"name":"http","protocol":"TCP"}],"readinessProbe":{"httpGet":{"path":"/api/health","port":"http"},"initialDelaySeconds":5,"periodSeconds":5},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}}}],"imagePullSecrets":[{"name":"ghcr-credentials"}],"securityContext":{"fsGroup":1001,"runAsNonRoot":true,"runAsUser":1001}}}}}
+    creationTimestamp: "2026-01-06T11:28:20Z"
+    generation: 14
+    labels:
+      app.kubernetes.io/component: management-portal
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: management-portal
+    namespace: mechanicbuddy-system
+    resourceVersion: "488441"
+    uid: d4e7fc37-c6db-4573-a2cf-b68831e4f0ef
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: management-portal
+        app.kubernetes.io/name: mechanicbuddy
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-01-08T00:31:10-05:00"
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/component: management-portal
+          app.kubernetes.io/name: mechanicbuddy
+      spec:
+        containers:
+        - env:
+          - name: NODE_ENV
+            value: production
+          - name: MANAGEMENT_API_URL
+            value: http://management-api:15568
+          - name: NEXT_PUBLIC_MANAGEMENT_API_URL
+            value: https://api.mechanicbuddy.app
+          - name: SESSION_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: session-secret
+                name: management-portal-secrets
+          - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+            valueFrom:
+              secretKeyRef:
+                key: stripe-publishable-key
+                name: management-portal-secrets
+          - name: NEXT_PUBLIC_APP_URL
+            value: https://mechanicbuddy.app
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-management-portal:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: portal
+          ports:
+          - containerPort: 3026
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext:
+          fsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 3
+    conditions:
+    - lastTransitionTime: "2026-01-08T05:33:36Z"
+      lastUpdateTime: "2026-01-08T05:33:36Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-01-06T11:28:20Z"
+      lastUpdateTime: "2026-01-08T05:33:36Z"
+      message: ReplicaSet "management-portal-6955b9d8d9" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 14
+    readyReplicas: 3
+    replicas: 3
+    updatedReplicas: 3
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:/Service:mechanicbuddy-system/management-api
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:/Service:mechanicbuddy-system/management-api"},"labels":{"app.kubernetes.io/component":"management-api","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"management-api","namespace":"mechanicbuddy-system"},"spec":{"ports":[{"name":"http","port":15568,"protocol":"TCP","targetPort":"http"}],"selector":{"app.kubernetes.io/component":"management-api","app.kubernetes.io/name":"mechanicbuddy"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-01-06T11:28:20Z"
+    labels:
+      app.kubernetes.io/component: management-api
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: management-api
+    namespace: mechanicbuddy-system
+    resourceVersion: "190187"
+    uid: 0ff20d56-ddab-446d-8103-850d272477dd
+  spec:
+    clusterIP: 10.97.247.25
+    clusterIPs:
+    - 10.97.247.25
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 15568
+      protocol: TCP
+      targetPort: http
+    selector:
+      app.kubernetes.io/component: management-api
+      app.kubernetes.io/name: mechanicbuddy
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:/Service:mechanicbuddy-system/management-portal
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:/Service:mechanicbuddy-system/management-portal"},"labels":{"app.kubernetes.io/component":"management-portal","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"management-portal","namespace":"mechanicbuddy-system"},"spec":{"ports":[{"name":"http","port":3026,"protocol":"TCP","targetPort":"http"}],"selector":{"app.kubernetes.io/component":"management-portal","app.kubernetes.io/name":"mechanicbuddy"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-01-06T11:28:20Z"
+    labels:
+      app.kubernetes.io/component: management-portal
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: management-portal
+    namespace: mechanicbuddy-system
+    resourceVersion: "46637"
+    uid: 689e1543-92f9-49de-a2b7-067202cc53b5
+  spec:
+    clusterIP: 10.102.196.248
+    clusterIPs:
+    - 10.102.196.248
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 3026
+      protocol: TCP
+      targetPort: http
+    selector:
+      app.kubernetes.io/component: management-portal
+      app.kubernetes.io/name: mechanicbuddy
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      cnpg.io/operatorVersion: 1.22.1
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    labels:
+      cnpg.io/cluster: mechanicbuddy-management-db
+    name: mechanicbuddy-management-db-r
+    namespace: mechanicbuddy-system
+    ownerReferences:
+    - apiVersion: postgresql.cnpg.io/v1
+      controller: true
+      kind: Cluster
+      name: mechanicbuddy-management-db
+      uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+    resourceVersion: "46720"
+    uid: 9467f2f3-d2ac-4218-b92b-440098f0bc90
+  spec:
+    clusterIP: 10.108.177.72
+    clusterIPs:
+    - 10.108.177.72
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: postgres
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      cnpg.io/cluster: mechanicbuddy-management-db
+      cnpg.io/podRole: instance
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      cnpg.io/operatorVersion: 1.22.1
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    labels:
+      cnpg.io/cluster: mechanicbuddy-management-db
+    name: mechanicbuddy-management-db-ro
+    namespace: mechanicbuddy-system
+    ownerReferences:
+    - apiVersion: postgresql.cnpg.io/v1
+      controller: true
+      kind: Cluster
+      name: mechanicbuddy-management-db
+      uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+    resourceVersion: "46725"
+    uid: a51dd41d-2c15-4454-a8f6-5fdcafa890b3
+  spec:
+    clusterIP: 10.109.126.73
+    clusterIPs:
+    - 10.109.126.73
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: postgres
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      cnpg.io/cluster: mechanicbuddy-management-db
+      role: replica
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      cnpg.io/operatorVersion: 1.22.1
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    labels:
+      cnpg.io/cluster: mechanicbuddy-management-db
+    name: mechanicbuddy-management-db-rw
+    namespace: mechanicbuddy-system
+    ownerReferences:
+    - apiVersion: postgresql.cnpg.io/v1
+      controller: true
+      kind: Cluster
+      name: mechanicbuddy-management-db
+      uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+    resourceVersion: "46729"
+    uid: 46d27de9-9a98-4976-9015-a21eacb74c27
+  spec:
+    clusterIP: 10.101.130.17
+    clusterIPs:
+    - 10.101.130.17
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: postgres
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      cnpg.io/cluster: mechanicbuddy-management-db
+      role: primary
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  data:
+    queries: |
+      backends:
+        query: |
+         SELECT sa.datname
+             , sa.usename
+             , sa.application_name
+             , states.state
+             , COALESCE(sa.count, 0) AS total
+             , COALESCE(sa.max_tx_secs, 0) AS max_tx_duration_seconds
+             FROM ( VALUES ('active')
+                 , ('idle')
+                 , ('idle in transaction')
+                 , ('idle in transaction (aborted)')
+                 , ('fastpath function call')
+                 , ('disabled')
+                 ) AS states(state)
+             LEFT JOIN (
+                 SELECT datname
+                     , state
+                     , usename
+                     , COALESCE(application_name, '') AS application_name
+                     , COUNT(*)
+                     , COALESCE(EXTRACT (EPOCH FROM (max(now() - xact_start))), 0) AS max_tx_secs
+                 FROM pg_catalog.pg_stat_activity
+                 GROUP BY datname, state, usename, application_name
+             ) sa ON states.state = sa.state
+             WHERE sa.usename IS NOT NULL
+        metrics:
+          - datname:
+              usage: "LABEL"
+              description: "Name of the database"
+          - usename:
+              usage: "LABEL"
+              description: "Name of the user"
+          - application_name:
+              usage: "LABEL"
+              description: "Name of the application"
+          - state:
+              usage: "LABEL"
+              description: "State of the backend"
+          - total:
+              usage: "GAUGE"
+              description: "Number of backends"
+          - max_tx_duration_seconds:
+              usage: "GAUGE"
+              description: "Maximum duration of a transaction in seconds"
+
+      backends_waiting:
+        query: |
+         SELECT count(*) AS total
+         FROM pg_catalog.pg_locks blocked_locks
+         JOIN pg_catalog.pg_locks blocking_locks
+           ON blocking_locks.locktype = blocked_locks.locktype
+           AND blocking_locks.database IS NOT DISTINCT FROM blocked_locks.database
+           AND blocking_locks.relation IS NOT DISTINCT FROM blocked_locks.relation
+           AND blocking_locks.page IS NOT DISTINCT FROM blocked_locks.page
+           AND blocking_locks.tuple IS NOT DISTINCT FROM blocked_locks.tuple
+           AND blocking_locks.virtualxid IS NOT DISTINCT FROM blocked_locks.virtualxid
+           AND blocking_locks.transactionid IS NOT DISTINCT FROM blocked_locks.transactionid
+           AND blocking_locks.classid IS NOT DISTINCT FROM blocked_locks.classid
+           AND blocking_locks.objid IS NOT DISTINCT FROM blocked_locks.objid
+           AND blocking_locks.objsubid IS NOT DISTINCT FROM blocked_locks.objsubid
+           AND blocking_locks.pid != blocked_locks.pid
+         JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
+         WHERE NOT blocked_locks.granted
+        metrics:
+          - total:
+              usage: "GAUGE"
+              description: "Total number of backends that are currently waiting on other queries"
+
+      pg_database:
+        query: |
+          SELECT datname
+            , pg_catalog.pg_database_size(datname) AS size_bytes
+            , pg_catalog.age(datfrozenxid) AS xid_age
+            , pg_catalog.mxid_age(datminmxid) AS mxid_age
+          FROM pg_catalog.pg_database
+        metrics:
+          - datname:
+              usage: "LABEL"
+              description: "Name of the database"
+          - size_bytes:
+              usage: "GAUGE"
+              description: "Disk space used by the database"
+          - xid_age:
+              usage: "GAUGE"
+              description: "Number of transactions from the frozen XID to the current one"
+          - mxid_age:
+              usage: "GAUGE"
+              description: "Number of multiple transactions (Multixact) from the frozen XID to the current one"
+
+      pg_postmaster:
+        query: |
+          SELECT EXTRACT(EPOCH FROM pg_postmaster_start_time) AS start_time
+          FROM pg_catalog.pg_postmaster_start_time()
+        metrics:
+          - start_time:
+              usage: "GAUGE"
+              description: "Time at which postgres started (based on epoch)"
+
+      pg_replication:
+        query: "SELECT CASE WHEN (
+                  NOT pg_catalog.pg_is_in_recovery()
+                  OR pg_catalog.pg_last_wal_receive_lsn() = pg_catalog.pg_last_wal_replay_lsn())
+                THEN 0
+                ELSE GREATEST (0,
+                  EXTRACT(EPOCH FROM (now() - pg_catalog.pg_last_xact_replay_timestamp())))
+                END AS lag,
+                pg_catalog.pg_is_in_recovery() AS in_recovery,
+                EXISTS (TABLE pg_stat_wal_receiver) AS is_wal_receiver_up,
+                (SELECT count(*) FROM pg_catalog.pg_stat_replication) AS streaming_replicas"
+        metrics:
+          - lag:
+              usage: "GAUGE"
+              description: "Replication lag behind primary in seconds"
+          - in_recovery:
+              usage: "GAUGE"
+              description: "Whether the instance is in recovery"
+          - is_wal_receiver_up:
+              usage: "GAUGE"
+              description: "Whether the instance wal_receiver is up"
+          - streaming_replicas:
+              usage: "GAUGE"
+              description: "Number of streaming replicas connected to the instance"
+
+      pg_replication_slots:
+        query: |
+          SELECT slot_name,
+            slot_type,
+            database,
+            active,
+            (CASE pg_catalog.pg_is_in_recovery()
+              WHEN TRUE THEN pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_last_wal_receive_lsn(), restart_lsn)
+              ELSE pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_lsn(), restart_lsn)
+            END) as pg_wal_lsn_diff
+          FROM pg_catalog.pg_replication_slots
+          WHERE NOT temporary
+        metrics:
+          - slot_name:
+              usage: "LABEL"
+              description: "Name of the replication slot"
+          - slot_type:
+              usage: "LABEL"
+              description: "Type of the replication slot"
+          - database:
+              usage: "LABEL"
+              description: "Name of the database"
+          - active:
+              usage: "GAUGE"
+              description: "Flag indicating whether the slot is active"
+          - pg_wal_lsn_diff:
+              usage: "GAUGE"
+              description: "Replication lag in bytes"
+
+      pg_stat_archiver:
+        query: |
+          SELECT archived_count
+            , failed_count
+            , COALESCE(EXTRACT(EPOCH FROM (now() - last_archived_time)), -1) AS seconds_since_last_archival
+            , COALESCE(EXTRACT(EPOCH FROM (now() - last_failed_time)), -1) AS seconds_since_last_failure
+            , COALESCE(EXTRACT(EPOCH FROM last_archived_time), -1) AS last_archived_time
+            , COALESCE(EXTRACT(EPOCH FROM last_failed_time), -1) AS last_failed_time
+            , COALESCE(CAST(CAST('x'||pg_catalog.right(pg_catalog.split_part(last_archived_wal, '.', 1), 16) AS pg_catalog.bit(64)) AS pg_catalog.int8), -1) AS last_archived_wal_start_lsn
+            , COALESCE(CAST(CAST('x'||pg_catalog.right(pg_catalog.split_part(last_failed_wal, '.', 1), 16) AS pg_catalog.bit(64)) AS pg_catalog.int8), -1) AS last_failed_wal_start_lsn
+            , EXTRACT(EPOCH FROM stats_reset) AS stats_reset_time
+          FROM pg_catalog.pg_stat_archiver
+        metrics:
+          - archived_count:
+              usage: "COUNTER"
+              description: "Number of WAL files that have been successfully archived"
+          - failed_count:
+              usage: "COUNTER"
+              description: "Number of failed attempts for archiving WAL files"
+          - seconds_since_last_archival:
+              usage: "GAUGE"
+              description: "Seconds since the last successful archival operation"
+          - seconds_since_last_failure:
+              usage: "GAUGE"
+              description: "Seconds since the last failed archival operation"
+          - last_archived_time:
+              usage: "GAUGE"
+              description: "Epoch of the last time WAL archiving succeeded"
+          - last_failed_time:
+              usage: "GAUGE"
+              description: "Epoch of the last time WAL archiving failed"
+          - last_archived_wal_start_lsn:
+              usage: "GAUGE"
+              description: "Archived WAL start LSN"
+          - last_failed_wal_start_lsn:
+              usage: "GAUGE"
+              description: "Last failed WAL LSN"
+          - stats_reset_time:
+              usage: "GAUGE"
+              description: "Time at which these statistics were last reset"
+
+      pg_stat_bgwriter:
+        query: |
+          SELECT checkpoints_timed
+            , checkpoints_req
+            , checkpoint_write_time
+            , checkpoint_sync_time
+            , buffers_checkpoint
+            , buffers_clean
+            , maxwritten_clean
+            , buffers_backend
+            , buffers_backend_fsync
+            , buffers_alloc
+          FROM pg_catalog.pg_stat_bgwriter
+        metrics:
+          - checkpoints_timed:
+              usage: "COUNTER"
+              description: "Number of scheduled checkpoints that have been performed"
+          - checkpoints_req:
+              usage: "COUNTER"
+              description: "Number of requested checkpoints that have been performed"
+          - checkpoint_write_time:
+              usage: "COUNTER"
+              description: "Total amount of time that has been spent in the portion of checkpoint processing where files are written to disk, in milliseconds"
+          - checkpoint_sync_time:
+              usage: "COUNTER"
+              description: "Total amount of time that has been spent in the portion of checkpoint processing where files are synchronized to disk, in milliseconds"
+          - buffers_checkpoint:
+              usage: "COUNTER"
+              description: "Number of buffers written during checkpoints"
+          - buffers_clean:
+              usage: "COUNTER"
+              description: "Number of buffers written by the background writer"
+          - maxwritten_clean:
+              usage: "COUNTER"
+              description: "Number of times the background writer stopped a cleaning scan because it had written too many buffers"
+          - buffers_backend:
+              usage: "COUNTER"
+              description: "Number of buffers written directly by a backend"
+          - buffers_backend_fsync:
+              usage: "COUNTER"
+              description: "Number of times a backend had to execute its own fsync call (normally the background writer handles those even when the backend does its own write)"
+          - buffers_alloc:
+              usage: "COUNTER"
+              description: "Number of buffers allocated"
+
+      pg_stat_database:
+        query: |
+          SELECT datname
+            , xact_commit
+            , xact_rollback
+            , blks_read
+            , blks_hit
+            , tup_returned
+            , tup_fetched
+            , tup_inserted
+            , tup_updated
+            , tup_deleted
+            , conflicts
+            , temp_files
+            , temp_bytes
+            , deadlocks
+            , blk_read_time
+            , blk_write_time
+          FROM pg_catalog.pg_stat_database
+        metrics:
+          - datname:
+              usage: "LABEL"
+              description: "Name of this database"
+          - xact_commit:
+              usage: "COUNTER"
+              description: "Number of transactions in this database that have been committed"
+          - xact_rollback:
+              usage: "COUNTER"
+              description: "Number of transactions in this database that have been rolled back"
+          - blks_read:
+              usage: "COUNTER"
+              description: "Number of disk blocks read in this database"
+          - blks_hit:
+              usage: "COUNTER"
+              description: "Number of times disk blocks were found already in the buffer cache, so that a read was not necessary (this only includes hits in the PostgreSQL buffer cache, not the operating system's file system cache)"
+          - tup_returned:
+              usage: "COUNTER"
+              description: "Number of rows returned by queries in this database"
+          - tup_fetched:
+              usage: "COUNTER"
+              description: "Number of rows fetched by queries in this database"
+          - tup_inserted:
+              usage: "COUNTER"
+              description: "Number of rows inserted by queries in this database"
+          - tup_updated:
+              usage: "COUNTER"
+              description: "Number of rows updated by queries in this database"
+          - tup_deleted:
+              usage: "COUNTER"
+              description: "Number of rows deleted by queries in this database"
+          - conflicts:
+              usage: "COUNTER"
+              description: "Number of queries canceled due to conflicts with recovery in this database"
+          - temp_files:
+              usage: "COUNTER"
+              description: "Number of temporary files created by queries in this database"
+          - temp_bytes:
+              usage: "COUNTER"
+              description: "Total amount of data written to temporary files by queries in this database"
+          - deadlocks:
+              usage: "COUNTER"
+              description: "Number of deadlocks detected in this database"
+          - blk_read_time:
+              usage: "COUNTER"
+              description: "Time spent reading data file blocks by backends in this database, in milliseconds"
+          - blk_write_time:
+              usage: "COUNTER"
+              description: "Time spent writing data file blocks by backends in this database, in milliseconds"
+
+      pg_stat_replication:
+        primary: true
+        query: |
+         SELECT usename
+           , COALESCE(application_name, '') AS application_name
+           , COALESCE(client_addr::text, '') AS client_addr
+           , COALESCE(client_port::text, '') AS client_port
+           , EXTRACT(EPOCH FROM backend_start) AS backend_start
+           , COALESCE(pg_catalog.age(backend_xmin), 0) AS backend_xmin_age
+           , pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_lsn(), sent_lsn) AS sent_diff_bytes
+           , pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_lsn(), write_lsn) AS write_diff_bytes
+           , pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_lsn(), flush_lsn) AS flush_diff_bytes
+           , COALESCE(pg_catalog.pg_wal_lsn_diff(pg_catalog.pg_current_wal_lsn(), replay_lsn),0) AS replay_diff_bytes
+           , COALESCE((EXTRACT(EPOCH FROM write_lag)),0)::float AS write_lag_seconds
+           , COALESCE((EXTRACT(EPOCH FROM flush_lag)),0)::float AS flush_lag_seconds
+           , COALESCE((EXTRACT(EPOCH FROM replay_lag)),0)::float AS replay_lag_seconds
+         FROM pg_catalog.pg_stat_replication
+        metrics:
+          - usename:
+              usage: "LABEL"
+              description: "Name of the replication user"
+          - application_name:
+              usage: "LABEL"
+              description: "Name of the application"
+          - client_addr:
+              usage: "LABEL"
+              description: "Client IP address"
+          - client_port:
+              usage: "LABEL"
+              description: "Client TCP port"
+          - backend_start:
+              usage: "COUNTER"
+              description: "Time when this process was started"
+          - backend_xmin_age:
+              usage: "COUNTER"
+              description: "The age of this standby's xmin horizon"
+          - sent_diff_bytes:
+              usage: "GAUGE"
+              description: "Difference in bytes from the last write-ahead log location sent on this connection"
+          - write_diff_bytes:
+              usage: "GAUGE"
+              description: "Difference in bytes from the last write-ahead log location written to disk by this standby server"
+          - flush_diff_bytes:
+              usage: "GAUGE"
+              description: "Difference in bytes from the last write-ahead log location flushed to disk by this standby server"
+          - replay_diff_bytes:
+              usage: "GAUGE"
+              description: "Difference in bytes from the last write-ahead log location replayed into the database on this standby server"
+          - write_lag_seconds:
+              usage: "GAUGE"
+              description: "Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written it"
+          - flush_lag_seconds:
+              usage: "GAUGE"
+              description: "Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written and flushed it"
+          - replay_lag_seconds:
+              usage: "GAUGE"
+              description: "Time elapsed between flushing recent WAL locally and receiving notification that this standby server has written, flushed and applied it"
+
+      pg_settings:
+        query: |
+          SELECT name,
+          CASE setting WHEN 'on' THEN '1' WHEN 'off' THEN '0' ELSE setting END AS setting
+          FROM pg_catalog.pg_settings
+          WHERE vartype IN ('integer', 'real', 'bool')
+          ORDER BY 1
+        metrics:
+          - name:
+              usage: "LABEL"
+              description: "Name of the setting"
+          - setting:
+              usage: "GAUGE"
+              description: "Setting value"
+  kind: ConfigMap
+  metadata:
+    annotations:
+      cnpg.io/operatorVersion: 1.22.1
+    creationTimestamp: "2026-01-06T11:28:22Z"
+    labels:
+      cnpg.io/reload: "true"
+    name: cnpg-default-monitoring
+    namespace: mechanicbuddy-system
+    resourceVersion: "46757"
+    uid: 8d33204c-398f-472f-b2a3-ec09c06e6cf6
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIIA9iD9L9x67owDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNjAxMDYwNzE5MTlaFw0zNjAxMDQwNzI0MTlaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQC+9LXiJnRKrm09KPJBu6vTWfxbsG/qsln6IoheZn36FWsqjKfnizg0PJI/
+      cwwypkg33etMCQBBDKKW/fi4l4CbzlxkHBftyIV6njfBaB/Yy1PWE70cn2aKJKUg
+      qIg1B5fwwCeHHjaWeElpCTN/F07Ik8p5Q12BXfZ669hAc7KDFd96K1ZXCIzfa8SQ
+      ceAaFszPcz/+/4fH6Bc5SxJueNrBdqxcDR3pBkELGTRaRUPEjOY/ne6M7jtbxXBh
+      A+nolUrGIdHSZ+om1C2R3wGJHUt959qRCp4ctRuKYs0J4fpE7/YGobgIcFWY6KJp
+      AM/ZNc5QowfHYvFbjuIsSpLpShCfAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQ+OSDPt+yZlUQkjhcx3cX2KpMpiDAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQAQ8kAsXKX8
+      yktIhrWXnYoek7ulA3zEJQRWI1jcfjJPZLt0eOEaa4xlgm8Bjtozr/UikkuHqk6T
+      ysyHzhDhHbmYm8TTP2xobnFwy+VgRCd3GBsx9UEJTd9kBozP5HwWGv1quSXbGNAP
+      uU83z7FNa0bhspDBczsIoew6j5DkqWk/2JwftycQlyw/zFl5UBGtjmWvsf4yGyyr
+      Vvr4kwCEgmcmeRX3mPgQ5T+BM5VwV54QyFYdZeA7yQ89qxkVd7LD5zqVQQS7Z1Wp
+      lL8io1zSF2NRxdzs5V9pe2hNvONFQTVWmBiBSAUoARAaEFdAg+Ph5zPWcj6Zre7j
+      ZrVs+rkCBYxe
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-01-06T11:28:17Z"
+    name: kube-root-ca.crt
+    namespace: mechanicbuddy-system
+    resourceVersion: "46603"
+    uid: 6dd6c46c-760f-4fe0-9f98-9d11681df82d
+- apiVersion: v1
+  data:
+    BASE_DOMAIN: mechanicbuddy.app
+    CLUSTER_ISSUER: letsencrypt-prod
+    NAMESPACE_PREFIX: tenant-
+  kind: ConfigMap
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:/ConfigMap:mechanicbuddy-system/mechanicbuddy-config-c47796mkh4
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"BASE_DOMAIN":"mechanicbuddy.app","CLUSTER_ISSUER":"letsencrypt-prod","NAMESPACE_PREFIX":"tenant-"},"kind":"ConfigMap","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:/ConfigMap:mechanicbuddy-system/mechanicbuddy-config-c47796mkh4"},"labels":{"environment":"production"},"name":"mechanicbuddy-config-c47796mkh4","namespace":"mechanicbuddy-system"}}
+    creationTimestamp: "2026-01-06T11:28:19Z"
+    labels:
+      environment: production
+    name: mechanicbuddy-config-c47796mkh4
+    namespace: mechanicbuddy-system
+    resourceVersion: "46619"
+    uid: dd4b9c05-489c-4d74-8d70-780acbc9f1e5
+- apiVersion: v1
+  data:
+    api-token: eGZXQ0h4UDR1cW84UExPUnlIQjU1TGItZEpOLUdReFNIYnZrZnVDSA==
+    zone-id: MmM1YTA5ZTI4NDY2MTQzMDEwN2QxNGM1ZDJmN2RkYzY=
+  kind: Secret
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{},"name":"cloudflare-credentials","namespace":"mechanicbuddy-system"},"stringData":{"api-token":"xfWCHxP4uqo8PLORyHB55Lb-dJN-GQxSHbvkfuCH","zone-id":"2c5a09e284661430107d14c5d2f7ddc6"},"type":"Opaque"}
+    creationTimestamp: "2026-01-07T01:16:58Z"
+    name: cloudflare-credentials
+    namespace: mechanicbuddy-system
+    resourceVersion: "191829"
+    uid: 438a0182-be6a-4c94-bab7-150be775f934
+  type: Opaque
+- apiVersion: v1
+  data:
+    api-token: cHJvZHVjdGlvbi1jcm9uam9iLWFwaS10b2tlbi00NTY=
+  kind: Secret
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:/Secret:mechanicbuddy-system/cronjob-secrets
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:/Secret:mechanicbuddy-system/cronjob-secrets"},"labels":{"app.kubernetes.io/component":"cronjobs","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"cronjob-secrets","namespace":"mechanicbuddy-system"},"stringData":{"api-token":"production-cronjob-api-token-456"},"type":"Opaque"}
+    creationTimestamp: "2026-01-06T11:28:19Z"
+    labels:
+      app.kubernetes.io/component: cronjobs
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: cronjob-secrets
+    namespace: mechanicbuddy-system
+    resourceVersion: "46617"
+    uid: 54530d14-e9ce-497c-82cf-15b17a2824d9
+  type: Opaque
+- apiVersion: v1
+  data:
+    .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7InVzZXJuYW1lIjoiZDRtMTNuLWQzdiIsInBhc3N3b3JkIjoiZ2hwXzh4SzJjSVBmY3BCR0xETm9JcDNYT1pVZ0hPRnFhSDJURVNFNiIsImVtYWlsIjoiZGFtaWVub3N0bGVyMUBvdXRsb29rLmNvbSIsImF1dGgiOiJaRFJ0TVROdUxXUXpkanBuYUhCZk9IaExNbU5KVUdaamNFSkhURVJPYjBsd00xaFBXbFZuU0U5R2NXRklNbFJGVTBVMiJ9fX0=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-06T11:46:44Z"
+    name: ghcr-credentials
+    namespace: mechanicbuddy-system
+    resourceVersion: "51332"
+    uid: c89103d5-86d6-43d4-8b29-58157b4dd284
+  type: kubernetes.io/dockerconfigjson
+- apiVersion: v1
+  data:
+    connection-string: SG9zdD1tZWNoYW5pY2J1ZGR5LW1hbmFnZW1lbnQtZGItcnc7UG9ydD01NDMyO0RhdGFiYXNlPW1lY2hhbmljYnVkZHlfbWFuYWdlbWVudDtVc2VybmFtZT1tYW5hZ2VtZW50O1Bhc3N3b3JkPVNpbXBsZVBhc3N3b3JkMTIz
+    cronjob-api-key: QmJFd3hjNHI1cXYvYzdUNVVYdm5ZRisyenJiak5DaTBvYllxR2FBRnc3ST0=
+    jwt-secret: UHJvZHVjdGlvbkp3dFNlY3JldEtleU1pbmltdW0zMkNoYXJhY3RlcnMh
+    resend-api-key: cmVfSFhvbzFIWktfQmRMTmsyc05uU0h0UG9ZWkVlQTRGUnBV
+    stripe-secret-key: c2tfdGVzdF81MVNtVlBxSnZwaEc4OXNocDF6RjFjWkRKR3NFZHBZd3V3YkozSHZQcFR4SzlpelJFaUZhc29pN3g3aWI3M3Q5TFZPeW9BdWNIS0k3dDFSWGE0VGhwOHdlazAwM1haamtQZVk=
+    stripe-webhook-secret: d2hzZWNfaUJ0WmpZQW93VGV5QndXYXdUOGI0ejFlRUhGQ05CRTI=
+  kind: Secret
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{},"name":"management-api-secrets","namespace":"mechanicbuddy-system"},"stringData":{"connection-string":"Host=mechanicbuddy-management-db-rw;Port=5432;Database=mechanicbuddy_management;Username=management;Password=ProductionDBPassword456!","jwt-secret":"REDACTED_JWT","resend-api-key":"REDACTED_RESEND_KEY","stripe-secret-key":"sk_test_51SmVPqJvphG89shp1zF1cZDJGsEdpYwuwbJ3HvPpTxK9izREiFasoi7x7ib73t9LVOyoAucHKI7t1RXa4Thp8wek003","stripe-webhook-secret":"whsec_PRODUCTION_WEBHOOK_SECRET"},"type":"Opaque"}
+    creationTimestamp: "2026-01-07T01:06:17Z"
+    name: management-api-secrets
+    namespace: mechanicbuddy-system
+    resourceVersion: "489320"
+    uid: 6d3740b0-3077-49cf-85b2-e6a1abf78ff6
+  type: Opaque
+- apiVersion: v1
+  data:
+    password: U2ltcGxlUGFzc3dvcmQxMjM=
+    username: bWFuYWdlbWVudA==
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-07T04:19:33Z"
+    name: management-db-credentials
+    namespace: mechanicbuddy-system
+    resourceVersion: "229085"
+    uid: 6234db42-1ef8-44e0-be00-008f68ed88aa
+  type: kubernetes.io/basic-auth
+- apiVersion: v1
+  data:
+    session-secret: UHJvZHVjdGlvblNlc3Npb25TZWNyZXRNaW5pbXVtMzJDaGFyYWN0ZXJzIQ==
+    stripe-publishable-key: cGtfdGVzdF81MVNtVlBxSnZwaEc4OXNocEI5bDRVMzRUa1ZPWWkwaUtFSllNcTVYc0V0REVVSkpIQUEwNWF6cjRZdkZXVDlYcXcxVFZxNm1yU0prR3dleEt1RTRtSXNhVDAwRUZNZFNwOGU=
+  kind: Secret
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:/Secret:mechanicbuddy-system/management-portal-secrets
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:/Secret:mechanicbuddy-system/management-portal-secrets"},"labels":{"app.kubernetes.io/component":"management-portal","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"management-portal-secrets","namespace":"mechanicbuddy-system"},"stringData":{"session-secret":"ProductionSessionSecretMinimum32Characters!","stripe-publishable-key":"REDACTED_STRIPE_PK"},"type":"Opaque"}
+    creationTimestamp: "2026-01-06T11:28:19Z"
+    labels:
+      app.kubernetes.io/component: management-portal
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: management-portal-secrets
+    namespace: mechanicbuddy-system
+    resourceVersion: "46615"
+    uid: 052e0638-66b4-459b-98ba-5e8d0231f532
+  type: Opaque
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZEakNDQS9hZ0F3SUJBZ0lTQldDcVdyaHE2SUJxZXpiaXNGWlJuOUdpTUEwR0NTcUdTSWIzRFFFQkN3VUEKTURNeEN6QUpCZ05WQkFZVEFsVlRNUll3RkFZRFZRUUtFdzFNWlhRbmN5QkZibU55ZVhCME1Rd3dDZ1lEVlFRRApFd05TTVRNd0hoY05Nall3TVRBMk1UQXlPVFUwV2hjTk1qWXdOREEyTVRBeU9UVXpXakFnTVI0d0hBWURWUVFECkV4VmhjR2t1YldWamFHRnVhV05pZFdSa2VTNWhjSEF3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXcKZ2dFS0FvSUJBUURheGJaUHpjbnZybkdOc0lEdGI3aW51N3ZBcmNtZlgybjVPamVETllFNzF2TUE4WTFScXN1RwpmQzV1cXVSWHg2dHBnRzg2cHhPa3A3eGFTa3FFeXJwb29kNCtqakNvbjAvdnRNTzdKd0FDYU44TGxWekJTa3YrCllLaC93bWFHWk9HT2RVcE5mMTdxajV3UGE1Mm1WcUtOWUptSFNKUXRKWmp1ZmVxc2VZR0Z0N1BoOVUwa3pPdnkKMWcvQ003T29McGxoVHR6NngrYWEvc1NvSm1QSGV6Sml3ZTlLNzM2dWoxU2NrcXpXSHV0WWhvT1RMVG5hYUV1YgpsdnRzM0lScyt3OEtSdjNTbVY2Z3UvTzdMaS9oalZqNEpXbHhXSmI1RXo0L05KaU5sOWk5bzZXcEhaTTYxYk94Cm1yMlRXdG9TTjdwN2N5ZEUrajVVUmkyL1lLc0Qxa3V6QWdNQkFBR2pnZ0l0TUlJQ0tUQU9CZ05WSFE4QkFmOEUKQkFNQ0JhQXdIUVlEVlIwbEJCWXdGQVlJS3dZQkJRVUhBd0VHQ0NzR0FRVUZCd01DTUF3R0ExVWRFd0VCL3dRQwpNQUF3SFFZRFZSME9CQllFRkpPNVp3Nk0yWUVVd1BuUVhmei9adDZVTXdOd01COEdBMVVkSXdRWU1CYUFGT2VyCm53OHNNNkJUMDE1UGVNaXloQTQ3MXBJek1ETUdDQ3NHQVFVRkJ3RUJCQ2N3SlRBakJnZ3JCZ0VGQlFjd0FvWVgKYUhSMGNEb3ZMM0l4TXk1cExteGxibU55TG05eVp5OHdJQVlEVlIwUkJCa3dGNElWWVhCcExtMWxZMmhoYm1sagpZblZrWkhrdVlYQndNQk1HQTFVZElBUU1NQW93Q0FZR1o0RU1BUUlCTUM0R0ExVWRId1FuTUNVd0k2QWhvQitHCkhXaDBkSEE2THk5eU1UTXVZeTVzWlc1amNpNXZjbWN2TXpVdVkzSnNNSUlCREFZS0t3WUJCQUhXZVFJRUFnU0IKL1FTQitnRDRBSDBBY1g2Vjg4STRpbTJ4NDRSSlBUSGhXcWxpQ0hZdFFnRGdCUXpRWjdXbVllSUFBQUdia3hDNApGQUFJQUFBRkFBWXBDYzRFQXdCR01FUUNJQmJjcmd1cDByV1lCaXU2UHV3Q3F0SHNkdVpSUXR0bll1VUtseTJRCk9sKzJBaUJzYXEydUUxR04rUDZkc1FnNjZ1N3JBMzRJRmZCRXdMVWhoUkxxQkZCdjdRQjNBQTVYbEx6enJxaysKTXhzc21RZXo5NURmbThJOWNUSWwzU0dwSmF4aHhVNGhBQUFCbTVNUXZ5d0FBQVFEQUVnd1JnSWhBSzhaRUNmRgpzWU5oalpEMGdJSDM4ejRJa1F6ZFRpdFl1ekZSeWFGODRpUnhBaUVBbnJuZStHMTM5a1RZWmc0MXFXeTJvdmJTCnZWT3hPZEh2MjFhcTREMFZYTjR3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQURZVmthcnFnamZ2cjVzYUJXYzYKRzRmOHdmM3NiY3NvQzlTVkxlRys1T1QxMy85ZFQ0cnJJeDdMaVhzcmErY2dWUVh4cU5Qc21WdTJHRHhPNUlmKwpPL01LMWl3VFhKYXRoOXpLcllsbFI5YVhDQW9qelJTMGdGTmo2TTNRaFdRenp2ajd3UUVKcWV6VHFzdng5U2dNCklLWmpqcTlJV2NuTWVRVHRsUndwSjl0OTRrUy93LzNUVG54OVhyNEh4ZS8remZKMU4xRVBJODM3QUUwUWtkTUwKQmVCYXFQcVkySjJ5aDZFTDJaYm1ZR3ZKK3AxbXppZWxXRThmZ2liQkFjK1E1NStPa2p3azNicDZoc1RuY3FxQgpIYkhISFc2RHpML0JacC90R1NjZEg3MC9sRzRHUUU3aEFuYWowMWpNNkRIUkxEcUllWGNZRXkxYTBYRVJEakNpCmxPTT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQotLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRkJUQ0NBdTJnQXdJQkFnSVFXZ0R5RXRqVXRJRHpra0ZYNmltREJUQU5CZ2txaGtpRzl3MEJBUXNGQURCUApNUXN3Q1FZRFZRUUdFd0pWVXpFcE1DY0dBMVVFQ2hNZ1NXNTBaWEp1WlhRZ1UyVmpkWEpwZEhrZ1VtVnpaV0Z5ClkyZ2dSM0p2ZFhBeEZUQVRCZ05WQkFNVERFbFRVa2NnVW05dmRDQllNVEFlRncweU5EQXpNVE13TURBd01EQmEKRncweU56QXpNVEl5TXpVNU5UbGFNRE14Q3pBSkJnTlZCQVlUQWxWVE1SWXdGQVlEVlFRS0V3MU1aWFFuY3lCRgpibU55ZVhCME1Rd3dDZ1lEVlFRREV3TlNNVE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUUNsWjNDTjBGYUJaQlVYWWMyNUJ0U3RHWkNNSmxBM21CWmprbFRiMmN5RUJaUHMwK3dJRzZCZ1VVTkkKZlN2SFNKYWV0QzNhbmNnbk8xZWhuNnZ3MWc3VURqREtiNXV4MGRha25USStXRTQxYjBWWWFIRVgvRDdZWFlLZwpMN0pSYkxBYVhiaFp6alZseUl1aHJ4QTMvK09jWGNKSkZ6VC9qQ3VMamZDOGNTeVREQjBGeExySHphckpYbnpSCnlRSDNuQVAyL0FwZDlOcDc1dHQyUW5EcjlFMGkyZ0IzYjliSlh4ZjkyblV1cFZjTTl1cGN0dUJ6cFdqUG9YVGkKZFlKK0VKL0I5YUxyQWVrNHNRcEV6TlBDaWZWSk5ZSUtOTE1jNllqQ1IwNkNEZ28yOEVkUGl2RXBCSFhhemVHYQpYUDllblppVnVwcEQwRXFpRndVQkJERFRNck9QQWdNQkFBR2pnZmd3Z2ZVd0RnWURWUjBQQVFIL0JBUURBZ0dHCk1CMEdBMVVkSlFRV01CUUdDQ3NHQVFVRkJ3TUNCZ2dyQmdFRkJRY0RBVEFTQmdOVkhSTUJBZjhFQ0RBR0FRSC8KQWdFQU1CMEdBMVVkRGdRV0JCVG5xNThQTERPZ1U5TmVUM2pJc29RT085YVNNekFmQmdOVkhTTUVHREFXZ0JSNQp0Rm5tZTdibDVBRnpnQWlJeUJwWTl1bWJiakF5QmdnckJnRUZCUWNCQVFRbU1DUXdJZ1lJS3dZQkJRVUhNQUtHCkZtaDBkSEE2THk5NE1TNXBMbXhsYm1OeUxtOXlaeTh3RXdZRFZSMGdCQXd3Q2pBSUJnWm5nUXdCQWdFd0p3WUQKVlIwZkJDQXdIakFjb0JxZ0dJWVdhSFIwY0RvdkwzZ3hMbU11YkdWdVkzSXViM0puTHpBTkJna3Foa2lHOXcwQgpBUXNGQUFPQ0FnRUFVVGRZVXFFaW16VzdUYnJPeXBMcUNmTDdWT3dZZi9RNzlPSDVjSExDWmVnZ2ZRaERjb25sCms3S2doOGIwdmkrL1h1V3U3Q044bi9VUGVnMXZvM0crdGFYaXJyeXR0aFFpbkFIR3djL1VkYk95Z0phOXp1QmMKVnlxb0gzQ1hUWERJblQrOGErYzNhRVZNSjJTdCtwU240ZWQrV2tEcDhpanNpanZFeUZ3RTQ3aHVsVzBMdHpqZwo5Zk9WNVBtcmcvenhXYlJ1TCtrMERCREhFSmVubkNzQWVuN2MzNVBteDdqcG1KL0h0Z1JoY256MHlqU0J2eUl3CjZMMVFJdXBrQ3YyU0JPRFQveEREM2dmUVF5S3Y2cm9WNEcyRWhmRXlBc1dwbW9qeGpDVUNHaXlnOTdGdkR0bS8KTksyTFNjOWx5Ykt4QjczSTIrUDJHM0NhV3B2dnBBaUhDVnUzMGpXOEdDeEtkZmhzWHRuSXkyaW1za1FxVloybQowUG14b2JiMjhUdWNyN3hCSzdDdHd2UHJiNzlvczd1MlhQM081ZjliL0g2NkdOeVJyZ2xSWGxyWWpJMW9HWUwvCmY0STFuL1NndXNkYTZXdkE2QzE5MGt4alUxNVkxMm1IVTQrQnh5UjljeDJoaEdTOWZBak1aS0pzczI4cXh2ejYKQXh1NENhRG1STlpwSy9wUXJYRjE3eVhDWGttRVdndlNPRVp5Nlo5cGNiTElWRUdja1YvaVZlcTBBT28ycGtnOQpwNFFSSXkwdEsyZGlSRU5MU0YyS3lzRndiWTZCMjZCRmVGczN2MXNZVlJoRlc5bkxrT3JRVnBvckNTMEt5Wm1mCndWRDg5cVNUbG5jdExjWm5JYXZqS3NLVXUxbkExaVUweVlNZFllcEtSN2xXYm53aGR4M2V3b2s9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBMnNXMlQ4M0o3NjV4amJDQTdXKzRwN3U3d0szSm4xOXArVG8zZ3pXQk85YnpBUEdOClVhckxobnd1YnFya1Y4ZXJhWUJ2T3FjVHBLZThXa3BLaE1xNmFLSGVQbzR3cUo5UDc3VER1eWNBQW1qZkM1VmMKd1VwTC9tQ29mOEptaG1UaGpuVktUWDllNm8rY0QydWRwbGFpaldDWmgwaVVMU1dZN24zcXJIbUJoYmV6NGZWTgpKTXpyOHRZUHdqT3pxQzZaWVU3YytzZm1tdjdFcUNaangzc3lZc0h2U3U5K3JvOVVuSktzMWg3cldJYURreTA1CjJtaExtNWI3Yk55RWJQc1BDa2I5MHBsZW9Mdnp1eTR2NFkxWStDVnBjVmlXK1JNK1B6U1lqWmZZdmFPbHFSMlQKT3RXenNacTlrMXJhRWplNmUzTW5SUG8rVkVZdHYyQ3JBOVpMc3dJREFRQUJBb0lCQUIxRTFsOVc2TzFvS1VrTApsRFF2L2tSeW1XdnQxRXUrT0M5ZjJvMXpXeGJtYXh4MU5MTDRac0pYV3Q3emZobEFYVzZBQUdHWWVNaE9xS1JyCnpBeDRFdmhzcjQ4dTl0T1lmTmxWRmRxMEhRdzFlNkhSR2RmQ1dPaHZoaHVScHFYVVdWajEyRHNHRDJ6U1NjN0cKVnhFcUJoVmtGeVpDVDVDNnR2c3hYWFExelY1V05pVU01VWJIYkNGSldJdCtoRjVnQm9QT3RQN3ovTVBHMWVFMQpZQ1RZQVNyNWVFSCtGZTY4S20zUnozYUZLR0dPbUl5dlRpelNVMHR4TXUrdmI3M2ZTa0NRdW9vNHlEYzJZZWhzCjJZNTd4dWJWSWtRaFFSbHdUMmMzRVpleGdQZ3NtZzVqYlhmZlp1TERSbnRIdzZVcDNCNDZjZEVQUjhKUFhMZXcKcGdNVHBBRUNnWUVBNkVXS2RlQlRNU09odTg5WTcrb21lUk9ZYjNIeHAxVzhwdUhSS2Y1YkRhbE9yRit3VkVlSQpHMkQ2SXlrUDlrRXk3Unl6b1l3aXBVY3RHNGhoVGQ0UFVhR1h2a2hyM0VOd1JqWHI0MFhnLzdtbnRYRFY2cTEzCmh6K3YyRjY2R2hEU3loeVpBNWlIVVZZb0NBbTZDOHZaYWVkNXpBZXhzdHk0aGlkMjBVc2xIZnNDZ1lFQThSOGgKcWRpbzA4Z0poNmxPSjgzSllvY0ZIcWRvSDc2YzdlUG04Q1RxdG1PbWpjdkRJM3pzVkFsQXl0V1EyNnMxM0t4dgpkN2ZWaDVBVDl6bHZGWGdQQVo0V0tqSzVIZTA0UWh3dmppVlQ1aitLaEl5TnUyWXg0VW9TK2EzWGF6MDh0SFJNCm42ZUpTQ0lvb1Fab3gxdDJrYjVMRzE3aTZrQ3dRSjBoQ3FudHM2a0NnWUVBdzJRMG5RS3ZtU2ZMVjIyTytJdjEKLzJaL2xraTVLN1pSTStYRkNkbUNDVlVDN0xpMlliK20vTGt3MDBFb3YxU0xuYkhHWHNDL0tHQmV6c21FYVhmRApWVDFscEZuUitvSDB3ZXQ4V3owZWtLRkNOcjBNQnhZVDlmK2FVcDhsV09ZTUhKL0FES2xVTkJVUktlbmN5eTJaCjRLQXI4bm9LZjFkMEZzNitBa1IvbmQ4Q2dZQWNVWXl4bHZtVkRleFltNERMV2ZicDlIT2Nld3JXbDV0MHNReUIKYmNTSE1VTHhhbG43eEFNNWgzQ3RvZEdHaXlBalQ3a3p0VXFGeGwwaDd3UGw0SmphbHNlQm96MXNqMXpKSHVoUwo2SDFuRUZWalplS0xmT0FrMW45T0JhWEVPWWYwcGFnT0pDNFNZN2lqMk0zYmhCbHoyb2FWcTFvNUt1bklYT3Z4CmhhMmVLUUtCZ1FDTVNTNDVUVDE3VENIUnlBTEt3dmVyenNYU1FJd04yYXdxQXhyYXh6UkxjVmVTNFlQNndmY1gKN0svWDlEemRmUjFOTlJ2clRzV3AvL2xMUG1xRVpOVnNrU2dKSy9ZNDRqZW9IT0RmVzRrRjk3QXRQUVpKUVduSwpOdGRJOFUvS3NIRm5NWGxCMGZOeFpqdzdnZDF0QktVelUyT3dPMHJkektHbGg5cVNlTFFhSUE9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    annotations:
+      cert-manager.io/alt-names: api.mechanicbuddy.app
+      cert-manager.io/certificate-name: mechanicbuddy-api-tls
+      cert-manager.io/common-name: api.mechanicbuddy.app
+      cert-manager.io/ip-sans: ""
+      cert-manager.io/issuer-group: cert-manager.io
+      cert-manager.io/issuer-kind: ClusterIssuer
+      cert-manager.io/issuer-name: letsencrypt-prod
+      cert-manager.io/uri-sans: ""
+    creationTimestamp: "2026-01-06T11:28:27Z"
+    labels:
+      controller.cert-manager.io/fao: "true"
+    name: mechanicbuddy-api-tls
+    namespace: mechanicbuddy-system
+    resourceVersion: "46906"
+    uid: b092f23f-b567-420b-a277-97f9bfa4e5b3
+  type: kubernetes.io/tls
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZIakNDQkFhZ0F3SUJBZ0lTQmJqUmd0MDJVR2toV0t5aVdWU0VhUmRoTUEwR0NTcUdTSWIzRFFFQkN3VUEKTURNeEN6QUpCZ05WQkFZVEFsVlRNUll3RkFZRFZRUUtFdzFNWlhRbmN5QkZibU55ZVhCME1Rd3dDZ1lEVlFRRApFd05TTVRJd0hoY05Nall3TVRBMk1UQXlPVFV6V2hjTk1qWXdOREEyTVRBeU9UVXlXakFjTVJvd0dBWURWUVFECkV4RnRaV05vWVc1cFkySjFaR1I1TG1Gd2NEQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0MKZ2dFQkFQejBnT3BidW5ESjZ5NDh4cTlvYWxkaWxXUnBCVk5yUXpHb2tPd3VVdUJuY2wvaVo1WVNMTEkxdTRkbwptZHRKdzFIUFFGcG9QZUpQYWJwS0ltUTlacGhqWUUyN1BweFFadWIxRXA1QVlzSnVpR0ZTTE1peGlSVmN3UWZYCmNFamp0cGkwandLODlvRVFEcEErVHhjZ0NyeG40V0U2YUV1aGUrVnFkWjQwL3FFSEthZUdwa0ZOUXRJalNOdEgKZEZtamErc25HeU10dEJTd1RmUFZrak14bzVQZTJkLzlYbkVHQ0NlMDFWSXVDUmVweXdRa1ZkcUxBVkJrS2JFcgp4ZFdJTUdvSFdQQjRMdEZUZTNBdkt4MloweWNZNDBSRWs1Y2dXdFdPN3Y4TWg0a3FkZWpZUEZ0Y0NxQUNYNUZsCkR6bXNTOFY3dW54dnIwVXJUanAwMU5wZ0lTRUNBd0VBQWFPQ0FrRXdnZ0k5TUE0R0ExVWREd0VCL3dRRUF3SUYKb0RBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBZApCZ05WSFE0RUZnUVVjbWxZdlFMWSs3YW9oN3BSdDJXazJsSmpKcEF3SHdZRFZSMGpCQmd3Rm9BVUFMVXA4aTJPCmJ6SG9tMHl0ZUQ3NjNPa00wZEl3TXdZSUt3WUJCUVVIQVFFRUp6QWxNQ01HQ0NzR0FRVUZCekFDaGhkb2RIUncKT2k4dmNqRXlMbWt1YkdWdVkzSXViM0puTHpBekJnTlZIUkVFTERBcWdoRnRaV05vWVc1cFkySjFaR1I1TG1GdwpjSUlWZDNkM0xtMWxZMmhoYm1salluVmtaSGt1WVhCd01CTUdBMVVkSUFRTU1Bb3dDQVlHWjRFTUFRSUJNQzRHCkExVWRId1FuTUNVd0k2QWhvQitHSFdoMGRIQTZMeTl5TVRJdVl5NXNaVzVqY2k1dmNtY3ZPVGd1WTNKc01JSUIKRFFZS0t3WUJCQUhXZVFJRUFnU0IvZ1NCK3dENUFINEFjWDZWODhJNGltMng0NFJKUFRIaFdxbGlDSFl0UWdEZwpCUXpRWjdXbVllSUFBQUdia3hDelpBQUlBQUFGQUFZcENib0VBd0JITUVVQ0lRQ21PVFUvM2tkei9SNUZyU2NlCndpZFN6V2llbjVjQnBrMWVoekFBeks1ek5BSWdVKzZ0bi9Gc2NURjhmeXA0V1JwR1d6bll1MlV5RG96ZU0vaUUKa29EdGFkZ0Fkd0RSYnFtbGFBZCtaaldnUHplbDNid0RwVHhCRWhUVWlCajE2VEd6STh1VkJBQUFBWnVURUx1YwpBQUFFQXdCSU1FWUNJUUNqSnJEdUZUSVNOMGp0MVRhYmJHZ3J2VlE2Wm1QbFIzQ25FdGNGeHBkNWNBSWhBTGdLCktGVHJPT0pNMjNESitjZlp5NWFBaHhzSGQwaTJUSXEvdDNSajVkWGdNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUIKQVFDcU52Qm51aUh0OTdJbEZvcGFjRXgwbDdiWWJxMnlwTWhDY0ZLQXRidWVUZ1ovSUJXWUNXODhBWEFISVRQSQpuVmltbTVKNXZoY0w1bHlGVlp4N0xuUFlOQWZ0a2tIWlBHNzl0RURIVEVTa2g0Vk50Wnp2ZzV3MmxtbGNPbnBsCmpBektKK2ZBOXRocWFsR0EvR2RxaHlFN3ZVaUF4LzU3SEc5dUJTSGs0K1ppQ253T3VxMVJ2d3dLNWtiRVRwMWIKRktZRE1jQkNiOVFsMkJuRVJUNExpU1lOMmg2OUJjb05RR05RSFNkQ2R2T3Bpa3BVRjdJUzFoMk1yWXkrdERYRApkTnVwdXlIdk5aSXFDVVBzZXJBcWdNbVNlV294NUM0b0l3SFlITWpGdkFyYVRwMnVMSXhrRFdEN2Z2ZkFuM0NPCng4SFFzeXRRUHg4c3Z0eW9tMTVNVlFBUwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCi0tLS0tQkVHSU4gQ0VSVElGSUNBVEUtLS0tLQpNSUlGQmpDQ0F1NmdBd0lCQWdJUkFNSVNNa3R3cWJTUmNkeEE5K0tGSmp3d0RRWUpLb1pJaHZjTkFRRUxCUUF3ClR6RUxNQWtHQTFVRUJoTUNWVk14S1RBbkJnTlZCQW9USUVsdWRHVnlibVYwSUZObFkzVnlhWFI1SUZKbGMyVmgKY21Ob0lFZHliM1Z3TVJVd0V3WURWUVFERXd4SlUxSkhJRkp2YjNRZ1dERXdIaGNOTWpRd016RXpNREF3TURBdwpXaGNOTWpjd016RXlNak0xT1RVNVdqQXpNUXN3Q1FZRFZRUUdFd0pWVXpFV01CUUdBMVVFQ2hNTlRHVjBKM01nClJXNWpjbmx3ZERFTU1Bb0dBMVVFQXhNRFVqRXlNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUIKQ2dLQ0FRRUEycGdvZEsyK2xQNDc0QjdpNVV0MXF5d1NmKzJuQXpKK05wZnM2REdQcFJPTkM1a3VIczBCVVQxTQo1U2h1Q1ZVeHFxVWlYWEwwTFFmQ1RVQTgzd0VqdVhnMzlScGxNalRtaG5HZEJPK0VDRnU5QWhxWjY2WUJBSnB6CmtHMlBvZ2VnMEpmVDJrVmhnVFU5RlBuRXdGOXEzQXVXR3JDZjR5cnF2U3JXbU1lYmNhczdkQTg4MjdKZ3ZscEwKVGhqcDJ5cHpYSWxoWlo3KzdUeW15MDV2NUo3NUFFYXoveGxOS21PemptYkdHSVZ3eDFCbGJ6dDA1VWlERHdoWQpYUzBqblY2ai91amJBS0hTOU9NWlRmTHVldllubnVYTm5DMmk4bitjRjYzdkV6YzUwYlRJTEVIV2hzRHA3Q0g0CldSdC91VHA4bjF3Qm5XSUV3aWk5Q3EwOHloRHNHd0lEQVFBQm80SDRNSUgxTUE0R0ExVWREd0VCL3dRRUF3SUIKaGpBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFnWUlLd1lCQlFVSEF3RXdFZ1lEVlIwVEFRSC9CQWd3QmdFQgovd0lCQURBZEJnTlZIUTRFRmdRVUFMVXA4aTJPYnpIb20weXRlRDc2M09rTTBkSXdId1lEVlIwakJCZ3dGb0FVCmViUlo1bnUyNWVRQmM0QUlpTWdhV1BicG0yNHdNZ1lJS3dZQkJRVUhBUUVFSmpBa01DSUdDQ3NHQVFVRkJ6QUMKaGhab2RIUndPaTh2ZURFdWFTNXNaVzVqY2k1dmNtY3ZNQk1HQTFVZElBUU1NQW93Q0FZR1o0RU1BUUlCTUNjRwpBMVVkSHdRZ01CNHdIS0Fhb0JpR0ZtaDBkSEE2THk5NE1TNWpMbXhsYm1OeUxtOXlaeTh3RFFZSktvWklodmNOCkFRRUxCUUFEZ2dJQkFJOTEwQW5QYW5aSVpUS1MzclZFeUlWMjlCV0VqQUsvZHV1ejhlTDVib1NvVnBIaGtrdjMKNGVvQWVFaVBkWkxqNUVaN0cyQXJJSytnemhUbFJRMXE0RktHcFBQYUZCU3BxVi94YlViNVVsQVhRT25rSG4zbQpGVmorcVl2ODcvV2VZK0JtNHNOM094OEJoeWFVN1VBUTNMZVo3TjFYMDF4eFFlNHdJQUFFM0pWTFVDaUhtWkwrCnFvQ1V0Z1lJRlBnY2czNTBRTVVJV2d4UFhOR0VuY1Q5MjFuZTdubHVJMDJWOHBMVW1DbHFYT3NDd1VMdytQVk8KWkNCN3FPTXh4TUJvQ1VlTDJMbDRvTXBPU3I1cEpDcExOM3RSQTJzNlAxS0xzOVRTclZoT2srN0xYMjhOTVVsSQp1c1EvbnhMSklEMFJoQWVGdFBqeU9DT3NjUUJBNTMrTlJqU0NhazdQNEE1alg3cHBta2NKRUNMK1MwaTNrWFZVCnk1TWU1QmJyVTg5NzNqWk52L2F4NitaSzZUTThqV21pbUw2b2Y2T3JYN1pVNkUyV3FhenpzRnJMRzNvMmt5U2IKemxoU2dKODFDbDR0djNTYllpWVhuSkV4S1F2emY4M0RZb3RveDNmMGZ3djd4bG4xQTJaTHBsQ2IwTytsL0FLMApZRTBEUzJGUHhTQUhpMGl3TWZXMm5OSEpyWGNZM0xMSEQ3N2dSZ2plNEV2ZXViaTJ4eGErTm1rL2htaExkSUVUCmlWREZhbm9Dck1WSXBRNTlYV0hremRGbW9IWEhCVjdvaWJWakdTTzdVTFNRN01KMU56NTFwaHVESlNnQUlVN0EKMHpyTG5PckFqL2RmcmxFV1JoQ3ZBZ2J1d0xaWDFBMnNqTmpYb1BPSGJzUGl5K2xPMUtGOC9YWTcKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBL1BTQTZsdTZjTW5yTGp6R3IyaHFWMktWWkdrRlUydERNYWlRN0M1UzRHZHlYK0puCmxoSXNzalc3aDJpWjIwbkRVYzlBV21nOTRrOXB1a29pWkQxbW1HTmdUYnMrbkZCbTV2VVNua0Jpd202SVlWSXMKeUxHSkZWekJCOWR3U09PMm1MU1BBcnoyZ1JBT2tENVBGeUFLdkdmaFlUcG9TNkY3NVdwMW5qVCtvUWNwcDRhbQpRVTFDMGlOSTIwZDBXYU5yNnljYkl5MjBGTEJOODlXU016R2prOTdaMy8xZWNRWUlKN1RWVWk0SkY2bkxCQ1JWCjJvc0JVR1Fwc1N2RjFZZ3dhZ2RZOEhndTBWTjdjQzhySFpuVEp4ampSRVNUbHlCYTFZN3Uvd3lIaVNwMTZOZzgKVzF3S29BSmZrV1VQT2F4THhYdTZmRyt2UlN0T09uVFUybUFoSVFJREFRQUJBb0lCQVFDNnFCR1kzaWN0bzFJUAp4SGs0Wm14U0gwVHQyekU2NVNPb09TTDNwUmN5MENMdDdqdFIyZ2R4V1lVUDNuZnFBUHhJR2c3NnA0RkN4aWJXCmVHMzRXZmFpN0hIYjZoZkJjUEw5NmtuYXpOZ1RjVXpodzZtWVRxbEJRamlPZU1NNmhnM3ZrUTBXa0NtMkF3czgKRlQ1M2FnV0NFWVdXSVd0a283eXhCV1hWWUhXa2pCVDVab25Qd01hZHJzVTcrN1VZRU5FZ2tuQ2NjOGJzcGxhSgpQUDZQV2pQek5YWDZiQmdPUk9JTDVJYkt6SWVzeVBHUGNheDVibkVqZG9lbjBZaUYrUi9vNnA1OERRU2R1aE4wCmowdWNzRVE5ZXMzYXYxU0c3eCtTMHZVdmFCQnZSbjFVZ0s1VndoMXY3NUNwTDJ5WW8xMFBvYXE3TGtuUU9vQ0wKZjFYaW4wZ0JBb0dCQVAzdS9KaG5JbktoQm5EQjZLK3lXMngzTmpQRHZNTXNmSUtWc0lJVUFyUExKa3NVdHpxOApTL01UbWhIaUNXU0tiaytMQmJpeFErUUdlZk1ZMmpBYVBoRnphZFdwMmY2Yk4xV0oxTGt1RTM5cWhQT3lPMkNCCktnenZhWSt4Ym0rU0lCVVY0dzY4SEVBampnemU1VjU0WGgzelVHdHNzcUpCdzBEMnlpQ1prdml4QW9HQkFQOEQKZW42NHNxS2g1dXNaYUZWWEZVeTdpTTIzRkpvc2hweStZcTZScGhiaXpPdmd1K1lwQ0ppR243bW90REZselZkWQo2c3pmUjFBRFIwZXJuNkhqYlg1ZGJPWTExRU80UVdpeEJYTVpydy9jOEFjQW44dnV4UnBENUxTS0VHL1h3QkxYCjl5ZFNBSXdDcktUa2pnNzdQVFdPRkNHalBCMG4rU0swR3FydERNdHhBb0dBRW1TY0lVSGZLZVJsL2diZG50UlIKY1BMVmx6eEhVTy9JK1FCMHI0ZFpoc0poUExEOGNLR3c4cU5wMW4vRDVHZHVoQTV5MUtUcVlQcmpIR3VoYWppTQpaR0V5dWtvNlF3bmxJU29Cb1lRbjMyUE15NFlPYlBnT0hxKzh1cTdFYkFwdWpuaHVZT1BaUEFBWFN2RmVOZENNCktLazJHd0hka29rbTVtNjV4MUM0WjVFQ2dZRUFvMFd1NEFPUkc5OWM0WmxhMjRqdDhqci8wL1lzRXFuL1pjdmYKa3JWZUNia2NTc21RaEVReFpMYU0vV211TlJKZzdsUFh3V1FUWEg4ODIvNWVMbUJXY2xtT3A3WS9PVHgzWkhneQpiUWM4dG9OV2lxVXpxbll0YkN1YitwdUsrcERBUVZCVXhiQVMrWkdjeDlZdHZobk5qc1J3enppYi9HN2phL3kwCk5rdWZyWUVDZ1lFQXJCNXhKQzFrenJQbWVMTlBMakk5Z3pTWXJGR0xjcmNabzh4cytmUXY5UWo5U3IvU2NpV3EKckZBRitoL3RrSTdJWjJtalFKSlRQTFNXakI0Z29vc3A2djNlVVVLOEpVZm0rMTFTaEx5SnhBWXJYQ1ZHblI0ZgpQWk40UVRPOEpTSGcvMWNkcWRvYnNiczhENkhVMVJFSkVQV2pad2NGTUZPTGxJR3A3eFhEWGRZPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    annotations:
+      cert-manager.io/alt-names: mechanicbuddy.app,www.mechanicbuddy.app
+      cert-manager.io/certificate-name: mechanicbuddy-app-tls
+      cert-manager.io/common-name: mechanicbuddy.app
+      cert-manager.io/ip-sans: ""
+      cert-manager.io/issuer-group: cert-manager.io
+      cert-manager.io/issuer-kind: ClusterIssuer
+      cert-manager.io/issuer-name: letsencrypt-prod
+      cert-manager.io/uri-sans: ""
+    creationTimestamp: "2026-01-06T11:28:26Z"
+    labels:
+      controller.cert-manager.io/fao: "true"
+    name: mechanicbuddy-app-tls
+    namespace: mechanicbuddy-system
+    resourceVersion: "46887"
+    uid: dab112a2-f9c1-462b-8b28-47bba59e42f8
+  type: kubernetes.io/tls
+- apiVersion: v1
+  data:
+    ca.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJ5ekNDQVhHZ0F3SUJBZ0lSQU81VllVU0dMaGZuTG16cnF4SS95OTh3Q2dZSUtvWkl6ajBFQXdJd1JURWQKTUJzR0ExVUVDeE1VYldWamFHRnVhV05pZFdSa2VTMXplWE4wWlcweEpEQWlCZ05WQkFNVEcyMWxZMmhoYm1sagpZblZrWkhrdGJXRnVZV2RsYldWdWRDMWtZakFlRncweU5qQXhNRFl4TVRJek1qRmFGdzB5TmpBME1EWXhNVEl6Ck1qRmFNRVV4SFRBYkJnTlZCQXNURkcxbFkyaGhibWxqWW5Wa1pIa3RjM2x6ZEdWdE1TUXdJZ1lEVlFRREV4dHQKWldOb1lXNXBZMkoxWkdSNUxXMWhibUZuWlcxbGJuUXRaR0l3V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQgpCd05DQUFRMm1RbjNtMGRZelh6WGI5YThPY29rb2hYa2plcGlDOWlOWWNSMFVjaWNzZEZUSE1DYk9YK3RSR3VRCkVrajdVTEFnQm1KYVltNTF6REhnQmUzRXA0ZVVvMEl3UURBT0JnTlZIUThCQWY4RUJBTUNBZ1F3RHdZRFZSMFQKQVFIL0JBVXdBd0VCL3pBZEJnTlZIUTRFRmdRVWxvajA3OEhNcEcrZ1RzdHFvVmRIRUJLcXVVc3dDZ1lJS29aSQp6ajBFQXdJRFNBQXdSUUloQU1wNmJZQjlXYU5NUHNkNEYzT0V6U3NUWmVXWjZPUWh5UFJJemZHczBGMUxBaUJSCm53ejVXNmdSTmpZc21rLzRLL2dSd1FLSlFJV2RWd0hHUU5jdlMwSjN1QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+    ca.key: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSU4rSGhZSzJQOHBHamdjVERXL2JDcVlJVUh3WnBOTHpTd3ljaVE2cnRvR1NvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFTnBrSjk1dEhXTTE4MTIvV3ZEbktKS0lWNUkzcVlndllqV0hFZEZISW5MSFJVeHpBbXpsLwpyVVJya0JKSSsxQ3dJQVppV21KdWRjd3g0QVh0eEtlSGxBPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    name: mechanicbuddy-management-db-ca
+    namespace: mechanicbuddy-system
+    ownerReferences:
+    - apiVersion: postgresql.cnpg.io/v1
+      controller: true
+      kind: Cluster
+      name: mechanicbuddy-management-db
+      uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+    resourceVersion: "46711"
+    uid: add0b778-1aef-46e4-a6f5-91fc8d812620
+  type: Opaque
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUJ0akNDQVZ5Z0F3SUJBZ0lSQU56ZEY0T3lCczJtaDU3WTlIbjlBUkF3Q2dZSUtvWkl6ajBFQXdJd1JURWQKTUJzR0ExVUVDeE1VYldWamFHRnVhV05pZFdSa2VTMXplWE4wWlcweEpEQWlCZ05WQkFNVEcyMWxZMmhoYm1sagpZblZrWkhrdGJXRnVZV2RsYldWdWRDMWtZakFlRncweU5qQXhNRFl4TVRJek1qRmFGdzB5TmpBME1EWXhNVEl6Ck1qRmFNQnd4R2pBWUJnTlZCQU1NRVhOMGNtVmhiV2x1WjE5eVpYQnNhV05oTUZrd0V3WUhLb1pJemowQ0FRWUkKS29aSXpqMERBUWNEUWdBRVFud3grVTNpMkUwSXN6Q0hpTVM3YmQyb3pvWHJqbk8ySWU5bCtLVjVEaDBGS1VBNApZSGxFRlRpZ3MrdmFFOU1KbTRGY21WTW1ObFVlblU0cGwyNXFaYU5XTUZRd0RnWURWUjBQQVFIL0JBUURBZ09JCk1CTUdBMVVkSlFRTU1Bb0dDQ3NHQVFVRkJ3TUNNQXdHQTFVZEV3RUIvd1FDTUFBd0h3WURWUjBqQkJnd0ZvQVUKbG9qMDc4SE1wRytnVHN0cW9WZEhFQktxdVVzd0NnWUlLb1pJemowRUF3SURTQUF3UlFJaEFNUFFkclYxSkNtOApmcFBzY3MyMFZrS1pMbkdUM1pPY2F2YVFQZU1Bb1FyaUFpQmNMQlR3OFIxM2wwZ2ZRbm1MaHd2ZEx5WXVCaVJpCjRQRkxUcll2VklNY2pRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    tls.key: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUozcmVpZDZXZ0tpU0l0bXRqWGRlTXlzUlpjM2N2NzhZd2tFSldtVytsL3lvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFUW53eCtVM2kyRTBJc3pDSGlNUzdiZDJvem9YcmpuTzJJZTlsK0tWNURoMEZLVUE0WUhsRQpGVGlncyt2YUU5TUptNEZjbVZNbU5sVWVuVTRwbDI1cVpRPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    name: mechanicbuddy-management-db-replication
+    namespace: mechanicbuddy-system
+    ownerReferences:
+    - apiVersion: postgresql.cnpg.io/v1
+      controller: true
+      kind: Cluster
+      name: mechanicbuddy-management-db
+      uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+    resourceVersion: "46717"
+    uid: 5a7335ea-f035-4a9c-b28f-5079508b90cd
+  type: kubernetes.io/tls
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURuekNDQTBXZ0F3SUJBZ0lSQVBsVGwwTnVCV3ljcVg4S2MyVFVFczB3Q2dZSUtvWkl6ajBFQXdJd1JURWQKTUJzR0ExVUVDeE1VYldWamFHRnVhV05pZFdSa2VTMXplWE4wWlcweEpEQWlCZ05WQkFNVEcyMWxZMmhoYm1sagpZblZrWkhrdGJXRnVZV2RsYldWdWRDMWtZakFlRncweU5qQXhNRFl4TVRJek1qRmFGdzB5TmpBME1EWXhNVEl6Ck1qRmFNQ2t4SnpBbEJnTlZCQU1USG0xbFkyaGhibWxqWW5Wa1pIa3RiV0Z1WVdkbGJXVnVkQzFrWWkxeWR6QloKTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCSUZBNmVPQWd1b3drWEd2dVJjQS92QUdsK1pHamdnVwpCaDNJaGtoSFg4Ry9NKzk1czNzb21zdmNoZ0JwS3JlcjNqckJrdVJKSFNEbEpvZ2xpZHZjdWFtamdnSXdNSUlDCkxEQU9CZ05WSFE4QkFmOEVCQU1DQTZnd0V3WURWUjBsQkF3d0NnWUlLd1lCQlFVSEF3RXdEQVlEVlIwVEFRSC8KQkFJd0FEQWZCZ05WSFNNRUdEQVdnQlNXaVBUdndjeWtiNkJPeTJxaFYwY1FFcXE1U3pDQ0FkUUdBMVVkRVFTQwpBY3N3Z2dISGdoNXRaV05vWVc1cFkySjFaR1I1TFcxaGJtRm5aVzFsYm5RdFpHSXRjbmVDTTIxbFkyaGhibWxqClluVmtaSGt0YldGdVlXZGxiV1Z1ZEMxa1lpMXlkeTV0WldOb1lXNXBZMkoxWkdSNUxYTjVjM1JsYllJM2JXVmoKYUdGdWFXTmlkV1JrZVMxdFlXNWhaMlZ0Wlc1MExXUmlMWEozTG0xbFkyaGhibWxqWW5Wa1pIa3RjM2x6ZEdWdApMbk4yWTRJZGJXVmphR0Z1YVdOaWRXUmtlUzF0WVc1aFoyVnRaVzUwTFdSaUxYS0NNbTFsWTJoaGJtbGpZblZrClpIa3RiV0Z1WVdkbGJXVnVkQzFrWWkxeUxtMWxZMmhoYm1salluVmtaSGt0YzNsemRHVnRnalp0WldOb1lXNXAKWTJKMVpHUjVMVzFoYm1GblpXMWxiblF0WkdJdGNpNXRaV05vWVc1cFkySjFaR1I1TFhONWMzUmxiUzV6ZG1PQwpIbTFsWTJoaGJtbGpZblZrWkhrdGJXRnVZV2RsYldWdWRDMWtZaTF5YjRJemJXVmphR0Z1YVdOaWRXUmtlUzF0CllXNWhaMlZ0Wlc1MExXUmlMWEp2TG0xbFkyaGhibWxqWW5Wa1pIa3RjM2x6ZEdWdGdqZHRaV05vWVc1cFkySjEKWkdSNUxXMWhibUZuWlcxbGJuUXRaR0l0Y204dWJXVmphR0Z1YVdOaWRXUmtlUzF6ZVhOMFpXMHVjM1pqZ2g1dApaV05vWVc1cFkySjFaR1I1TFcxaGJtRm5aVzFsYm5RdFpHSXRjbmN3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloCkFKSW9ZWldneERGWCszS3g1a0NYL0ZwWS9FUWxvMVFKME42OVJZSU1rRTl0QWlCclJydnhaQWk1NHRwbG05YVcKbVhQZDFHNDB3Z3pYenBSeHhIYnY0U3BxQkE9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+    tls.key: LS0tLS1CRUdJTiBFQyBQUklWQVRFIEtFWS0tLS0tCk1IY0NBUUVFSUlSb3hQYVNsTi9NcWZtUzBGZUhQZWxnZGlNZFRIdXJ4bDE5dHU1dEtQWlNvQW9HQ0NxR1NNNDkKQXdFSG9VUURRZ0FFZ1VEcDQ0Q0M2akNSY2ErNUZ3RCs4QWFYNWthT0NCWUdIY2lHU0VkZndiOHo3M216ZXlpYQp5OXlHQUdrcXQ2dmVPc0dTNUVrZElPVW1pQ1dKMjl5NXFRPT0KLS0tLS1FTkQgRUMgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    name: mechanicbuddy-management-db-server
+    namespace: mechanicbuddy-system
+    ownerReferences:
+    - apiVersion: postgresql.cnpg.io/v1
+      controller: true
+      kind: Cluster
+      name: mechanicbuddy-management-db
+      uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+    resourceVersion: "46712"
+    uid: bbf6bc93-c336-4586-ac20-757388086fcc
+  type: kubernetes.io/tls
+- apiVersion: v1
+  data:
+    cronjob-api-key: QmJFd3hjNHI1cXYvYzdUNVVYdm5ZRisyenJiak5DaTBvYllxR2FBRnc3ST0=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T05:38:34Z"
+    name: mechanicbuddy-system-secrets
+    namespace: mechanicbuddy-system
+    resourceVersion: "489344"
+    uid: 2720be73-64d0-4b2c-a037-9abf2da69c74
+  type: Opaque
+- apiVersion: v1
+  data:
+    base-url: aHR0cDovLzE5Mi4xNjguMS4yMzg6ODE=
+    email: ZGFtaWVub3N0bGVyMUBvdXRsb29rLmNvbQ==
+    password: MzcxOTVhYmNBQkMhQA==
+  kind: Secret
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Secret","metadata":{"annotations":{},"name":"npm-credentials","namespace":"mechanicbuddy-system"},"stringData":{"base-url":"http://192.168.1.238:81","email":"damienostler1@outlook.com","password":"REDACTED_NPM_PASS"},"type":"Opaque"}
+    creationTimestamp: "2026-01-07T01:19:54Z"
+    name: npm-credentials
+    namespace: mechanicbuddy-system
+    resourceVersion: "192668"
+    uid: 73b6dfd7-c50d-4eba-9ef3-024879855d53
+  type: Opaque
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:networking.k8s.io/Ingress:mechanicbuddy-system/mechanicbuddy-system
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:networking.k8s.io/Ingress:mechanicbuddy-system/mechanicbuddy-system","cert-manager.io/cluster-issuer":"letsencrypt-prod","nginx.ingress.kubernetes.io/proxy-body-size":"50m","nginx.ingress.kubernetes.io/proxy-read-timeout":"300","nginx.ingress.kubernetes.io/proxy-send-timeout":"300","nginx.ingress.kubernetes.io/ssl-redirect":"false"},"labels":{"app.kubernetes.io/component":"ingress","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"mechanicbuddy-system","namespace":"mechanicbuddy-system"},"spec":{"ingressClassName":"nginx","rules":[{"host":"mechanicbuddy.app","http":{"paths":[{"backend":{"service":{"name":"management-portal","port":{"number":3026}}},"path":"/","pathType":"Prefix"}]}},{"host":"www.mechanicbuddy.app","http":{"paths":[{"backend":{"service":{"name":"management-portal","port":{"number":3026}}},"path":"/","pathType":"Prefix"}]}},{"host":"api.mechanicbuddy.app","http":{"paths":[{"backend":{"service":{"name":"management-api","port":{"number":15568}}},"path":"/","pathType":"Prefix"}]}}],"tls":[{"hosts":["mechanicbuddy.app","www.mechanicbuddy.app"],"secretName":"mechanicbuddy-app-tls"},{"hosts":["api.mechanicbuddy.app"],"secretName":"mechanicbuddy-api-tls"}]}}
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: ingress
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: mechanicbuddy-system
+    namespace: mechanicbuddy-system
+    resourceVersion: "47181"
+    uid: 80341615-d09c-4b0b-a5bf-0fca20c1563d
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: management-portal
+              port:
+                number: 3026
+          path: /
+          pathType: Prefix
+    - host: www.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: management-portal
+              port:
+                number: 3026
+          path: /
+          pathType: Prefix
+    - host: api.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: management-api
+              port:
+                number: 15568
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - mechanicbuddy.app
+      - www.mechanicbuddy.app
+      secretName: mechanicbuddy-app-tls
+    - hosts:
+      - api.mechanicbuddy.app
+      secretName: mechanicbuddy-api-tls
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:batch/CronJob:mechanicbuddy-system/billing-sync
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"batch/v1","kind":"CronJob","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:batch/CronJob:mechanicbuddy-system/billing-sync"},"labels":{"app.kubernetes.io/component":"billing-sync","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"billing-sync","namespace":"mechanicbuddy-system"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":3,"jobTemplate":{"spec":{"template":{"spec":{"containers":[{"command":["/bin/sh","-c","echo \"Triggering billing sync...\"\ncurl -X POST \\\n  -H \"Authorization: Bearer $API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  http://management-api:15568/api/billing/sync-all-mechanics\necho \"Done\"\n"],"env":[{"name":"API_TOKEN","valueFrom":{"secretKeyRef":{"key":"api-token","name":"cronjob-secrets"}}}],"image":"curlimages/curl:8.5.0","name":"billing-sync"}],"restartPolicy":"OnFailure"}}}},"schedule":"0 0 * * *","successfulJobsHistoryLimit":3}}
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: billing-sync
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: billing-sync
+    namespace: mechanicbuddy-system
+    resourceVersion: "424892"
+    uid: 861bd5f1-7aa7-4878-97db-a694e8dbba2a
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 3
+    jobTemplate:
+      metadata:
+        creationTimestamp: null
+      spec:
+        template:
+          metadata:
+            creationTimestamp: null
+          spec:
+            containers:
+            - command:
+              - /bin/sh
+              - -c
+              - |
+                echo "Triggering billing sync..."
+                curl -X POST \
+                  -H "Authorization: Bearer $API_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  http://management-api:15568/api/billing/sync-all-mechanics
+                echo "Done"
+              env:
+              - name: API_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    key: api-token
+                    name: cronjob-secrets
+              image: curlimages/curl:8.5.0
+              imagePullPolicy: IfNotPresent
+              name: billing-sync
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            terminationGracePeriodSeconds: 30
+    schedule: 0 0 * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-01-08T00:00:00Z"
+    lastSuccessfulTime: "2026-01-08T00:00:05Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:batch/CronJob:mechanicbuddy-system/demo-cleanup
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"batch/v1","kind":"CronJob","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:batch/CronJob:mechanicbuddy-system/demo-cleanup"},"labels":{"app.kubernetes.io/component":"demo-cleanup","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"demo-cleanup","namespace":"mechanicbuddy-system"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":3,"jobTemplate":{"spec":{"template":{"spec":{"containers":[{"command":["/bin/sh","-c","echo \"Triggering demo cleanup...\"\ncurl -X POST \\\n  -H \"Authorization: Bearer $API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  http://management-api:15568/api/demo-requests/cleanup-expired\necho \"Done\"\n"],"env":[{"name":"API_TOKEN","valueFrom":{"secretKeyRef":{"key":"api-token","name":"cronjob-secrets"}}}],"image":"curlimages/curl:8.5.0","name":"demo-cleanup"}],"restartPolicy":"OnFailure"}}}},"schedule":"0 3 * * *","successfulJobsHistoryLimit":3}}
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: demo-cleanup
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: demo-cleanup
+    namespace: mechanicbuddy-system
+    resourceVersion: "457447"
+    uid: 1d761217-6ce5-4aac-85e1-6a1b79cfacac
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 3
+    jobTemplate:
+      metadata:
+        creationTimestamp: null
+      spec:
+        template:
+          metadata:
+            creationTimestamp: null
+          spec:
+            containers:
+            - command:
+              - /bin/sh
+              - -c
+              - |
+                echo "Triggering demo cleanup..."
+                curl -X POST \
+                  -H "Authorization: Bearer $API_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  http://management-api:15568/api/demo-requests/cleanup-expired
+                echo "Done"
+              env:
+              - name: API_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    key: api-token
+                    name: cronjob-secrets
+              image: curlimages/curl:8.5.0
+              imagePullPolicy: IfNotPresent
+              name: demo-cleanup
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            terminationGracePeriodSeconds: 30
+    schedule: 0 3 * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-01-08T03:00:00Z"
+    lastSuccessfulTime: "2026-01-08T03:00:04Z"
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:batch/CronJob:mechanicbuddy-system/metrics-collector
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"batch/v1","kind":"CronJob","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:batch/CronJob:mechanicbuddy-system/metrics-collector"},"labels":{"app.kubernetes.io/component":"metrics-collector","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"metrics-collector","namespace":"mechanicbuddy-system"},"spec":{"concurrencyPolicy":"Forbid","failedJobsHistoryLimit":3,"jobTemplate":{"spec":{"template":{"spec":{"containers":[{"command":["/bin/sh","-c","echo \"Triggering metrics collection...\"\ncurl -X POST \\\n  -H \"Authorization: Bearer $API_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  http://management-api:15568/api/analytics/collect-metrics\necho \"Done\"\n"],"env":[{"name":"API_TOKEN","valueFrom":{"secretKeyRef":{"key":"api-token","name":"cronjob-secrets"}}}],"image":"curlimages/curl:8.5.0","name":"metrics-collector"}],"restartPolicy":"OnFailure"}}}},"schedule":"0 */4 * * *","successfulJobsHistoryLimit":3}}
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: metrics-collector
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: metrics-collector
+    namespace: mechanicbuddy-system
+    resourceVersion: "469054"
+    uid: d801cc63-2b3c-4172-a9b6-d6ff1059800e
+  spec:
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 3
+    jobTemplate:
+      metadata:
+        creationTimestamp: null
+      spec:
+        template:
+          metadata:
+            creationTimestamp: null
+          spec:
+            containers:
+            - command:
+              - /bin/sh
+              - -c
+              - |
+                echo "Triggering metrics collection..."
+                curl -X POST \
+                  -H "Authorization: Bearer $API_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  http://management-api:15568/api/analytics/collect-metrics
+                echo "Done"
+              env:
+              - name: API_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    key: api-token
+                    name: cronjob-secrets
+              image: curlimages/curl:8.5.0
+              imagePullPolicy: IfNotPresent
+              name: metrics-collector
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+            dnsPolicy: ClusterFirst
+            restartPolicy: OnFailure
+            schedulerName: default-scheduler
+            securityContext: {}
+            terminationGracePeriodSeconds: 30
+    schedule: 0 */4 * * *
+    successfulJobsHistoryLimit: 3
+    suspend: false
+  status:
+    lastScheduleTime: "2026-01-08T04:00:00Z"
+    lastSuccessfulTime: "2026-01-08T04:00:04Z"
+kind: List
+metadata:
+  resourceVersion: ""

@@ -1,0 +1,919 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: 86b0ca32c499388327336a09dc2652d28dc03a9bf999b97b3f4dd40cbd0ab339
+      cni.projectcalico.org/podIP: 10.244.230.47/32
+      cni.projectcalico.org/podIPs: 10.244.230.47/32
+      kubectl.kubernetes.io/restartedAt: "2026-01-08T05:52:06.5427506Z"
+    creationTimestamp: "2026-01-08T05:52:06Z"
+    generateName: api-temp-test-556c6c69cb-
+    labels:
+      app: mechanicbuddy-api
+      pod-template-hash: 556c6c69cb
+      tenant-id: temp-test
+      tier: lifetime
+    name: api-temp-test-556c6c69cb-q66jp
+    namespace: mb-temp-test
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: api-temp-test-556c6c69cb
+      uid: d9bccc93-b718-4fc5-bbe9-d320f82e64c5
+    resourceVersion: "491960"
+    uid: 7439438b-9036-4aa1-b5dc-3182b2cd3caa
+  spec:
+    containers:
+    - env:
+      - name: TENANT_ID
+        value: temp-test
+      - name: TENANT_TIER
+        value: lifetime
+      - name: ASPNETCORE_ENVIRONMENT
+        value: Production
+      image: ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest
+      imagePullPolicy: Always
+      name: api
+      ports:
+      - containerPort: 15567
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /app/appsettings.Secrets.json
+        name: secrets-volume
+        readOnly: true
+        subPath: appsettings.Secrets.json
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-vqss6
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    imagePullSecrets:
+    - name: ghcr-credentials
+    nodeName: k8s-worker-1
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: secrets-volume
+      secret:
+        defaultMode: 420
+        secretName: api-secrets-temp-test
+    - name: kube-api-access-vqss6
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:52:09Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:52:06Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:52:09Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:52:09Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:52:06Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://bd6245ef70c0e35a2a32497ac75ee462f17293ce71d86cea59389250ef8244cb
+      image: ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest
+      imageID: ghcr.io/d4m13n-d3v/mechanicbuddy-api@sha256:ca44a086151f013c67b919257e48ebec1ac941d808ed7709f24e5f9d04db2b19
+      lastState: {}
+      name: api
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2026-01-08T05:52:08Z"
+    hostIP: 192.168.1.101
+    hostIPs:
+    - ip: 192.168.1.101
+    phase: Running
+    podIP: 10.244.230.47
+    podIPs:
+    - ip: 10.244.230.47
+    qosClass: Burstable
+    startTime: "2026-01-08T05:52:06Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      cni.projectcalico.org/containerID: bfc76d9c2f6f6418373339422613e01f80f8a378aa3d59a07e2ed40fe8924539
+      cni.projectcalico.org/podIP: 10.244.140.52/32
+      cni.projectcalico.org/podIPs: 10.244.140.52/32
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    generateName: frontend-temp-test-66d4db48f9-
+    labels:
+      app: mechanicbuddy-frontend
+      pod-template-hash: 66d4db48f9
+      tenant-id: temp-test
+    name: frontend-temp-test-66d4db48f9-sl68l
+    namespace: mb-temp-test
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: frontend-temp-test-66d4db48f9
+      uid: de9953a5-6d33-43c4-81bc-d7d284ba57cc
+    resourceVersion: "491582"
+    uid: 347a9026-80fb-45da-9ad1-e1fca5043e5b
+  spec:
+    containers:
+    - env:
+      - name: TENANT_ID
+        value: temp-test
+      - name: NODE_ENV
+        value: production
+      envFrom:
+      - secretRef:
+          name: frontend-secrets-temp-test
+      image: ghcr.io/d4m13n-d3v/mechanicbuddy-web:latest
+      imagePullPolicy: Always
+      name: frontend
+      ports:
+      - containerPort: 3000
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 250m
+          memory: 256Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-wd9qt
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    imagePullSecrets:
+    - name: ghcr-credentials
+    nodeName: k8s-worker-2
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-wd9qt
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:49:58Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:49:07Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:49:58Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:49:58Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2026-01-08T05:49:07Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://f0460132d22c9795af5fe209309524150e0c915d2466b4fcbfdce8561ad91e47
+      image: ghcr.io/d4m13n-d3v/mechanicbuddy-web:latest
+      imageID: ghcr.io/d4m13n-d3v/mechanicbuddy-web@sha256:cccf3f00165a6bdec7371d128c084abdc4d8dc4d61382faf392eef997e9c6515
+      lastState: {}
+      name: frontend
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2026-01-08T05:49:58Z"
+    hostIP: 192.168.1.102
+    hostIPs:
+    - ip: 192.168.1.102
+    phase: Running
+    podIP: 10.244.140.52
+    podIPs:
+    - ip: 10.244.140.52
+    qosClass: Burstable
+    startTime: "2026-01-08T05:49:07Z"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    labels:
+      app: mechanicbuddy-api
+      tenant-id: temp-test
+    name: api-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491402"
+    uid: e87104a8-9d33-4776-9239-9dbcfa8d2e8e
+  spec:
+    clusterIP: 10.103.208.222
+    clusterIPs:
+    - 10.103.208.222
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 15567
+    selector:
+      app: mechanicbuddy-api
+      tenant-id: temp-test
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    labels:
+      app: mechanicbuddy-frontend
+      tenant-id: temp-test
+    name: frontend-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491406"
+    uid: ca1e7097-0a77-4d4f-a867-66ba9d0ec718
+  spec:
+    clusterIP: 10.99.8.49
+    clusterIPs:
+    - 10.99.8.49
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 3000
+    selector:
+      app: mechanicbuddy-frontend
+      tenant-id: temp-test
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "2"
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    generation: 2
+    labels:
+      app: mechanicbuddy-api
+      tenant-id: temp-test
+      tier: lifetime
+    name: api-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491974"
+    uid: a7a06b39-bd85-43d1-9699-97971506f655
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: mechanicbuddy-api
+        tenant-id: temp-test
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-01-08T05:52:06.5427506Z"
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-api
+          tenant-id: temp-test
+          tier: lifetime
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: temp-test
+          - name: TENANT_TIER
+            value: lifetime
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest
+          imagePullPolicy: Always
+          name: api
+          ports:
+          - containerPort: 15567
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/appsettings.Secrets.json
+            name: secrets-volume
+            readOnly: true
+            subPath: appsettings.Secrets.json
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: secrets-volume
+          secret:
+            defaultMode: 420
+            secretName: api-secrets-temp-test
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-01-08T05:49:22Z"
+      lastUpdateTime: "2026-01-08T05:49:22Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-01-08T05:49:06Z"
+      lastUpdateTime: "2026-01-08T05:52:09Z"
+      message: ReplicaSet "api-temp-test-556c6c69cb" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy-frontend
+      tenant-id: temp-test
+      tier: free
+    name: frontend-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491586"
+    uid: 95879e6e-414a-43e4-97f8-90552f7950c1
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: mechanicbuddy-frontend
+        tenant-id: temp-test
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-frontend
+          tenant-id: temp-test
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: temp-test
+          - name: NODE_ENV
+            value: production
+          envFrom:
+          - secretRef:
+              name: frontend-secrets-temp-test
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-web:latest
+          imagePullPolicy: Always
+          name: frontend
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-01-08T05:49:58Z"
+      lastUpdateTime: "2026-01-08T05:49:58Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-01-08T05:49:07Z"
+      lastUpdateTime: "2026-01-08T05:49:58Z"
+      message: ReplicaSet "frontend-temp-test-66d4db48f9" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "2"
+    creationTimestamp: "2026-01-08T05:52:06Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy-api
+      pod-template-hash: 556c6c69cb
+      tenant-id: temp-test
+      tier: lifetime
+    name: api-temp-test-556c6c69cb
+    namespace: mb-temp-test
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: api-temp-test
+      uid: a7a06b39-bd85-43d1-9699-97971506f655
+    resourceVersion: "491963"
+    uid: d9bccc93-b718-4fc5-bbe9-d320f82e64c5
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: mechanicbuddy-api
+        pod-template-hash: 556c6c69cb
+        tenant-id: temp-test
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-01-08T05:52:06.5427506Z"
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-api
+          pod-template-hash: 556c6c69cb
+          tenant-id: temp-test
+          tier: lifetime
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: temp-test
+          - name: TENANT_TIER
+            value: lifetime
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest
+          imagePullPolicy: Always
+          name: api
+          ports:
+          - containerPort: 15567
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/appsettings.Secrets.json
+            name: secrets-volume
+            readOnly: true
+            subPath: appsettings.Secrets.json
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: secrets-volume
+          secret:
+            defaultMode: 420
+            secretName: api-secrets-temp-test
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    generation: 2
+    labels:
+      app: mechanicbuddy-api
+      pod-template-hash: 74dc76fd7
+      tenant-id: temp-test
+    name: api-temp-test-74dc76fd7
+    namespace: mb-temp-test
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: api-temp-test
+      uid: a7a06b39-bd85-43d1-9699-97971506f655
+    resourceVersion: "491973"
+    uid: 4e2ae173-7f20-41bf-8e2c-e22d9009e95c
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app: mechanicbuddy-api
+        pod-template-hash: 74dc76fd7
+        tenant-id: temp-test
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-api
+          pod-template-hash: 74dc76fd7
+          tenant-id: temp-test
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: temp-test
+          - name: TENANT_TIER
+            value: free
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest
+          imagePullPolicy: Always
+          name: api
+          ports:
+          - containerPort: 15567
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/appsettings.Secrets.json
+            name: secrets-volume
+            readOnly: true
+            subPath: appsettings.Secrets.json
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: secrets-volume
+          secret:
+            defaultMode: 420
+            secretName: api-secrets-temp-test
+  status:
+    observedGeneration: 2
+    replicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy-frontend
+      pod-template-hash: 66d4db48f9
+      tenant-id: temp-test
+    name: frontend-temp-test-66d4db48f9
+    namespace: mb-temp-test
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: frontend-temp-test
+      uid: 95879e6e-414a-43e4-97f8-90552f7950c1
+    resourceVersion: "491585"
+    uid: de9953a5-6d33-43c4-81bc-d7d284ba57cc
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: mechanicbuddy-frontend
+        pod-template-hash: 66d4db48f9
+        tenant-id: temp-test
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-frontend
+          pod-template-hash: 66d4db48f9
+          tenant-id: temp-test
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: temp-test
+          - name: NODE_ENV
+            value: production
+          envFrom:
+          - secretRef:
+              name: frontend-secrets-temp-test
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-web:latest
+          imagePullPolicy: Always
+          name: frontend
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIIA9iD9L9x67owDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNjAxMDYwNzE5MTlaFw0zNjAxMDQwNzI0MTlaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQC+9LXiJnRKrm09KPJBu6vTWfxbsG/qsln6IoheZn36FWsqjKfnizg0PJI/
+      cwwypkg33etMCQBBDKKW/fi4l4CbzlxkHBftyIV6njfBaB/Yy1PWE70cn2aKJKUg
+      qIg1B5fwwCeHHjaWeElpCTN/F07Ik8p5Q12BXfZ669hAc7KDFd96K1ZXCIzfa8SQ
+      ceAaFszPcz/+/4fH6Bc5SxJueNrBdqxcDR3pBkELGTRaRUPEjOY/ne6M7jtbxXBh
+      A+nolUrGIdHSZ+om1C2R3wGJHUt959qRCp4ctRuKYs0J4fpE7/YGobgIcFWY6KJp
+      AM/ZNc5QowfHYvFbjuIsSpLpShCfAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQ+OSDPt+yZlUQkjhcx3cX2KpMpiDAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQAQ8kAsXKX8
+      yktIhrWXnYoek7ulA3zEJQRWI1jcfjJPZLt0eOEaa4xlgm8Bjtozr/UikkuHqk6T
+      ysyHzhDhHbmYm8TTP2xobnFwy+VgRCd3GBsx9UEJTd9kBozP5HwWGv1quSXbGNAP
+      uU83z7FNa0bhspDBczsIoew6j5DkqWk/2JwftycQlyw/zFl5UBGtjmWvsf4yGyyr
+      Vvr4kwCEgmcmeRX3mPgQ5T+BM5VwV54QyFYdZeA7yQ89qxkVd7LD5zqVQQS7Z1Wp
+      lL8io1zSF2NRxdzs5V9pe2hNvONFQTVWmBiBSAUoARAaEFdAg+Ph5zPWcj6Zre7j
+      ZrVs+rkCBYxe
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    name: kube-root-ca.crt
+    namespace: mb-temp-test
+    resourceVersion: "491370"
+    uid: 13cd37bb-2868-4fab-a918-9aef5dff9b21
+- apiVersion: v1
+  data:
+    appsettings.Secrets.json: ewogICJQZGZEaXJlY3RvcnkiOiAiL3Zhci9tZWNoYW5pY2J1ZGR5L3BkZiIsCiAgIlB1cHBldGVlclBhdGgiOiAiL29wdC9wdXBwZXRlZXIiLAogICJKd3RPcHRpb25zIjogewogICAgIlNlY3JldCI6ICJQcm9kdWN0aW9uSnd0U2VjcmV0S2V5TWluaW11bTMyQ2hhcmFjdGVycyEiLAogICAgIkNvbnN1bWVyU2VjcmV0IjogIlByb2R1Y3Rpb25Kd3RTZWNyZXRLZXlNaW5pbXVtMzJDaGFyYWN0ZXJzISIKICB9LAogICJEYk9wdGlvbnMiOiB7CiAgICAiSG9zdCI6ICJtZWNoYW5pY2J1ZGR5LW1hbmFnZW1lbnQtZGItcncubWVjaGFuaWNidWRkeS1zeXN0ZW0uc3ZjLmNsdXN0ZXIubG9jYWwiLAogICAgIlBvcnQiOiA1NDMyLAogICAgIlVzZXJJZCI6ICJtYW5hZ2VtZW50IiwKICAgICJQYXNzd29yZCI6ICJTaW1wbGVQYXNzd29yZDEyMyIsCiAgICAiTmFtZSI6ICJtZWNoYW5pY2J1ZGR5LXRlbXAtdGVzdCIsCiAgICAiU2NoZW1hIjogImRvbWFpbiIsCiAgICAiTXVsdGlUZW5hbmN5IjogewogICAgICAiRW5hYmxlZCI6IGZhbHNlLAogICAgICAiVGVuYW50SWQiOiAidGVtcC10ZXN0IgogICAgfQogIH0sCiAgIlNtdHBPcHRpb25zIjogewogICAgIkhvc3QiOiAic210cC5yZXNlbmQuY29tIiwKICAgICJQb3J0IjogIjU4NyIsCiAgICAiVXNlciI6ICJyZXNlbmQiLAogICAgIlBhc3N3b3JkIjogInJlX0hYb28xSFpLX0JkTE5rMnNOblNIdFBvWVpFZUE0RlJwVSIKICB9LAogICJDb3JzIjogewogICAgIk1vZGUiOiAib3BlbiIsCiAgICAiQXBwSG9zdCI6ICJ0ZW1wLXRlc3QubWVjaGFuaWNidWRkeS5hcHAiCiAgfQp9
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    labels:
+      app: mechanicbuddy-api
+      tenant-id: temp-test
+    name: api-secrets-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491373"
+    uid: c6af5ddf-5061-41c6-b83e-893b05851f2c
+  type: Opaque
+- apiVersion: v1
+  data:
+    API_URL: aHR0cDovL2FwaS10ZW1wLXRlc3Q6ODA=
+    NEXT_PUBLIC_API_URL: aHR0cHM6Ly90ZW1wLXRlc3QubWVjaGFuaWNidWRkeS5hcHAvYXBp
+    NEXT_PUBLIC_SESSION_TIMEOUT: MzYwMA==
+    SERVER_SECRET: UHJvZHVjdGlvbkp3dFNlY3JldEtleU1pbmltdW0zMkNoYXJhY3RlcnMh
+    SESSION_SECRET: YnIrSVkxbVloVTJvdEpCb2dyUG9CR3VRTytYOFQ1WkZpZzVYakFXUldUWT0=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    labels:
+      app: mechanicbuddy-frontend
+      tenant-id: temp-test
+    name: frontend-secrets-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491374"
+    uid: 69733050-0469-4395-aa05-a5c7cad604a3
+  type: Opaque
+- apiVersion: v1
+  data:
+    .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7InVzZXJuYW1lIjoiZDRtMTNuLWQzdiIsInBhc3N3b3JkIjoiZ2hwXzh4SzJjSVBmY3BCR0xETm9JcDNYT1pVZ0hPRnFhSDJURVNFNiIsImVtYWlsIjoiZGFtaWVub3N0bGVyMUBvdXRsb29rLmNvbSIsImF1dGgiOiJaRFJ0TVROdUxXUXpkanBuYUhCZk9IaExNbU5KVUdaamNFSkhURVJPYjBsd00xaFBXbFZuU0U5R2NXRklNbFJGVTBVMiJ9fX0=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T05:49:06Z"
+    labels:
+      app: mechanicbuddy
+      copied-from-namespace: mechanicbuddy-system
+      copied-from-secret: ghcr-credentials
+    name: ghcr-credentials
+    namespace: mb-temp-test
+    resourceVersion: "491372"
+    uid: 850a23a9-3fb8-4f75-8214-12e7e41b7cf7
+  type: kubernetes.io/dockerconfigjson
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZIRENDQkFTZ0F3SUJBZ0lTQlFueFVuSkdoeDZmMTJIT0xlSmZBdG83TUEwR0NTcUdTSWIzRFFFQkN3VUEKTURNeEN6QUpCZ05WQkFZVEFsVlRNUll3RkFZRFZRUUtFdzFNWlhRbmN5QkZibU55ZVhCME1Rd3dDZ1lEVlFRRApFd05TTVRNd0hoY05Nall3TVRBMk1qQXpNakUwV2hjTk1qWXdOREEyTWpBek1qRXpXakFjTVJvd0dBWURWUVFECkV4RnRaV05vWVc1cFkySjFaR1I1TG1Gd2NEQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0MKZ2dFQkFNZm5hZXArUTdDWGRWcTZwdExNVnIxWWFUUDF0d0dmTGcwakhFdnBPdEVaYVVxQ3NxYXFQWXV5TFdMNwpKWkdaQ25EcE91N1FyM0RoVU9jekVUdXcwU2hUUjM1U2puQjhiMmZvOXhuWFpyNzFWK1JMZ0ZubW9EL2JFR3F4Clk1RDcwOHhhbThTZEt2TTFKVkVmWGRIOEpFbUNKczA2aHRZcVJMMXNBR0daNEM5aVRYNWtEeEZJRStqT2F6NmUKai9jQjcydTYvZTFoRkhJZ1d5Y1QxK3djZXZ3OUxQWWgwYkV1MzZEZmdRNmIxUlBPUTRVRytzUWVVbzV5YmlmYgowTjVoR2s0NzFXNW1lNXpaSFF0WnU2d3lsL3RpUHY0eWN0cnQzanNCZU9PUHFZTFRvNzU5b3k5ZG84b0Y2L0VECnJZWGR2UkRIWVE3NVNoaHBFZG91bThrakRZa0NBd0VBQWFPQ0FqOHdnZ0k3TUE0R0ExVWREd0VCL3dRRUF3SUYKb0RBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBZApCZ05WSFE0RUZnUVU3N3pKTnBXaWtUQ0w4QmNyZWRvZWpTVlRrNVl3SHdZRFZSMGpCQmd3Rm9BVTU2dWZEeXd6Cm9GUFRYazk0eUxLRURqdldrak13TXdZSUt3WUJCUVVIQVFFRUp6QWxNQ01HQ0NzR0FRVUZCekFDaGhkb2RIUncKT2k4dmNqRXpMbWt1YkdWdVkzSXViM0puTHpBeEJnTlZIUkVFS2pBb2doTXFMbTFsWTJoaGJtbGpZblZrWkhrdQpZWEJ3Z2hGdFpXTm9ZVzVwWTJKMVpHUjVMbUZ3Y0RBVEJnTlZIU0FFRERBS01BZ0dCbWVCREFFQ0FUQXVCZ05WCkhSOEVKekFsTUNPZ0lhQWZoaDFvZEhSd09pOHZjakV6TG1NdWJHVnVZM0l1YjNKbkx6WXdMbU55YkRDQ0FRMEcKQ2lzR0FRUUIxbmtDQkFJRWdmNEVnZnNBK1FCK0FPTWpqZktOb29qZ3F1Q3M4UHFReVlYd3RyLzEwcVVuc0FIOApIRVJZeExib0FBQUJtNVU0S2FzQUNBQUFCUUF1Z002ZEJBTUFSekJGQWlCZTh6R3U1bzdQMkllZ3c1NysvQkQvCm04NUlBeEdnUWJOMnpGT3B2ZjN6andJaEFNekFQS2xPWlhrRXRXdXZrSFJ6ZXdZNDNweElEMms3aURFTWMreUsKNE5Ma0FIY0FEbGVVdlBPdXFUNHpHeXlaQjdQM2tOK2J3ajF4TWlYZElha2xyR0hGVGlFQUFBR2JsVGd3TUFBQQpCQU1BU0RCR0FpRUEvaXNKLzhjblNwTUlnaE9hcTNoOHVUNEc1bllJeVMzcW9WVXQ3SDdkMVhVQ0lRQ0FwZ2ozCmZSOWViUmYvc3NoY1ZuaGJzYnhKcko5SkI2bzlnQXdwSU1OdmFqQU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUEKZXptdTJVS3ljbndranhlOHludzUzOTdhdGNpbHFYYTJVUEx3RVdiNGU2QTJlUWlibkRQZkN0anoxaTJNNFZEKwprRUpHRkFlcWQ2cjNNSlN5TG5WTUNVWGRXNE54NXFub3V0bUpPOEpHbzViemhvMjFmekllSjZHa0daSWhkbDNBCjdob0NTekNjU042Mmx5S05rZlh1UC9EWWpHZmtXODJXRVVEK2JBMGlZOVRDdTNQRTFaSVowdS9Vd0NpVis2cmMKYW1nem9NTW1GeUlPVXRyUmIzc0t4SFBKQU9OcWRDUUZpWFFHYlhabjFXbHczSzJ6cFJFV0gvTlBkWTdrNVFlUwpPbEhkNUwyaHduSHQrRnp6bzNTTUVCTzRaNmUyM1JKNW5YZ3ZQSFlieERpSHBkZERMbEFtWXUwNURqTzBCVmNiCi9LOEVDVGl5YzFqRWE4MFZ3QXBpb2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCi0tLS0tQkVHSU4gQ0VSVElGSUNBVEUtLS0tLQpNSUlGQlRDQ0F1MmdBd0lCQWdJUVdnRHlFdGpVdElEemtrRlg2aW1EQlRBTkJna3Foa2lHOXcwQkFRc0ZBREJQCk1Rc3dDUVlEVlFRR0V3SlZVekVwTUNjR0ExVUVDaE1nU1c1MFpYSnVaWFFnVTJWamRYSnBkSGtnVW1WelpXRnkKWTJnZ1IzSnZkWEF4RlRBVEJnTlZCQU1UREVsVFVrY2dVbTl2ZENCWU1UQWVGdzB5TkRBek1UTXdNREF3TURCYQpGdzB5TnpBek1USXlNelU1TlRsYU1ETXhDekFKQmdOVkJBWVRBbFZUTVJZd0ZBWURWUVFLRXcxTVpYUW5jeUJGCmJtTnllWEIwTVF3d0NnWURWUVFERXdOU01UTXdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUsKQW9JQkFRQ2xaM0NOMEZhQlpCVVhZYzI1QnRTdEdaQ01KbEEzbUJaamtsVGIyY3lFQlpQczArd0lHNkJnVVVOSQpmU3ZIU0phZXRDM2FuY2duTzFlaG42dncxZzdVRGpES2I1dXgwZGFrblRJK1dFNDFiMFZZYUhFWC9EN1lYWUtnCkw3SlJiTEFhWGJoWnpqVmx5SXVocnhBMy8rT2NYY0pKRnpUL2pDdUxqZkM4Y1N5VERCMEZ4THJIemFySlhuelIKeVFIM25BUDIvQXBkOU5wNzV0dDJRbkRyOUUwaTJnQjNiOWJKWHhmOTJuVXVwVmNNOXVwY3R1QnpwV2pQb1hUaQpkWUorRUovQjlhTHJBZWs0c1FwRXpOUENpZlZKTllJS05MTWM2WWpDUjA2Q0RnbzI4RWRQaXZFcEJIWGF6ZUdhClhQOWVuWmlWdXBwRDBFcWlGd1VCQkREVE1yT1BBZ01CQUFHamdmZ3dnZlV3RGdZRFZSMFBBUUgvQkFRREFnR0cKTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQ0JnZ3JCZ0VGQlFjREFUQVNCZ05WSFJNQkFmOEVDREFHQVFILwpBZ0VBTUIwR0ExVWREZ1FXQkJUbnE1OFBMRE9nVTlOZVQzaklzb1FPTzlhU016QWZCZ05WSFNNRUdEQVdnQlI1CnRGbm1lN2JsNUFGemdBaUl5QnBZOXVtYmJqQXlCZ2dyQmdFRkJRY0JBUVFtTUNRd0lnWUlLd1lCQlFVSE1BS0cKRm1oMGRIQTZMeTk0TVM1cExteGxibU55TG05eVp5OHdFd1lEVlIwZ0JBd3dDakFJQmdabmdRd0JBZ0V3SndZRApWUjBmQkNBd0hqQWNvQnFnR0lZV2FIUjBjRG92TDNneExtTXViR1Z1WTNJdWIzSm5MekFOQmdrcWhraUc5dzBCCkFRc0ZBQU9DQWdFQVVUZFlVcUVpbXpXN1Rick95cExxQ2ZMN1ZPd1lmL1E3OU9INWNITENaZWdnZlFoRGNvbmwKazdLZ2g4YjB2aSsvWHVXdTdDTjhuL1VQZWcxdm8zRyt0YVhpcnJ5dHRoUWluQUhHd2MvVWRiT3lnSmE5enVCYwpWeXFvSDNDWFRYREluVCs4YStjM2FFVk1KMlN0K3BTbjRlZCtXa0RwOGlqc2lqdkV5RndFNDdodWxXMEx0empnCjlmT1Y1UG1yZy96eFdiUnVMK2swREJESEVKZW5uQ3NBZW43YzM1UG14N2pwbUovSHRnUmhjbnoweWpTQnZ5SXcKNkwxUUl1cGtDdjJTQk9EVC94REQzZ2ZRUXlLdjZyb1Y0RzJFaGZFeUFzV3Btb2p4akNVQ0dpeWc5N0Z2RHRtLwpOSzJMU2M5bHliS3hCNzNJMitQMkczQ2FXcHZ2cEFpSENWdTMwalc4R0N4S2RmaHNYdG5JeTJpbXNrUXFWWjJtCjBQbXhvYmIyOFR1Y3I3eEJLN0N0d3ZQcmI3OW9zN3UyWFAzTzVmOWIvSDY2R055UnJnbFJYbHJZakkxb0dZTC8KZjRJMW4vU2d1c2RhNld2QTZDMTkwa3hqVTE1WTEybUhVNCtCeHlSOWN4MmhoR1M5ZkFqTVpLSnNzMjhxeHZ6NgpBeHU0Q2FEbVJOWnBLL3BRclhGMTd5WENYa21FV2d2U09FWnk2WjlwY2JMSVZFR2NrVi9pVmVxMEFPbzJwa2c5CnA0UVJJeTB0SzJkaVJFTkxTRjJLeXNGd2JZNkIyNkJGZUZzM3Yxc1lWUmhGVzluTGtPclFWcG9yQ1MwS3labWYKd1ZEODlxU1RsbmN0TGNabklhdmpLc0tVdTFuQTFpVTB5WU1kWWVwS1I3bFdibndoZHgzZXdvaz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBeCtkcDZuNURzSmQxV3JxbTBzeFd2VmhwTS9XM0FaOHVEU01jUytrNjBSbHBTb0t5CnBxbzlpN0l0WXZzbGtaa0tjT2s2N3RDdmNPRlE1ek1STzdEUktGTkhmbEtPY0h4dlorajNHZGRtdnZWWDVFdUEKV2VhZ1A5c1FhckZqa1B2VHpGcWJ4SjBxOHpVbFVSOWQwZndrU1lJbXpUcUcxaXBFdld3QVlabmdMMkpOZm1RUApFVWdUNk01clBwNlA5d0h2YTdyOTdXRVVjaUJiSnhQWDdCeDYvRDBzOWlIUnNTN2ZvTitCRHB2VkU4NURoUWI2CnhCNVNqbkp1Sjl2UTNtRWFUanZWYm1aN25Oa2RDMW03ckRLWCsySSsvakp5MnUzZU93RjQ0NCtwZ3RPanZuMmoKTDEyanlnWHI4UU90aGQyOUVNZGhEdmxLR0drUjJpNmJ5U01OaVFJREFRQUJBb0lCQVFDQVkwMHdNTFh5dGVQRwpTTGlhREdqdEpObzBaK3lJbXg1dGk0NUI1dUpDcDJwclUzTy8vUGlZUHZCTmNQV1pCRXlqWmZmV3A2cjErWkFIClhWSUZIelBHRFc2T1lDRmhkMW5weDhMa0V1YkhZRFY1eDFBQTdWRWdrZWFDVDdtZHhVOHJJVXFIeFZWdmJFT3kKVFUzcGJtSXozK1poeXVRTXFvc0ppVkxaWElXU2lCRTIrNU1ITExhMktudXJPaUlFWTBNUHVYd0YwQ3ZXRGwrTwp5dENReDVTNktsQ3ZmdE9ZQjJqb21GVTQ3Q09rRHI2SWhJTWpXTUVsQ09OTjczNmdKTWM0N1RuR29qMGRkdDg5CnJGdUxlUzBCNEI3Z1dzYUxtdHVxcmRERG8zZ28zZDFlOWhBMGRCdVhUYUFNNng3a1lBdURqUWZaWHgvOURtd00Kd2hkTGJIYmRBb0dCQVBtUkJkWVBveFg2WXMyVEVjVmowV1MxM0YvTjBXZXp0M3RJUiswWTZWWmJ0NUFHNjZYQwo1My8wUjFoZDRYQ3g0cmc0NmNWV1RxYXZOWE5pTGpRUDVpdndUNEY2dklZSWJyTXpuZWJnSjd3ZDJQNjhrRXEwCnRabUZLQnljaDc4OXIzUllhWWdwUEwyRjBZcTNibDA4OEJTcEc3UDMyT2VrTmxZaUNuL3QzZWZ2QW9HQkFNME8KcG43b3VNY051c2wrUFdVRkJwMlBEb0RXRzJUZFYzejh0a0hEc2hwZVB0WkZhbVhRaXlpZWpqVzE0aXZrSU9xcwpzbXA0c1ZNeVplUTdydnZSRG5rOWlKRFNhY2JmRDVYejNBOEtOWGVDMVdaZ04xVUd5UWFmRkxzWUVlV2lMYkNoCnBNS2hWYTkyN1h3eUVKWUJzSWNZa2ZKVGVRMkJNV3M5aWJ2UHc2b0hBb0dCQUl0R1VibDZsSXNKWnVaTzh4WHoKZE1IOWMvVExTZGZUeGN1NU5OcXVrbG10YWEycER3MDh6akRzUkh5ZU45Zktqam85R01rV04ySnlXU1FCWU1PUgpNK1RGZ2JsQ283OHhLWVk4Z2h4OGIvQmR2K0c1bmRUek1IMXlnRVluWE9KdkxHR0RqYkY5UWZhS25id0tUajhlCmFPVSswc1VHeGpmUHZyc20yREU0c0NSbEFvR0FGSVcxMWhlMmZuMTZSell5TU0wSzkzUGMwTG9jN2NCVlJEWUsKaTVScFc4ZzQ0N3I0eGczVUQ1R215K3RUSW05bmQvVW11Zzh3T0JKZ0xqSm05ZDdiWXZqc2xRbnAralJTM0FBVwo4dzVqZ1gxL25BcGZIMHhaakNjWnJRdmdwcW5QaHREMnExLzRNbUpsckR0YWU1alpzUHVkaDdJZytHQUlzU0hzCmlmWm1MN3NDZ1lFQXR3U0VGclg5Nnc4b29hTDhZK1FYYVN3UitpRjhMaE1tMXVzQ05yNkxWZjRlM3Q1S3pHemkKWFo1TERLekw0bmRlaVUwemt1QlY2eDN1WCtLYU01R2F6KzVkYmo5aUtFRUFRV3RKS0t4cHpvY1BySW43L0FBagpKU0hVbTE1Qit1UlozSGNZNzhUY0Rrb0Q5RnVxTU5PTkdGeUZyQTdIWVF0T0JMQjlPTzRrUDVnPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    labels:
+      app: mechanicbuddy
+      copied-from: wildcard-mechanicbuddy-app-tls
+    name: tls-wildcard-mechanicbuddy-app
+    namespace: mb-temp-test
+    resourceVersion: "491409"
+    uid: 402df025-ce0c-4b53-8e68-e326f7d21aba
+  type: kubernetes.io/tls
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    creationTimestamp: "2026-01-08T05:49:07Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy
+      tenant-id: temp-test
+    name: ingress-temp-test
+    namespace: mb-temp-test
+    resourceVersion: "491566"
+    uid: be41b7f7-c8ed-4360-8ce7-196b861cc455
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: temp-test.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: api-temp-test
+              port:
+                number: 80
+          path: /api
+          pathType: Prefix
+        - backend:
+            service:
+              name: frontend-temp-test
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - temp-test.mechanicbuddy.app
+      secretName: tls-wildcard-mechanicbuddy-app
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+kind: List
+metadata:
+  resourceVersion: ""

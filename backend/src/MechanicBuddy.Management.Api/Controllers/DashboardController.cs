@@ -106,10 +106,10 @@ public class DashboardController : ControllerBase
             recentTenants = recentTenants.Select(t => new
             {
                 id = t.Id.ToString(),
-                name = t.CompanyName,
-                plan = t.Tier,
+                companyName = t.CompanyName,
+                tier = t.Tier,
                 status = t.Status,
-                joinedAt = t.CreatedAt.ToString("yyyy-MM-dd")
+                createdAt = t.CreatedAt.ToString("yyyy-MM-dd")
             }),
             revenueByMonth,
             tenantsByPlan

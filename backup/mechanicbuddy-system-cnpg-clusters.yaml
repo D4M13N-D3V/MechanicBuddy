@@ -1,0 +1,184 @@
+apiVersion: v1
+items:
+- apiVersion: postgresql.cnpg.io/v1
+  kind: Cluster
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: mechanicbuddy-system-production:postgresql.cnpg.io/Cluster:mechanicbuddy-system/mechanicbuddy-management-db
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"postgresql.cnpg.io/v1","kind":"Cluster","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"mechanicbuddy-system-production:postgresql.cnpg.io/Cluster:mechanicbuddy-system/mechanicbuddy-management-db"},"labels":{"app.kubernetes.io/component":"database","app.kubernetes.io/name":"mechanicbuddy","environment":"production"},"name":"mechanicbuddy-management-db","namespace":"mechanicbuddy-system"},"spec":{"bootstrap":{"initdb":{"database":"mechanicbuddy_management","owner":"management","secret":{"name":"management-db-credentials"}}},"instances":3,"monitoring":{"enablePodMonitor":false},"postgresql":{"parameters":{"max_connections":"100","shared_buffers":"256MB"}},"resources":{"limits":{"cpu":"2000m","memory":"2Gi"},"requests":{"cpu":"250m","memory":"512Mi"}},"storage":{"size":"50Gi","storageClass":"local-path"}}}
+    creationTimestamp: "2026-01-06T11:28:21Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/component: database
+      app.kubernetes.io/name: mechanicbuddy
+      environment: production
+    name: mechanicbuddy-management-db
+    namespace: mechanicbuddy-system
+    resourceVersion: "233822"
+    uid: 3670723e-dc85-42bc-a6ea-f9ec2a9f0d01
+  spec:
+    affinity:
+      podAntiAffinityType: preferred
+    bootstrap:
+      initdb:
+        database: mechanicbuddy_management
+        encoding: UTF8
+        localeCType: C
+        localeCollate: C
+        owner: management
+        secret:
+          name: management-db-credentials
+    enableSuperuserAccess: false
+    failoverDelay: 0
+    imageName: ghcr.io/cloudnative-pg/postgresql:16.1
+    instances: 3
+    logLevel: info
+    maxSyncReplicas: 0
+    minSyncReplicas: 0
+    monitoring:
+      customQueriesConfigMap:
+      - key: queries
+        name: cnpg-default-monitoring
+      disableDefaultQueries: false
+      enablePodMonitor: false
+    postgresGID: 26
+    postgresUID: 26
+    postgresql:
+      parameters:
+        archive_mode: "on"
+        archive_timeout: 5min
+        dynamic_shared_memory_type: posix
+        log_destination: csvlog
+        log_directory: /controller/log
+        log_filename: postgres
+        log_rotation_age: "0"
+        log_rotation_size: "0"
+        log_truncate_on_rotation: "false"
+        logging_collector: "on"
+        max_connections: "100"
+        max_parallel_workers: "32"
+        max_replication_slots: "32"
+        max_worker_processes: "32"
+        shared_buffers: 256MB
+        shared_memory_type: mmap
+        shared_preload_libraries: ""
+        ssl_max_protocol_version: TLSv1.3
+        ssl_min_protocol_version: TLSv1.3
+        wal_keep_size: 512MB
+        wal_receiver_timeout: 5s
+        wal_sender_timeout: 5s
+      syncReplicaElectionConstraint:
+        enabled: false
+    primaryUpdateMethod: restart
+    primaryUpdateStrategy: unsupervised
+    replicationSlots:
+      highAvailability:
+        enabled: true
+        slotPrefix: _cnpg_
+      updateInterval: 30
+    resources:
+      limits:
+        cpu: "2"
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    smartShutdownTimeout: 180
+    startDelay: 3600
+    stopDelay: 1800
+    storage:
+      resizeInUseVolumes: true
+      size: 50Gi
+      storageClass: local-path
+    switchoverDelay: 3600
+  status:
+    certificates:
+      clientCASecret: mechanicbuddy-management-db-ca
+      expirations:
+        mechanicbuddy-management-db-ca: 2026-04-06 11:23:21 +0000 UTC
+        mechanicbuddy-management-db-replication: 2026-04-06 11:23:21 +0000 UTC
+        mechanicbuddy-management-db-server: 2026-04-06 11:23:21 +0000 UTC
+      replicationTLSSecret: mechanicbuddy-management-db-replication
+      serverAltDNSNames:
+      - mechanicbuddy-management-db-rw
+      - mechanicbuddy-management-db-rw.mechanicbuddy-system
+      - mechanicbuddy-management-db-rw.mechanicbuddy-system.svc
+      - mechanicbuddy-management-db-r
+      - mechanicbuddy-management-db-r.mechanicbuddy-system
+      - mechanicbuddy-management-db-r.mechanicbuddy-system.svc
+      - mechanicbuddy-management-db-ro
+      - mechanicbuddy-management-db-ro.mechanicbuddy-system
+      - mechanicbuddy-management-db-ro.mechanicbuddy-system.svc
+      serverCASecret: mechanicbuddy-management-db-ca
+      serverTLSSecret: mechanicbuddy-management-db-server
+    cloudNativePGCommitHash: c7be872e
+    cloudNativePGOperatorHash: 262d86af058f59462fdccaec51231a1afd888153413f63224f60e458fcd335be
+    conditions:
+    - lastTransitionTime: "2026-01-06T11:30:01Z"
+      message: Cluster is Ready
+      reason: ClusterIsReady
+      status: "True"
+      type: Ready
+    - lastTransitionTime: "2026-01-06T11:28:41Z"
+      message: Continuous archiving is working
+      reason: ContinuousArchivingSuccess
+      status: "True"
+      type: ContinuousArchiving
+    configMapResourceVersion:
+      metrics:
+        cnpg-default-monitoring: "46757"
+    currentPrimary: mechanicbuddy-management-db-1
+    currentPrimaryTimestamp: "2026-01-06T11:28:41.579359Z"
+    healthyPVC:
+    - mechanicbuddy-management-db-1
+    - mechanicbuddy-management-db-2
+    - mechanicbuddy-management-db-3
+    instanceNames:
+    - mechanicbuddy-management-db-1
+    - mechanicbuddy-management-db-2
+    - mechanicbuddy-management-db-3
+    instances: 3
+    instancesReportedState:
+      mechanicbuddy-management-db-1:
+        isPrimary: true
+        timeLineID: 1
+      mechanicbuddy-management-db-2:
+        isPrimary: false
+        timeLineID: 1
+      mechanicbuddy-management-db-3:
+        isPrimary: false
+        timeLineID: 1
+    instancesStatus:
+      healthy:
+      - mechanicbuddy-management-db-1
+      - mechanicbuddy-management-db-2
+      - mechanicbuddy-management-db-3
+    latestGeneratedNode: 3
+    managedRolesStatus: {}
+    phase: Cluster in healthy state
+    poolerIntegrations:
+      pgBouncerIntegration: {}
+    pvcCount: 3
+    readService: mechanicbuddy-management-db-r
+    readyInstances: 3
+    secretsResourceVersion:
+      applicationSecretVersion: "229085"
+      clientCaSecretVersion: "46711"
+      replicationSecretVersion: "46717"
+      serverCaSecretVersion: "46711"
+      serverSecretVersion: "46712"
+    targetPrimary: mechanicbuddy-management-db-1
+    targetPrimaryTimestamp: "2026-01-06T11:28:22.373326Z"
+    timelineID: 1
+    topology:
+      instances:
+        mechanicbuddy-management-db-1: {}
+        mechanicbuddy-management-db-2: {}
+        mechanicbuddy-management-db-3: {}
+      nodesUsed: 2
+      successfullyExtracted: true
+    writeService: mechanicbuddy-management-db-rw
+kind: List
+metadata:
+  resourceVersion: ""

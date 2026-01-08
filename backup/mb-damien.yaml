@@ -1,0 +1,391 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "7"
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    generation: 7
+    labels:
+      app: mechanicbuddy-api
+      tenant-id: damien
+      tier: team
+    name: api-damien
+    namespace: mb-damien
+    resourceVersion: "489867"
+    uid: 8e0ba642-9049-4dbf-819b-c5882aaefa60
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: mechanicbuddy-api
+        tenant-id: damien
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-01-08T05:41:19.5910062Z"
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-api
+          tenant-id: damien
+          tier: team
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: damien
+          - name: ASPNETCORE_ENVIRONMENT
+            value: Production
+          - name: TENANT_TIER
+            value: team
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-api:latest
+          imagePullPolicy: Always
+          name: api
+          ports:
+          - containerPort: 15567
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/appsettings.Secrets.json
+            name: secrets-volume
+            readOnly: true
+            subPath: appsettings.Secrets.json
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: secrets-volume
+          secret:
+            defaultMode: 420
+            secretName: api-secrets-damien
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-01-08T04:12:26Z"
+      lastUpdateTime: "2026-01-08T04:12:26Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-01-08T04:12:16Z"
+      lastUpdateTime: "2026-01-08T05:41:22Z"
+      message: ReplicaSet "api-damien-947947cf5" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 7
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "5"
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    generation: 5
+    labels:
+      app: mechanicbuddy-frontend
+      tenant-id: damien
+      tier: free
+    name: frontend-damien
+    namespace: mb-damien
+    resourceVersion: "491193"
+    uid: 86d9627c-9b44-46da-a8bd-94b9fb91b12c
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: mechanicbuddy-frontend
+        tenant-id: damien
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-01-08T00:47:15-05:00"
+        creationTimestamp: null
+        labels:
+          app: mechanicbuddy-frontend
+          tenant-id: damien
+      spec:
+        containers:
+        - env:
+          - name: TENANT_ID
+            value: damien
+          - name: NODE_ENV
+            value: production
+          envFrom:
+          - secretRef:
+              name: frontend-secrets-damien
+          image: ghcr.io/d4m13n-d3v/mechanicbuddy-web:latest
+          imagePullPolicy: Always
+          name: frontend
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        imagePullSecrets:
+        - name: ghcr-credentials
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-01-08T04:13:03Z"
+      lastUpdateTime: "2026-01-08T04:13:03Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-01-08T04:12:16Z"
+      lastUpdateTime: "2026-01-08T05:48:05Z"
+      message: ReplicaSet "frontend-damien-5f5d895665" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 5
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    labels:
+      app: mechanicbuddy-api
+      tenant-id: damien
+    name: api-damien
+    namespace: mb-damien
+    resourceVersion: "471544"
+    uid: 33b89f25-8ca2-40fe-b48e-b3f7495ec3a4
+  spec:
+    clusterIP: 10.106.188.118
+    clusterIPs:
+    - 10.106.188.118
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 15567
+    selector:
+      app: mechanicbuddy-api
+      tenant-id: damien
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    labels:
+      app: mechanicbuddy-frontend
+      tenant-id: damien
+    name: frontend-damien
+    namespace: mb-damien
+    resourceVersion: "471548"
+    uid: db42e742-1070-476d-8f22-4a253c195a68
+  spec:
+    clusterIP: 10.99.184.37
+    clusterIPs:
+    - 10.99.184.37
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 3000
+    selector:
+      app: mechanicbuddy-frontend
+      tenant-id: damien
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIIA9iD9L9x67owDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNjAxMDYwNzE5MTlaFw0zNjAxMDQwNzI0MTlaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQC+9LXiJnRKrm09KPJBu6vTWfxbsG/qsln6IoheZn36FWsqjKfnizg0PJI/
+      cwwypkg33etMCQBBDKKW/fi4l4CbzlxkHBftyIV6njfBaB/Yy1PWE70cn2aKJKUg
+      qIg1B5fwwCeHHjaWeElpCTN/F07Ik8p5Q12BXfZ669hAc7KDFd96K1ZXCIzfa8SQ
+      ceAaFszPcz/+/4fH6Bc5SxJueNrBdqxcDR3pBkELGTRaRUPEjOY/ne6M7jtbxXBh
+      A+nolUrGIdHSZ+om1C2R3wGJHUt959qRCp4ctRuKYs0J4fpE7/YGobgIcFWY6KJp
+      AM/ZNc5QowfHYvFbjuIsSpLpShCfAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQ+OSDPt+yZlUQkjhcx3cX2KpMpiDAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQAQ8kAsXKX8
+      yktIhrWXnYoek7ulA3zEJQRWI1jcfjJPZLt0eOEaa4xlgm8Bjtozr/UikkuHqk6T
+      ysyHzhDhHbmYm8TTP2xobnFwy+VgRCd3GBsx9UEJTd9kBozP5HwWGv1quSXbGNAP
+      uU83z7FNa0bhspDBczsIoew6j5DkqWk/2JwftycQlyw/zFl5UBGtjmWvsf4yGyyr
+      Vvr4kwCEgmcmeRX3mPgQ5T+BM5VwV54QyFYdZeA7yQ89qxkVd7LD5zqVQQS7Z1Wp
+      lL8io1zSF2NRxdzs5V9pe2hNvONFQTVWmBiBSAUoARAaEFdAg+Ph5zPWcj6Zre7j
+      ZrVs+rkCBYxe
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-01-08T04:12:15Z"
+    name: kube-root-ca.crt
+    namespace: mb-damien
+    resourceVersion: "471508"
+    uid: 8d09cb52-3f76-4de7-a93f-9fe41d34bbb6
+- apiVersion: v1
+  data:
+    appsettings.Secrets.json: ewogICJQZGZEaXJlY3RvcnkiOiAiL3Zhci9tZWNoYW5pY2J1ZGR5L3BkZiIsCiAgIlB1cHBldGVlclBhdGgiOiAiL29wdC9wdXBwZXRlZXIiLAogICJKd3RPcHRpb25zIjogewogICAgIlNlY3JldCI6ICJQcm9kdWN0aW9uSnd0U2VjcmV0S2V5TWluaW11bTMyQ2hhcmFjdGVycyEiLAogICAgIkNvbnN1bWVyU2VjcmV0IjogIlByb2R1Y3Rpb25Kd3RTZWNyZXRLZXlNaW5pbXVtMzJDaGFyYWN0ZXJzISIKICB9LAogICJEYk9wdGlvbnMiOiB7CiAgICAiSG9zdCI6ICJtZWNoYW5pY2J1ZGR5LW1hbmFnZW1lbnQtZGItcncubWVjaGFuaWNidWRkeS1zeXN0ZW0uc3ZjLmNsdXN0ZXIubG9jYWwiLAogICAgIlBvcnQiOiA1NDMyLAogICAgIlVzZXJJZCI6ICJtYW5hZ2VtZW50IiwKICAgICJQYXNzd29yZCI6ICJTaW1wbGVQYXNzd29yZDEyMyIsCiAgICAiTmFtZSI6ICJtZWNoYW5pY2J1ZGR5LWRhbWllbiIsCiAgICAiU2NoZW1hIjogImRvbWFpbiIsCiAgICAiTXVsdGlUZW5hbmN5IjogewogICAgICAiRW5hYmxlZCI6IGZhbHNlLAogICAgICAiVGVuYW50SWQiOiAiZGFtaWVuIgogICAgfQogIH0sCiAgIlNtdHBPcHRpb25zIjogewogICAgIkhvc3QiOiAic210cC5yZXNlbmQuY29tIiwKICAgICJQb3J0IjogIjU4NyIsCiAgICAiVXNlciI6ICJyZXNlbmQiLAogICAgIlBhc3N3b3JkIjogInJlX0hYb28xSFpLX0JkTE5rMnNOblNIdFBvWVpFZUE0RlJwVSIKICB9LAogICJDb3JzIjogewogICAgIk1vZGUiOiAib3BlbiIsCiAgICAiQXBwSG9zdCI6ICJkYW1pZW4ubWVjaGFuaWNidWRkeS5hcHAiCiAgfQp9
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T04:12:15Z"
+    labels:
+      app: mechanicbuddy-api
+      tenant-id: damien
+    name: api-secrets-damien
+    namespace: mb-damien
+    resourceVersion: "471510"
+    uid: 3ca2075e-b680-4517-8fd9-738ffc01f187
+  type: Opaque
+- apiVersion: v1
+  data:
+    API_URL: aHR0cDovL2FwaS1kYW1pZW46ODA=
+    NEXT_PUBLIC_API_URL: aHR0cHM6Ly9kYW1pZW4ubWVjaGFuaWNidWRkeS5hcHAvYXBp
+    NEXT_PUBLIC_SESSION_TIMEOUT: MzYwMA==
+    SERVER_SECRET: UHJvZHVjdGlvbkp3dFNlY3JldEtleU1pbmltdW0zMkNoYXJhY3RlcnMh
+    SESSION_SECRET: cVUyUUxVb1IvMHVZL1RDMEVzOFgveTlMVVdMRXc5eEluamJ2OTJtaHplRT0=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T04:12:15Z"
+    labels:
+      app: mechanicbuddy-frontend
+      tenant-id: damien
+    name: frontend-secrets-damien
+    namespace: mb-damien
+    resourceVersion: "471511"
+    uid: e0f4a836-9855-4faa-9d15-bda8a96f361b
+  type: Opaque
+- apiVersion: v1
+  data:
+    .dockerconfigjson: eyJhdXRocyI6eyJnaGNyLmlvIjp7InVzZXJuYW1lIjoiZDRtMTNuLWQzdiIsInBhc3N3b3JkIjoiZ2hwXzh4SzJjSVBmY3BCR0xETm9JcDNYT1pVZ0hPRnFhSDJURVNFNiIsImVtYWlsIjoiZGFtaWVub3N0bGVyMUBvdXRsb29rLmNvbSIsImF1dGgiOiJaRFJ0TVROdUxXUXpkanBuYUhCZk9IaExNbU5KVUdaamNFSkhURVJPYjBsd00xaFBXbFZuU0U5R2NXRklNbFJGVTBVMiJ9fX0=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T04:12:15Z"
+    labels:
+      app: mechanicbuddy
+      copied-from-namespace: mechanicbuddy-system
+      copied-from-secret: ghcr-credentials
+    name: ghcr-credentials
+    namespace: mb-damien
+    resourceVersion: "471509"
+    uid: 5965bb21-736e-40a7-b6ac-7037d689dacd
+  type: kubernetes.io/dockerconfigjson
+- apiVersion: v1
+  data:
+    tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZIRENDQkFTZ0F3SUJBZ0lTQlFueFVuSkdoeDZmMTJIT0xlSmZBdG83TUEwR0NTcUdTSWIzRFFFQkN3VUEKTURNeEN6QUpCZ05WQkFZVEFsVlRNUll3RkFZRFZRUUtFdzFNWlhRbmN5QkZibU55ZVhCME1Rd3dDZ1lEVlFRRApFd05TTVRNd0hoY05Nall3TVRBMk1qQXpNakUwV2hjTk1qWXdOREEyTWpBek1qRXpXakFjTVJvd0dBWURWUVFECkV4RnRaV05vWVc1cFkySjFaR1I1TG1Gd2NEQ0NBU0l3RFFZSktvWklodmNOQVFFQkJRQURnZ0VQQURDQ0FRb0MKZ2dFQkFNZm5hZXArUTdDWGRWcTZwdExNVnIxWWFUUDF0d0dmTGcwakhFdnBPdEVaYVVxQ3NxYXFQWXV5TFdMNwpKWkdaQ25EcE91N1FyM0RoVU9jekVUdXcwU2hUUjM1U2puQjhiMmZvOXhuWFpyNzFWK1JMZ0ZubW9EL2JFR3F4Clk1RDcwOHhhbThTZEt2TTFKVkVmWGRIOEpFbUNKczA2aHRZcVJMMXNBR0daNEM5aVRYNWtEeEZJRStqT2F6NmUKai9jQjcydTYvZTFoRkhJZ1d5Y1QxK3djZXZ3OUxQWWgwYkV1MzZEZmdRNmIxUlBPUTRVRytzUWVVbzV5YmlmYgowTjVoR2s0NzFXNW1lNXpaSFF0WnU2d3lsL3RpUHY0eWN0cnQzanNCZU9PUHFZTFRvNzU5b3k5ZG84b0Y2L0VECnJZWGR2UkRIWVE3NVNoaHBFZG91bThrakRZa0NBd0VBQWFPQ0FqOHdnZ0k3TUE0R0ExVWREd0VCL3dRRUF3SUYKb0RBZEJnTlZIU1VFRmpBVUJnZ3JCZ0VGQlFjREFRWUlLd1lCQlFVSEF3SXdEQVlEVlIwVEFRSC9CQUl3QURBZApCZ05WSFE0RUZnUVU3N3pKTnBXaWtUQ0w4QmNyZWRvZWpTVlRrNVl3SHdZRFZSMGpCQmd3Rm9BVTU2dWZEeXd6Cm9GUFRYazk0eUxLRURqdldrak13TXdZSUt3WUJCUVVIQVFFRUp6QWxNQ01HQ0NzR0FRVUZCekFDaGhkb2RIUncKT2k4dmNqRXpMbWt1YkdWdVkzSXViM0puTHpBeEJnTlZIUkVFS2pBb2doTXFMbTFsWTJoaGJtbGpZblZrWkhrdQpZWEJ3Z2hGdFpXTm9ZVzVwWTJKMVpHUjVMbUZ3Y0RBVEJnTlZIU0FFRERBS01BZ0dCbWVCREFFQ0FUQXVCZ05WCkhSOEVKekFsTUNPZ0lhQWZoaDFvZEhSd09pOHZjakV6TG1NdWJHVnVZM0l1YjNKbkx6WXdMbU55YkRDQ0FRMEcKQ2lzR0FRUUIxbmtDQkFJRWdmNEVnZnNBK1FCK0FPTWpqZktOb29qZ3F1Q3M4UHFReVlYd3RyLzEwcVVuc0FIOApIRVJZeExib0FBQUJtNVU0S2FzQUNBQUFCUUF1Z002ZEJBTUFSekJGQWlCZTh6R3U1bzdQMkllZ3c1NysvQkQvCm04NUlBeEdnUWJOMnpGT3B2ZjN6andJaEFNekFQS2xPWlhrRXRXdXZrSFJ6ZXdZNDNweElEMms3aURFTWMreUsKNE5Ma0FIY0FEbGVVdlBPdXFUNHpHeXlaQjdQM2tOK2J3ajF4TWlYZElha2xyR0hGVGlFQUFBR2JsVGd3TUFBQQpCQU1BU0RCR0FpRUEvaXNKLzhjblNwTUlnaE9hcTNoOHVUNEc1bllJeVMzcW9WVXQ3SDdkMVhVQ0lRQ0FwZ2ozCmZSOWViUmYvc3NoY1ZuaGJzYnhKcko5SkI2bzlnQXdwSU1OdmFqQU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FRRUEKZXptdTJVS3ljbndranhlOHludzUzOTdhdGNpbHFYYTJVUEx3RVdiNGU2QTJlUWlibkRQZkN0anoxaTJNNFZEKwprRUpHRkFlcWQ2cjNNSlN5TG5WTUNVWGRXNE54NXFub3V0bUpPOEpHbzViemhvMjFmekllSjZHa0daSWhkbDNBCjdob0NTekNjU042Mmx5S05rZlh1UC9EWWpHZmtXODJXRVVEK2JBMGlZOVRDdTNQRTFaSVowdS9Vd0NpVis2cmMKYW1nem9NTW1GeUlPVXRyUmIzc0t4SFBKQU9OcWRDUUZpWFFHYlhabjFXbHczSzJ6cFJFV0gvTlBkWTdrNVFlUwpPbEhkNUwyaHduSHQrRnp6bzNTTUVCTzRaNmUyM1JKNW5YZ3ZQSFlieERpSHBkZERMbEFtWXUwNURqTzBCVmNiCi9LOEVDVGl5YzFqRWE4MFZ3QXBpb2c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCi0tLS0tQkVHSU4gQ0VSVElGSUNBVEUtLS0tLQpNSUlGQlRDQ0F1MmdBd0lCQWdJUVdnRHlFdGpVdElEemtrRlg2aW1EQlRBTkJna3Foa2lHOXcwQkFRc0ZBREJQCk1Rc3dDUVlEVlFRR0V3SlZVekVwTUNjR0ExVUVDaE1nU1c1MFpYSnVaWFFnVTJWamRYSnBkSGtnVW1WelpXRnkKWTJnZ1IzSnZkWEF4RlRBVEJnTlZCQU1UREVsVFVrY2dVbTl2ZENCWU1UQWVGdzB5TkRBek1UTXdNREF3TURCYQpGdzB5TnpBek1USXlNelU1TlRsYU1ETXhDekFKQmdOVkJBWVRBbFZUTVJZd0ZBWURWUVFLRXcxTVpYUW5jeUJGCmJtTnllWEIwTVF3d0NnWURWUVFERXdOU01UTXdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUsKQW9JQkFRQ2xaM0NOMEZhQlpCVVhZYzI1QnRTdEdaQ01KbEEzbUJaamtsVGIyY3lFQlpQczArd0lHNkJnVVVOSQpmU3ZIU0phZXRDM2FuY2duTzFlaG42dncxZzdVRGpES2I1dXgwZGFrblRJK1dFNDFiMFZZYUhFWC9EN1lYWUtnCkw3SlJiTEFhWGJoWnpqVmx5SXVocnhBMy8rT2NYY0pKRnpUL2pDdUxqZkM4Y1N5VERCMEZ4THJIemFySlhuelIKeVFIM25BUDIvQXBkOU5wNzV0dDJRbkRyOUUwaTJnQjNiOWJKWHhmOTJuVXVwVmNNOXVwY3R1QnpwV2pQb1hUaQpkWUorRUovQjlhTHJBZWs0c1FwRXpOUENpZlZKTllJS05MTWM2WWpDUjA2Q0RnbzI4RWRQaXZFcEJIWGF6ZUdhClhQOWVuWmlWdXBwRDBFcWlGd1VCQkREVE1yT1BBZ01CQUFHamdmZ3dnZlV3RGdZRFZSMFBBUUgvQkFRREFnR0cKTUIwR0ExVWRKUVFXTUJRR0NDc0dBUVVGQndNQ0JnZ3JCZ0VGQlFjREFUQVNCZ05WSFJNQkFmOEVDREFHQVFILwpBZ0VBTUIwR0ExVWREZ1FXQkJUbnE1OFBMRE9nVTlOZVQzaklzb1FPTzlhU016QWZCZ05WSFNNRUdEQVdnQlI1CnRGbm1lN2JsNUFGemdBaUl5QnBZOXVtYmJqQXlCZ2dyQmdFRkJRY0JBUVFtTUNRd0lnWUlLd1lCQlFVSE1BS0cKRm1oMGRIQTZMeTk0TVM1cExteGxibU55TG05eVp5OHdFd1lEVlIwZ0JBd3dDakFJQmdabmdRd0JBZ0V3SndZRApWUjBmQkNBd0hqQWNvQnFnR0lZV2FIUjBjRG92TDNneExtTXViR1Z1WTNJdWIzSm5MekFOQmdrcWhraUc5dzBCCkFRc0ZBQU9DQWdFQVVUZFlVcUVpbXpXN1Rick95cExxQ2ZMN1ZPd1lmL1E3OU9INWNITENaZWdnZlFoRGNvbmwKazdLZ2g4YjB2aSsvWHVXdTdDTjhuL1VQZWcxdm8zRyt0YVhpcnJ5dHRoUWluQUhHd2MvVWRiT3lnSmE5enVCYwpWeXFvSDNDWFRYREluVCs4YStjM2FFVk1KMlN0K3BTbjRlZCtXa0RwOGlqc2lqdkV5RndFNDdodWxXMEx0empnCjlmT1Y1UG1yZy96eFdiUnVMK2swREJESEVKZW5uQ3NBZW43YzM1UG14N2pwbUovSHRnUmhjbnoweWpTQnZ5SXcKNkwxUUl1cGtDdjJTQk9EVC94REQzZ2ZRUXlLdjZyb1Y0RzJFaGZFeUFzV3Btb2p4akNVQ0dpeWc5N0Z2RHRtLwpOSzJMU2M5bHliS3hCNzNJMitQMkczQ2FXcHZ2cEFpSENWdTMwalc4R0N4S2RmaHNYdG5JeTJpbXNrUXFWWjJtCjBQbXhvYmIyOFR1Y3I3eEJLN0N0d3ZQcmI3OW9zN3UyWFAzTzVmOWIvSDY2R055UnJnbFJYbHJZakkxb0dZTC8KZjRJMW4vU2d1c2RhNld2QTZDMTkwa3hqVTE1WTEybUhVNCtCeHlSOWN4MmhoR1M5ZkFqTVpLSnNzMjhxeHZ6NgpBeHU0Q2FEbVJOWnBLL3BRclhGMTd5WENYa21FV2d2U09FWnk2WjlwY2JMSVZFR2NrVi9pVmVxMEFPbzJwa2c5CnA0UVJJeTB0SzJkaVJFTkxTRjJLeXNGd2JZNkIyNkJGZUZzM3Yxc1lWUmhGVzluTGtPclFWcG9yQ1MwS3labWYKd1ZEODlxU1RsbmN0TGNabklhdmpLc0tVdTFuQTFpVTB5WU1kWWVwS1I3bFdibndoZHgzZXdvaz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcFFJQkFBS0NBUUVBeCtkcDZuNURzSmQxV3JxbTBzeFd2VmhwTS9XM0FaOHVEU01jUytrNjBSbHBTb0t5CnBxbzlpN0l0WXZzbGtaa0tjT2s2N3RDdmNPRlE1ek1STzdEUktGTkhmbEtPY0h4dlorajNHZGRtdnZWWDVFdUEKV2VhZ1A5c1FhckZqa1B2VHpGcWJ4SjBxOHpVbFVSOWQwZndrU1lJbXpUcUcxaXBFdld3QVlabmdMMkpOZm1RUApFVWdUNk01clBwNlA5d0h2YTdyOTdXRVVjaUJiSnhQWDdCeDYvRDBzOWlIUnNTN2ZvTitCRHB2VkU4NURoUWI2CnhCNVNqbkp1Sjl2UTNtRWFUanZWYm1aN25Oa2RDMW03ckRLWCsySSsvakp5MnUzZU93RjQ0NCtwZ3RPanZuMmoKTDEyanlnWHI4UU90aGQyOUVNZGhEdmxLR0drUjJpNmJ5U01OaVFJREFRQUJBb0lCQVFDQVkwMHdNTFh5dGVQRwpTTGlhREdqdEpObzBaK3lJbXg1dGk0NUI1dUpDcDJwclUzTy8vUGlZUHZCTmNQV1pCRXlqWmZmV3A2cjErWkFIClhWSUZIelBHRFc2T1lDRmhkMW5weDhMa0V1YkhZRFY1eDFBQTdWRWdrZWFDVDdtZHhVOHJJVXFIeFZWdmJFT3kKVFUzcGJtSXozK1poeXVRTXFvc0ppVkxaWElXU2lCRTIrNU1ITExhMktudXJPaUlFWTBNUHVYd0YwQ3ZXRGwrTwp5dENReDVTNktsQ3ZmdE9ZQjJqb21GVTQ3Q09rRHI2SWhJTWpXTUVsQ09OTjczNmdKTWM0N1RuR29qMGRkdDg5CnJGdUxlUzBCNEI3Z1dzYUxtdHVxcmRERG8zZ28zZDFlOWhBMGRCdVhUYUFNNng3a1lBdURqUWZaWHgvOURtd00Kd2hkTGJIYmRBb0dCQVBtUkJkWVBveFg2WXMyVEVjVmowV1MxM0YvTjBXZXp0M3RJUiswWTZWWmJ0NUFHNjZYQwo1My8wUjFoZDRYQ3g0cmc0NmNWV1RxYXZOWE5pTGpRUDVpdndUNEY2dklZSWJyTXpuZWJnSjd3ZDJQNjhrRXEwCnRabUZLQnljaDc4OXIzUllhWWdwUEwyRjBZcTNibDA4OEJTcEc3UDMyT2VrTmxZaUNuL3QzZWZ2QW9HQkFNME8KcG43b3VNY051c2wrUFdVRkJwMlBEb0RXRzJUZFYzejh0a0hEc2hwZVB0WkZhbVhRaXlpZWpqVzE0aXZrSU9xcwpzbXA0c1ZNeVplUTdydnZSRG5rOWlKRFNhY2JmRDVYejNBOEtOWGVDMVdaZ04xVUd5UWFmRkxzWUVlV2lMYkNoCnBNS2hWYTkyN1h3eUVKWUJzSWNZa2ZKVGVRMkJNV3M5aWJ2UHc2b0hBb0dCQUl0R1VibDZsSXNKWnVaTzh4WHoKZE1IOWMvVExTZGZUeGN1NU5OcXVrbG10YWEycER3MDh6akRzUkh5ZU45Zktqam85R01rV04ySnlXU1FCWU1PUgpNK1RGZ2JsQ283OHhLWVk4Z2h4OGIvQmR2K0c1bmRUek1IMXlnRVluWE9KdkxHR0RqYkY5UWZhS25id0tUajhlCmFPVSswc1VHeGpmUHZyc20yREU0c0NSbEFvR0FGSVcxMWhlMmZuMTZSell5TU0wSzkzUGMwTG9jN2NCVlJEWUsKaTVScFc4ZzQ0N3I0eGczVUQ1R215K3RUSW05bmQvVW11Zzh3T0JKZ0xqSm05ZDdiWXZqc2xRbnAralJTM0FBVwo4dzVqZ1gxL25BcGZIMHhaakNjWnJRdmdwcW5QaHREMnExLzRNbUpsckR0YWU1alpzUHVkaDdJZytHQUlzU0hzCmlmWm1MN3NDZ1lFQXR3U0VGclg5Nnc4b29hTDhZK1FYYVN3UitpRjhMaE1tMXVzQ05yNkxWZjRlM3Q1S3pHemkKWFo1TERLekw0bmRlaVUwemt1QlY2eDN1WCtLYU01R2F6KzVkYmo5aUtFRUFRV3RKS0t4cHpvY1BySW43L0FBagpKU0hVbTE1Qit1UlozSGNZNzhUY0Rrb0Q5RnVxTU5PTkdGeUZyQTdIWVF0T0JMQjlPTzRrUDVnPQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
+  kind: Secret
+  metadata:
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    labels:
+      app: mechanicbuddy
+      copied-from: wildcard-mechanicbuddy-app-tls
+    name: tls-wildcard-mechanicbuddy-app
+    namespace: mb-damien
+    resourceVersion: "471551"
+    uid: 991df996-af1a-493d-8939-04d64d56894d
+  type: kubernetes.io/tls
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 50m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+    creationTimestamp: "2026-01-08T04:12:16Z"
+    generation: 1
+    labels:
+      app: mechanicbuddy
+      tenant-id: damien
+    name: ingress-damien
+    namespace: mb-damien
+    resourceVersion: "471678"
+    uid: 8cc14951-acee-4a61-86ea-b06d8a24aaa3
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: damien.mechanicbuddy.app
+      http:
+        paths:
+        - backend:
+            service:
+              name: api-damien
+              port:
+                number: 80
+          path: /api
+          pathType: Prefix
+        - backend:
+            service:
+              name: frontend-damien
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+    tls:
+    - hosts:
+      - damien.mechanicbuddy.app
+      secretName: tls-wildcard-mechanicbuddy-app
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.105.14.182
+kind: List
+metadata:
+  resourceVersion: ""

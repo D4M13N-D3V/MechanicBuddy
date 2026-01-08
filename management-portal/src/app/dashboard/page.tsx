@@ -137,6 +137,9 @@ export default async function DashboardPage() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        <span className="text-sm capitalize text-dark-700">{tenant.tier}</span>
+                      </TableCell>
+                      <TableCell>
                         <Badge
                           variant={
                             tenant.status === "active"
