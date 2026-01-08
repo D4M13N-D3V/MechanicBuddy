@@ -35,11 +35,11 @@ export default function ProfileMenu({
                                        height="100"
                                        className="size-8 rounded-full bg-gray-50" />  
 
-                                   <span className="hidden lg:flex lg:items-center">
-                                       <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-white">
+                                   <span className="hidden lg:flex lg:items-center min-w-0">
+                                       <span aria-hidden="true" className="ml-4 text-sm/6 font-semibold text-white truncate max-w-[120px]">
                                            {fullName}
                                        </span>
-                                       <EllipsisVerticalIcon aria-hidden="true" className="ml-2 size-5 text-white" />
+                                       <EllipsisVerticalIcon aria-hidden="true" className="ml-2 size-5 text-white shrink-0" />
                                    </span>
                                </MenuButton>
                                <MenuItems
