@@ -112,4 +112,18 @@ public class BillingEventRepository : IBillingEventRepository
         var sql = "SELECT COUNT(*) FROM management.billing_events";
         return await connection.ExecuteScalarAsync<int>(sql);
     }
+
+    public async Task<Dictionary<string, decimal>> GetTotalRevenueByTierAsync()
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = @"
+            SELECT t.tier, COALESCE(SUM(be.amount), 0) as total
+            FROM management.tenants t
+            LEFT JOIN management.billing_events be ON be.tenant_id = t.tenant_id
+                AND be.event_type = 'payment_succeeded'
+            GROUP BY t.tier";
+
+        var results = await connection.QueryAsync<(string tier, decimal total)>(sql);
+        return results.ToDictionary(r => r.tier ?? "unknown", r => r.total);
+    }
 }

@@ -41,9 +41,13 @@ public class DashboardController : ControllerBase
         var totalTenants = await _tenantRepository.GetTotalCountAsync();
         var tierCounts = await _tenantRepository.GetCountByTierAsync();
 
-        // Get revenue data
+        // Get revenue data from billing events
         var totalRevenue = await _billingEventRepository.GetTotalRevenueAsync();
-        var monthlyRevenue = await _billingEventRepository.GetTotalRevenueAsync(monthStart, now);
+        var revenueByTier = await _billingEventRepository.GetTotalRevenueByTierAsync();
+
+        // Calculate MRR: team subscriptions * $20/month (matching admin-billing page)
+        var teamCount = tierCounts.GetValueOrDefault("team", 0);
+        var monthlyRecurringRevenue = teamCount * 20m;
 
         // Get demo request stats
         var pendingDemos = await _demoRequestRepository.GetCountByStatusAsync("pending");
@@ -53,7 +57,7 @@ public class DashboardController : ControllerBase
         // Get recent tenants
         var recentTenants = await _tenantRepository.GetAllAsync(0, 5);
 
-        // Calculate revenue by month (last 6 months)
+        // Calculate revenue by month (last 6 months) - use actual billing events
         var revenueByMonth = new List<object>();
         for (int i = 5; i >= 0; i--)
         {
@@ -71,12 +75,15 @@ public class DashboardController : ControllerBase
             });
         }
 
-        // Build plan distribution
+        // Build plan distribution with correct revenue:
+        // - Lifetime: $250 per tenant
+        // - Team: total historical payments from billing events
+        // - Free/Solo: $0
         var tenantsByPlan = tierCounts.Select(kvp => new
         {
             plan = kvp.Key,
             count = kvp.Value,
-            revenue = GetRevenueByTier(kvp.Key, kvp.Value)
+            revenue = GetRevenueByTier(kvp.Key, kvp.Value, revenueByTier)
         }).ToList();
 
         var activeTenants = statusCounts.GetValueOrDefault("active", 0);
@@ -88,7 +95,7 @@ public class DashboardController : ControllerBase
             : 0;
 
         var averageRevenue = activeTenants > 0
-            ? Math.Round(monthlyRevenue / activeTenants, 2)
+            ? Math.Round(monthlyRecurringRevenue / activeTenants, 2)
             : 0;
 
         return Ok(new
@@ -98,7 +105,7 @@ public class DashboardController : ControllerBase
             trialTenants,
             suspendedTenants,
             totalRevenue,
-            monthlyRecurringRevenue = monthlyRevenue,
+            monthlyRecurringRevenue,
             averageRevenuePerTenant = averageRevenue,
             totalDemoRequests = totalDemos,
             pendingDemoRequests = pendingDemos,
@@ -116,18 +123,18 @@ public class DashboardController : ControllerBase
         });
     }
 
-    private static decimal GetRevenueByTier(string tier, int count)
+    private static decimal GetRevenueByTier(string tier, int count, Dictionary<string, decimal> historicalRevenue)
     {
-        // Monthly recurring revenue based on tier pricing
-        // Team: $25/month subscription
-        // Lifetime: One-time purchase, no MRR contribution
-        // Free/Solo: No cost
+        // Revenue calculation:
+        // - Lifetime: $250 per tenant (one-time purchase)
+        // - Team: Historical billing payments (total months paid * $20)
+        // - Free/Solo: $0
         return tier?.ToLower() switch
         {
             "free" => 0,
             "solo" => 0,
-            "team" => count * 25m,
-            "lifetime" => 0, // One-time purchase, not recurring revenue
+            "team" => historicalRevenue.GetValueOrDefault("team", 0),
+            "lifetime" => count * 250m,
             _ => 0
         };
     }

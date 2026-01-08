@@ -11,4 +11,5 @@ public interface IBillingEventRepository
     Task<decimal> GetTotalRevenueAsync(DateTime? startDate = null, DateTime? endDate = null);
     Task<IEnumerable<BillingEvent>> GetAllAsync(int skip = 0, int take = 50);
     Task<int> GetTotalCountAsync();
+    Task<Dictionary<string, decimal>> GetTotalRevenueByTierAsync();
 }
