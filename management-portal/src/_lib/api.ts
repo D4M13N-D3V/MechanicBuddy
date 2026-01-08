@@ -324,3 +324,16 @@ export async function requestNewTenant(data: RequestTenantData): Promise<ApiResp
     body: JSON.stringify(data),
   });
 }
+
+// Suspend tenant
+export interface SuspendTenantResponse {
+  message: string;
+  tenantId: string;
+}
+
+export async function suspendTenant(tenantId: string, reason: string): Promise<ApiResponse<SuspendTenantResponse>> {
+  return fetchApi<SuspendTenantResponse>(`/api/tenants/${tenantId}/suspend`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
