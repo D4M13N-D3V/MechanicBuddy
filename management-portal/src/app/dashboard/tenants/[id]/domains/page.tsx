@@ -73,7 +73,7 @@ export default async function DomainConfigPage({
 
   // Check if user owns this tenant
   const isOwner = user?.email?.toLowerCase() === tenant.ownerEmail?.toLowerCase();
-  const isAdmin = user?.role === "admin" || user?.role === "owner";
+  const isAdmin = user?.role === "admin" || user?.role === "support";
 
   if (!isOwner && !isAdmin) {
     return (

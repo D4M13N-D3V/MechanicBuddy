@@ -12,7 +12,7 @@ import { AddTenantButton } from "@/_components/TenantsPageClient";
 import { BulkTenantOperationsButtons } from "@/_components/BulkTenantOperationsButtons";
 import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
 
-const ADMIN_ROLES = ["admin", "owner", "support"];
+const ADMIN_ROLES = ["admin", "support"];
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
   active: "success",

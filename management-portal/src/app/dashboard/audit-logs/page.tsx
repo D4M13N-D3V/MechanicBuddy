@@ -6,7 +6,7 @@ import { AlertCircle } from "lucide-react";
 import AuditLogsTable from "./_components/AuditLogsTable";
 import AuditLogsFilters from "./_components/AuditLogsFilters";
 
-const ADMIN_ROLES = ["admin", "owner", "support"];
+const ADMIN_ROLES = ["admin", "support"];
 
 export default async function AuditLogsPage({
   searchParams

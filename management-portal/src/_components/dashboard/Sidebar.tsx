@@ -33,7 +33,7 @@ const navigation: NavItem[] = [
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard, adminOnly: false },
 ];
 
-const ADMIN_ROLES = ["admin", "owner", "support"];
+const ADMIN_ROLES = ["admin", "support"];
 
 interface SidebarProps {
   userRole?: string;

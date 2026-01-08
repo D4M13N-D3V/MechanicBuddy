@@ -8,7 +8,7 @@ import { formatCurrency, formatDate } from "@/_lib/utils";
 import { getDashboardAnalytics } from "@/_lib/api";
 import { getCurrentUser } from "@/_lib/auth";
 
-const ADMIN_ROLES = ["admin", "owner", "support"];
+const ADMIN_ROLES = ["admin", "support"];
 
 export default async function DashboardPage() {
   // Check if user is admin

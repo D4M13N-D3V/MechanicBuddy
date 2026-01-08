@@ -9,7 +9,7 @@ import { AlertCircle } from "lucide-react";
 import { DemoActions } from "./DemoActions";
 import type { DemoRequestStatus } from "@/types";
 
-const ADMIN_ROLES = ["admin", "owner", "support"];
+const ADMIN_ROLES = ["admin", "support"];
 
 const statusColors: Record<DemoRequestStatus, "default" | "success" | "warning" | "danger" | "info"> = {
   new: "info",
