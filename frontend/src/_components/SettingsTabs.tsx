@@ -4,6 +4,7 @@ import { BuildingOfficeIcon, UserIcon, PaintBrushIcon, GlobeAltIcon, UsersIcon }
 import clsx from 'clsx'
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { checkCanManageUsers } from '@/_lib/server/actions/userManagementActions';
 
 interface Tab {
   name: string;
@@ -34,18 +35,15 @@ export default function SettingsTabs() {
   const [canManageUsers, setCanManageUsers] = useState(false);
 
   useEffect(() => {
-    async function checkCanManageUsers() {
+    async function fetchCanManageUsers() {
       try {
-        const response = await fetch('/api/usermanagement/canmanage');
-        if (response.ok) {
-          const data = await response.json();
-          setCanManageUsers(data.canManageUsers);
-        }
+        const result = await checkCanManageUsers();
+        setCanManageUsers(result.canManageUsers);
       } catch (error) {
         console.error('Failed to check user management permissions:', error);
       }
     }
-    checkCanManageUsers();
+    fetchCanManageUsers();
   }, []);
 
   const tabs = allTabs.filter(tab => !tab.requiresUserManagement || canManageUsers);
