@@ -10,6 +10,7 @@ public class BillingService
     private readonly ITenantRepository _tenantRepository;
     private readonly IBillingEventRepository _billingEventRepository;
     private readonly Infrastructure.IStripeClient _stripeClient;
+    private readonly Infrastructure.IKubernetesClient _kubernetesClient;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BillingService> _logger;
 
@@ -25,12 +26,14 @@ public class BillingService
         ITenantRepository tenantRepository,
         IBillingEventRepository billingEventRepository,
         Infrastructure.IStripeClient stripeClient,
+        Infrastructure.IKubernetesClient kubernetesClient,
         IConfiguration configuration,
         ILogger<BillingService> logger)
     {
         _tenantRepository = tenantRepository;
         _billingEventRepository = billingEventRepository;
         _stripeClient = stripeClient;
+        _kubernetesClient = kubernetesClient;
         _configuration = configuration;
         _logger = logger;
     }
@@ -260,6 +263,9 @@ public class BillingService
             tenant.MaxMechanics = 999; // Unlimited
             tenant.SubscriptionEndsAt = null; // Lifetime has no end date
             await _tenantRepository.UpdateAsync(tenant);
+
+            // Update the running K8s deployment with new tier
+            await _kubernetesClient.UpdateTenantTierAsync(tenantId, "lifetime");
 
             await _billingEventRepository.CreateAsync(new BillingEvent
             {
@@ -593,6 +599,7 @@ public class BillingService
         tenant.SubscriptionEndsAt = subscription.CurrentPeriodEnd;
 
         // Determine tier from price ID
+        string? newTier = null;
         if (subscription.Items?.Data != null && subscription.Items.Data.Any())
         {
             var priceId = subscription.Items.Data.First().Price?.Id;
@@ -601,7 +608,8 @@ public class BillingService
             if (priceId == teamPriceId)
             {
                 // Team subscription - unlimited users
-                tenant.Tier = "team";
+                newTier = "team";
+                tenant.Tier = newTier;
                 tenant.MaxMechanics = 999; // Unlimited
             }
             else
@@ -609,11 +617,18 @@ public class BillingService
                 // Legacy tier-based pricing
                 var quantity = subscription.Items.Data.First().Quantity;
                 tenant.MaxMechanics = (int)quantity;
-                tenant.Tier = GetTierName((int)quantity);
+                newTier = GetTierName((int)quantity);
+                tenant.Tier = newTier;
             }
         }
 
         await _tenantRepository.UpdateAsync(tenant);
+
+        // Update the running K8s deployment with new tier if tier changed
+        if (!string.IsNullOrEmpty(newTier))
+        {
+            await _kubernetesClient.UpdateTenantTierAsync(tenantId, newTier);
+        }
 
         await _billingEventRepository.CreateAsync(new BillingEvent
         {
@@ -899,6 +914,9 @@ public class BillingService
             tenant.Tier = "solo";
             tenant.MaxMechanics = 1;
             await _tenantRepository.UpdateAsync(tenant);
+
+            // Update the running K8s deployment with new tier
+            await _kubernetesClient.UpdateTenantTierAsync(tenant.TenantId, "solo");
 
             await _billingEventRepository.CreateAsync(new BillingEvent
             {

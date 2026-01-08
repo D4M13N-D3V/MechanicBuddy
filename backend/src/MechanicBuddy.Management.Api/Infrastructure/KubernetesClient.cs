@@ -892,6 +892,62 @@ public class KubernetesClient : IKubernetesClient
         }
     }
 
+    public async Task UpdateTenantTierAsync(string tenantId, string tier)
+    {
+        var namespaceName = $"mb-{tenantId}";
+        var apiDeploymentName = $"api-{tenantId}";
+
+        try
+        {
+            // Read the current deployment
+            var deployment = await _client.AppsV1.ReadNamespacedDeploymentAsync(apiDeploymentName, namespaceName);
+
+            // Find and update the TENANT_TIER environment variable
+            var container = deployment.Spec.Template.Spec.Containers.FirstOrDefault(c => c.Name == "api");
+            if (container != null)
+            {
+                container.Env ??= new List<V1EnvVar>();
+
+                var tierEnv = container.Env.FirstOrDefault(e => e.Name == "TENANT_TIER");
+                if (tierEnv != null)
+                {
+                    tierEnv.Value = tier;
+                }
+                else
+                {
+                    container.Env.Add(new V1EnvVar { Name = "TENANT_TIER", Value = tier });
+                }
+
+                // Update the tier label
+                deployment.Metadata.Labels ??= new Dictionary<string, string>();
+                deployment.Metadata.Labels["tier"] = tier;
+                deployment.Spec.Template.Metadata.Labels ??= new Dictionary<string, string>();
+                deployment.Spec.Template.Metadata.Labels["tier"] = tier;
+
+                // Add restart annotation to trigger rollout
+                deployment.Spec.Template.Metadata.Annotations ??= new Dictionary<string, string>();
+                deployment.Spec.Template.Metadata.Annotations["kubectl.kubernetes.io/restartedAt"] = DateTime.UtcNow.ToString("o");
+
+                // Apply the update
+                await _client.AppsV1.ReplaceNamespacedDeploymentAsync(deployment, apiDeploymentName, namespaceName);
+                _logger.LogInformation("Updated tenant {TenantId} to tier {Tier} and triggered restart", tenantId, tier);
+            }
+            else
+            {
+                _logger.LogWarning("API container not found in deployment {Deployment}", apiDeploymentName);
+            }
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning("Deployment {Deployment} not found in namespace {Namespace}", apiDeploymentName, namespaceName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update tier for tenant {TenantId}", tenantId);
+            throw;
+        }
+    }
+
     private static (string cpu, string memory, int replicas) GetResourceLimitsForTier(string tier) => tier switch
     {
         "free" => ("500m", "512Mi", 1),

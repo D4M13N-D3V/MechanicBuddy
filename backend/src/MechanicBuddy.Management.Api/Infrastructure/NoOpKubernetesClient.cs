@@ -70,4 +70,10 @@ public class NoOpKubernetesClient : IKubernetesClient
         _logger.LogWarning("Kubernetes not available. Skipping migration job for tenant {TenantId}", tenantId);
         return Task.FromResult($"dbup-migrate-{tenantId}-noop");
     }
+
+    public Task UpdateTenantTierAsync(string tenantId, string tier)
+    {
+        _logger.LogWarning("Kubernetes not available. Skipping tier update for tenant {TenantId} to tier {Tier}", tenantId, tier);
+        return Task.CompletedTask;
+    }
 }
