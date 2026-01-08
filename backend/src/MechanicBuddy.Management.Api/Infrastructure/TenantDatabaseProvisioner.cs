@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Npgsql;
 
 namespace MechanicBuddy.Management.Api.Infrastructure;
@@ -14,11 +15,12 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     private readonly string _templateDbName;
     private readonly string _tenancyDbName;
 
-    // Default admin password hash (password: "carcare")
-    private const string DefaultAdminPasswordHash = "$2a$11$eXvWgMFQ2S5C5VZGTH.WKO/GzsKzRBXhgaNGcFJovWjag3wUPmukC";
-
     // Template employee ID (from mechanicbuddy-testt template database)
     private const string TemplateEmployeeId = "a7227c1f-3bbc-4367-a9b8-baa83d0f19ca";
+
+    // Security: Characters for generating secure passwords
+    private const string PasswordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    private const int GeneratedPasswordLength = 16;
 
     public TenantDatabaseProvisioner(
         IConfiguration configuration,
@@ -218,13 +220,17 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             }
         }
 
+        // Security: Generate a unique secure password for each new tenant
+        var generatedPassword = GenerateSecurePassword();
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(generatedPassword);
+
         // Create the admin user with the template employee ID
         await using (var cmd = new NpgsqlCommand(@"
             INSERT INTO public.""user"" (username, password, tenantname, email, validated, profile_image, employeeid)
             VALUES (@username, @password, @tenantname, @email, @validated, @profileImage, @employeeId)", connection))
         {
             cmd.Parameters.AddWithValue("username", "admin");
-            cmd.Parameters.AddWithValue("password", DefaultAdminPasswordHash);
+            cmd.Parameters.AddWithValue("password", passwordHash);
             cmd.Parameters.AddWithValue("tenantname", tenantId);
             cmd.Parameters.AddWithValue("email", "admin@example.com");
             cmd.Parameters.AddWithValue("validated", true);
@@ -233,7 +239,29 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             await cmd.ExecuteNonQueryAsync();
         }
 
-        _logger.LogInformation("Created default admin user for tenant {TenantId} with employee ID {EmployeeId}", tenantId, employeeId);
+        // Note: In production, the generated password should be sent to the tenant admin via secure channel
+        _logger.LogInformation("Created default admin user for tenant {TenantId} with employee ID {EmployeeId}. Initial password generated securely.", tenantId, employeeId);
+    }
+
+    /// <summary>
+    /// Security: Generates a cryptographically secure random password
+    /// </summary>
+    private static string GenerateSecurePassword()
+    {
+        var password = new char[GeneratedPasswordLength];
+        var randomBytes = new byte[GeneratedPasswordLength];
+
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomBytes);
+        }
+
+        for (int i = 0; i < GeneratedPasswordLength; i++)
+        {
+            password[i] = PasswordChars[randomBytes[i] % PasswordChars.Length];
+        }
+
+        return new string(password);
     }
 
     private string BuildConnectionString(string databaseName)

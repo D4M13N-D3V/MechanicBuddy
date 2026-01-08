@@ -1,5 +1,6 @@
 ﻿using MechanicBuddy.Core.Application.Configuration;
 using System;
+using System.Text.RegularExpressions;
 
 namespace MechanicBuddy.Core.Application.Database
 {
@@ -7,6 +8,12 @@ namespace MechanicBuddy.Core.Application.Database
     {
         string value;
         private readonly DbOptions options;
+
+        // Security: Regex to validate tenant names - only lowercase letters, numbers, and hyphens
+        // Maximum 63 characters (PostgreSQL database name limit minus prefix)
+        private static readonly Regex ValidTenantNamePattern = new Regex(
+            @"^[a-z][a-z0-9\-]{0,62}$",
+            RegexOptions.Compiled);
 
         private MultiTenancyDbName(DbOptions options)
         {
@@ -24,7 +31,15 @@ namespace MechanicBuddy.Core.Application.Database
             {
                 throw new ArgumentException($"'{nameof(tenantName)}' cannot be null or whitespace.", nameof(tenantName));
             }
-            value = $"{options.Name}-{tenantName}";
+
+            // Security: Validate tenant name to prevent database injection
+            var normalizedName = tenantName.ToLowerInvariant().Trim();
+            if (!ValidTenantNamePattern.IsMatch(normalizedName))
+            {
+                throw new ArgumentException($"Invalid tenant name format. Must start with a letter, contain only lowercase letters, numbers, and hyphens, and be at most 63 characters.", nameof(tenantName));
+            }
+
+            value = $"{options.Name}-{normalizedName}";
         }
         public MultiTenancyDbName(DbOptions options, DbKind kind) : this(options)
         {

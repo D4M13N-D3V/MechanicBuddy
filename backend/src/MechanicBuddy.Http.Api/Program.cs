@@ -81,7 +81,19 @@ app.UseCors("DefaultPolicy");
 app.UseMiddleware<DbConnectionScopeMiddleware>();
 
 /*By default, an ASP.NET Core app doesn't provide a status code page for HTTP error status codes, such as 404 - Not Found. When the app sets an HTTP 400-599 error status code that doesn't have a body, it returns the status code and an empty response body. To enable default text-only handlers for common error status codes,*/
-app.UseStatusCodePages(); 
+app.UseStatusCodePages();
+
+// Security: Add security headers middleware
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    await next();
+});
+
 app.UseRouting();
 app.UseStaticFiles();
 app.UseRateLimiting();

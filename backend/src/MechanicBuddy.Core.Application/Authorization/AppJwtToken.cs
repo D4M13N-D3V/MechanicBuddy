@@ -12,6 +12,12 @@ namespace MechanicBuddy.Core.Application.Authorization
 {
     public class AppJwtToken
     {
+        // Security: Define issuer and audience for token validation
+        private const string Issuer = "MechanicBuddy";
+        private const string Audience = "MechanicBuddy";
+
+        // Security: Maximum session timeout to prevent overly long sessions
+        private static readonly TimeSpan MaxSessionTimeout = TimeSpan.FromHours(8);
 
         public static JwtSecurityToken LoadJwt(JwtOptions options, string token)
         {
@@ -22,8 +28,11 @@ namespace MechanicBuddy.Core.Application.Authorization
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = false,
-                ValidateAudience = false,
+                // Security: Enable issuer and audience validation
+                ValidateIssuer = true,
+                ValidIssuer = Issuer,
+                ValidateAudience = true,
+                ValidAudience = Audience,
                 // set clockskew to zero so tokens expire exactly at token expiration time (instead of 5 minutes later)
                 ClockSkew = TimeSpan.Zero
             }, out SecurityToken validatedToken);
@@ -36,17 +45,24 @@ namespace MechanicBuddy.Core.Application.Authorization
         public static string Generate(JwtOptions options, ClaimsPrincipal principal)
         {
             EnsureJwtSecret(options);
-            // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(options.Secret);
 
             var subject = ((ClaimsIdentity)principal.Identity);
 
+            // Security: Enforce maximum session timeout
+            var sessionTimeout = options.SessionTimeout > MaxSessionTimeout
+                ? MaxSessionTimeout
+                : options.SessionTimeout;
+
             var tokenDescriptor = new SecurityTokenDescriptor
-            { 
+            {
                 Subject = subject,
                 IssuedAt = DateTime.UtcNow,
-                Expires = DateTime.UtcNow.Add(options.SessionTimeout),
+                Expires = DateTime.UtcNow.Add(sessionTimeout),
+                // Security: Include issuer and audience in token
+                Issuer = Issuer,
+                Audience = Audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);

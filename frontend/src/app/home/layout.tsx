@@ -9,6 +9,7 @@ import PortalThemeProvider from '@/_components/PortalThemeProvider'
 import { redirect } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 import { httpGet } from '@/_lib/server/query-api';
+import { escapeColorForScript } from '@/_lib/colorValidator';
 
 interface CustomJwtPayload {
     FullName?: string;
@@ -60,15 +61,25 @@ export default async function Layout({ children }: { children: React.ReactNode }
     const imageUrl = `/backend-api/users/profilepicture/${jwt}`
 
     // Generate inline CSS for immediate color application (prevents flash)
+    // Security: Validate and escape all color values to prevent CSS injection
     const portalColors = branding?.portalColors;
-    const themeStyles = portalColors ? `
+    const safeColors = portalColors ? {
+        sidebarBg: escapeColorForScript(portalColors.sidebarBg) || '#111827',
+        sidebarText: escapeColorForScript(portalColors.sidebarText) || '#ffffff',
+        sidebarActiveBg: escapeColorForScript(portalColors.sidebarActiveBg) || '#1f2937',
+        sidebarActiveText: escapeColorForScript(portalColors.sidebarActiveText) || '#ffffff',
+        accentColor: escapeColorForScript(portalColors.accentColor) || '#3b82f6',
+        contentBg: escapeColorForScript(portalColors.contentBg) || '#f9fafb',
+    } : null;
+
+    const themeStyles = safeColors ? `
         :root {
-            --portal-sidebar-bg: ${portalColors.sidebarBg};
-            --portal-sidebar-text: ${portalColors.sidebarText};
-            --portal-sidebar-active-bg: ${portalColors.sidebarActiveBg};
-            --portal-sidebar-active-text: ${portalColors.sidebarActiveText};
-            --portal-accent: ${portalColors.accentColor};
-            --portal-content-bg: ${portalColors.contentBg};
+            --portal-sidebar-bg: ${safeColors.sidebarBg};
+            --portal-sidebar-text: ${safeColors.sidebarText};
+            --portal-sidebar-active-bg: ${safeColors.sidebarActiveBg};
+            --portal-sidebar-active-text: ${safeColors.sidebarActiveText};
+            --portal-accent: ${safeColors.accentColor};
+            --portal-content-bg: ${safeColors.contentBg};
         }
     ` : '';
 

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MechanicBuddy.Core.Application.Configuration;
 using MechanicBuddy.Core.Application.RateLimiting;
 using MechanicBuddy.Core.Application.Services;
+using MechanicBuddy.Core.Application.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +50,13 @@ namespace MechanicBuddy.Http.Api.Controllers
         {
             try
             {
+                // Security: Validate logo image if provided
+                var logoValidation = ImageValidator.ValidateLogo(options.LogoBase64, options.LogoMimeType);
+                if (!logoValidation.IsValid)
+                {
+                    return BadRequest(logoValidation.ErrorMessage);
+                }
+
                 await brandingService.SaveBrandingAsync(options);
                 return Ok();
             }
@@ -103,6 +111,13 @@ namespace MechanicBuddy.Http.Api.Controllers
         {
             try
             {
+                // Security: Validate hero background image if provided
+                var imageValidation = ImageValidator.ValidateLargeImage(options.BackgroundImageBase64, options.BackgroundImageMimeType);
+                if (!imageValidation.IsValid)
+                {
+                    return BadRequest(imageValidation.ErrorMessage);
+                }
+
                 await brandingService.SaveHeroAsync(options);
                 return Ok();
             }
@@ -665,6 +680,13 @@ namespace MechanicBuddy.Http.Api.Controllers
         {
             try
             {
+                // Security: Validate gallery image
+                var imageValidation = ImageValidator.ValidateLargeImage(options.ImageBase64, options.ImageMimeType);
+                if (!imageValidation.IsValid)
+                {
+                    return BadRequest(imageValidation.ErrorMessage);
+                }
+
                 var result = await brandingService.CreateGalleryPhotoAsync(options);
                 return CreatedAtAction(nameof(GetGalleryPhotos), result);
             }
@@ -685,6 +707,13 @@ namespace MechanicBuddy.Http.Api.Controllers
         {
             try
             {
+                // Security: Validate gallery image if provided
+                var imageValidation = ImageValidator.ValidateLargeImage(options.ImageBase64, options.ImageMimeType);
+                if (!imageValidation.IsValid)
+                {
+                    return BadRequest(imageValidation.ErrorMessage);
+                }
+
                 await brandingService.UpdateGalleryPhotoAsync(id, options);
                 return Ok();
             }
