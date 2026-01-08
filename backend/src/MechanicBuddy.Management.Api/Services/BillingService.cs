@@ -553,12 +553,25 @@ public class BillingService
 
         tenant.SubscriptionEndsAt = subscription.CurrentPeriodEnd;
 
-        // Update mechanic count from quantity
+        // Determine tier from price ID
         if (subscription.Items?.Data != null && subscription.Items.Data.Any())
         {
-            var quantity = subscription.Items.Data.First().Quantity;
-            tenant.MaxMechanics = (int)quantity;
-            tenant.Tier = GetTierName((int)quantity);
+            var priceId = subscription.Items.Data.First().Price?.Id;
+            var teamPriceId = _configuration["Stripe:PriceIds:Team"];
+
+            if (priceId == teamPriceId)
+            {
+                // Team subscription - unlimited users
+                tenant.Tier = "team";
+                tenant.MaxMechanics = 999; // Unlimited
+            }
+            else
+            {
+                // Legacy tier-based pricing
+                var quantity = subscription.Items.Data.First().Quantity;
+                tenant.MaxMechanics = (int)quantity;
+                tenant.Tier = GetTierName((int)quantity);
+            }
         }
 
         await _tenantRepository.UpdateAsync(tenant);
