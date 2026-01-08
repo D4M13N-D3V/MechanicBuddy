@@ -177,8 +177,12 @@ public class BillingService
         var tenant = await _tenantRepository.GetByTenantIdAsync(tenantId);
         if (tenant == null) return;
 
-        tenant.Status = "suspended";
+        // Keep tenant active for 30 days after subscription ends (grace period)
+        // The tier stays the same, but SubscriptionEndsAt marks when they'll be downgraded
         tenant.StripeSubscriptionId = null;
+        tenant.SubscriptionEndsAt = DateTime.UtcNow.AddDays(30);
+        // Keep status as active during grace period - a background job should check SubscriptionEndsAt
+        // and downgrade to solo tier after the grace period expires
         await _tenantRepository.UpdateAsync(tenant);
 
         await _billingEventRepository.CreateAsync(new BillingEvent
@@ -187,8 +191,15 @@ public class BillingService
             EventType = "subscription_cancelled",
             Amount = 0,
             StripeEventId = stripeEvent.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Metadata = new Dictionary<string, object>
+            {
+                ["grace_period_ends"] = tenant.SubscriptionEndsAt?.ToString("o") ?? ""
+            }
         });
+
+        _logger.LogInformation("Subscription cancelled for tenant {TenantId}. Grace period until {GracePeriodEnd}",
+            tenantId, tenant.SubscriptionEndsAt);
     }
 
     private async Task HandlePaymentSucceededEventAsync(Event stripeEvent)
