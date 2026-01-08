@@ -38,6 +38,7 @@ export default async function Page(
       <Search
         searchParams={searchParams}
         resourceName="usermanagement"
+        pageName="settings/users"
         columns={[{
           dataField: "name",
           dataFormatter: ({ id, firstName, lastName }) => {
