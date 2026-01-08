@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/_components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/_components/ui/Table";
 import { Badge } from "@/_components/ui/Badge";
-import { Button } from "@/_components/ui/Button";
 import { formatDate } from "@/_lib/utils";
 import { getTenants, getSubscriptionStatus } from "@/_lib/api";
 import { AlertCircle, CreditCard, DollarSign, FileText } from "lucide-react";

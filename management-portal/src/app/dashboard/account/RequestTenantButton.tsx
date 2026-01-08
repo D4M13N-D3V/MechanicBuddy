@@ -32,7 +32,7 @@ export function RequestTenantButton() {
       } else {
         setError(response.error || "Failed to request tenant");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);

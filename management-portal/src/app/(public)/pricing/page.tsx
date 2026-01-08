@@ -135,7 +135,7 @@ export default function PricingPage() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-dark-900 mb-2">
-                What's the difference between Team and Lifetime?
+                What&apos;s the difference between Team and Lifetime?
               </h3>
               <p className="text-dark-500">
                 Team is a monthly subscription at $20/month with unlimited users. Lifetime is a one-time payment

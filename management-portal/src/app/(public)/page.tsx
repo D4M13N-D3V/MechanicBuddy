@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/_components/ui/Button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/_components/ui/Card";
-import { CheckCircle2, Users, FileText, Package, BarChart, ArrowRight } from "lucide-react";
+import { Users, FileText, Package, BarChart, ArrowRight } from "lucide-react";
 
 export default function HomePage() {
   const features = [

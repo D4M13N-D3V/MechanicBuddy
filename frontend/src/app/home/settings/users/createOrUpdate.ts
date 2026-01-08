@@ -4,13 +4,22 @@ import { httpPut, httpPost, httpDelete } from "@/_lib/server/query-api";
 import { pushToast } from "@/_lib/server/pushToast";
 import { redirect } from "next/navigation";
 
+interface UserFormData {
+    firstName: FormDataEntryValue | null;
+    lastName: FormDataEntryValue | null;
+    userName: FormDataEntryValue | null;
+    email: FormDataEntryValue | null;
+    phone: FormDataEntryValue | null;
+    password?: FormDataEntryValue | null;
+}
+
 export async function createOrUpdate(
     formData: FormData
 ) {
 
     const id = formData.get('id');
 
-    const body: any = {
+    const body: UserFormData = {
         firstName: formData.get('firstName'),
         lastName: formData.get('lastName'),
         userName: formData.get('userName'),

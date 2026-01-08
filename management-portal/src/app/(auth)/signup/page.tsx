@@ -52,7 +52,7 @@ export default function SignupPage() {
       } else {
         setError(result.error || "Signup failed");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);

@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/_components/ui/Badge";
 import { Button } from "@/_components/ui/Button";
 import { formatDate, formatRelativeTime } from "@/_lib/utils";
-import { getCurrentUser as getCurrentUserApi, getMyTenants } from "@/_lib/api";
+import { getMyTenants } from "@/_lib/api";
 import { getCurrentUser as getCurrentUserAuth } from "@/_lib/auth";
 import Link from "next/link";
 import { AlertCircle, User, Building2 } from "lucide-react";
@@ -192,7 +192,7 @@ export default async function AccountPage() {
               </div>
               <h3 className="text-lg font-semibold text-dark-900 mb-2">No tenants yet</h3>
               <p className="text-dark-500 mb-6">
-                You don't have any workshop tenants. Request one to get started.
+                You don&apos;t have any workshop tenants. Request one to get started.
               </p>
               <RequestTenantButton />
             </div>
