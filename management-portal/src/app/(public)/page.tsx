@@ -28,9 +28,9 @@ export default function HomePage() {
   ];
 
   const pricingPreview = [
-    { name: "Free", price: "$0", mechanics: "1 user included" },
-    { name: "Standard", price: "$20", mechanics: "Per user/month (2-9 users)", popular: true },
-    { name: "Volume", price: "$10", mechanics: "Per user/month (10+ users)" },
+    { name: "Solo", price: "$0", period: "forever", description: "1 user, limited work orders" },
+    { name: "Team", price: "$20", period: "/month", description: "Unlimited users & work orders", popular: true },
+    { name: "Lifetime", price: "$250", period: "once", description: "Unlimited users & work orders forever" },
   ];
 
   return (
@@ -127,11 +127,11 @@ export default function HomePage() {
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
                   <div className="mt-4">
                     <span className="text-5xl font-bold text-dark-900">{plan.price}</span>
-                    {plan.name !== "Free" && <span className="text-dark-500">/mo</span>}
+                    <span className="text-dark-500">{plan.period}</span>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-4">
-                  <p className="text-sm text-dark-500 mb-6 text-center">{plan.mechanics}</p>
+                  <p className="text-sm text-dark-500 mb-6 text-center">{plan.description}</p>
                   <Link href="/pricing">
                     <Button
                       variant={plan.popular ? "primary" : "outline"}
