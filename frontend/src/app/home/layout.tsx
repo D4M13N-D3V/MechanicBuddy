@@ -59,23 +59,40 @@ export default async function Layout({ children }: { children: React.ReactNode }
     // Use proxy path for profile picture to avoid NEXT_PUBLIC_API_URL build-time issues
     const imageUrl = `/backend-api/users/profilepicture/${jwt}`
 
+    // Generate inline CSS for immediate color application (prevents flash)
+    const portalColors = branding?.portalColors;
+    const themeStyles = portalColors ? `
+        :root {
+            --portal-sidebar-bg: ${portalColors.sidebarBg};
+            --portal-sidebar-text: ${portalColors.sidebarText};
+            --portal-sidebar-active-bg: ${portalColors.sidebarActiveBg};
+            --portal-sidebar-active-text: ${portalColors.sidebarActiveText};
+            --portal-accent: ${portalColors.accentColor};
+            --portal-content-bg: ${portalColors.contentBg};
+        }
+    ` : '';
+
     return (
-        <PortalThemeProvider colors={branding?.portalColors || null}>
-            {/* <Timeout></Timeout> */}
-            <ToastMessages></ToastMessages>
-            <div>
-                {/* Static sidebar for desktop */}
-                <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-62 lg:flex-col">
-                    {/* Sidebar component, swap this element with another sidebar if you like */}
-                    <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6" style={{ backgroundColor: 'var(--portal-sidebar-bg, #111827)' }}>
-                      <Nav imageUrl={imageUrl} fullName={fullName} onSmallScreen={false}></Nav>
+        <>
+            {/* Inline styles to prevent color flash on page load */}
+            {themeStyles && <style dangerouslySetInnerHTML={{ __html: themeStyles }} />}
+            <PortalThemeProvider colors={branding?.portalColors || null}>
+                {/* <Timeout></Timeout> */}
+                <ToastMessages></ToastMessages>
+                <div>
+                    {/* Static sidebar for desktop */}
+                    <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-62 lg:flex-col">
+                        {/* Sidebar component, swap this element with another sidebar if you like */}
+                        <div className="flex grow flex-col gap-y-5 overflow-y-auto px-6" style={{ backgroundColor: 'var(--portal-sidebar-bg, #111827)' }}>
+                          <Nav imageUrl={imageUrl} fullName={fullName} onSmallScreen={false}></Nav>
+                        </div>
                     </div>
-                </div>
-                 <NavDialog imageUrl={imageUrl} fullName={fullName}></NavDialog>
-                <main style={{ backgroundColor: 'var(--portal-content-bg, #f9fafb)' }}>
-                    {children}
-                </main>
-              </div>
-        </PortalThemeProvider>
+                     <NavDialog imageUrl={imageUrl} fullName={fullName}></NavDialog>
+                    <main style={{ backgroundColor: 'var(--portal-content-bg, #f9fafb)' }}>
+                        {children}
+                    </main>
+                  </div>
+            </PortalThemeProvider>
+        </>
     )
 }

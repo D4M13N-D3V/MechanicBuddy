@@ -42,18 +42,34 @@ export default async function Home() {
         );
     }
 
+    // Generate inline CSS for immediate color application (prevents flash)
+    const landingColors = data.branding.landingColors;
+    const themeStyles = landingColors ? `
+        :root {
+            ${landingColors.primaryColor ? `--landing-primary: ${landingColors.primaryColor};` : ''}
+            ${landingColors.secondaryColor ? `--landing-secondary: ${landingColors.secondaryColor};` : ''}
+            ${landingColors.accentColor ? `--landing-accent: ${landingColors.accentColor};` : ''}
+            ${landingColors.headerBg ? `--landing-header-bg: ${landingColors.headerBg};` : ''}
+            ${landingColors.footerBg ? `--landing-footer-bg: ${landingColors.footerBg};` : ''}
+        }
+    ` : '';
+
     return (
-        <LandingThemeProvider colors={data.branding.landingColors}>
-            <Navigation data={data} />
-            <main>
-                <HeroSection data={data} />
-                <ServicesSection data={data} />
-                <AboutSection data={data} />
-                <TipsSection data={data} />
-                <GallerySection data={data} />
-                <ContactSection data={data} />
-            </main>
-            <Footer data={data} />
-        </LandingThemeProvider>
+        <>
+            {/* Inline styles to prevent color flash on page load */}
+            {themeStyles && <style dangerouslySetInnerHTML={{ __html: themeStyles }} />}
+            <LandingThemeProvider colors={data.branding.landingColors}>
+                <Navigation data={data} />
+                <main>
+                    <HeroSection data={data} />
+                    <ServicesSection data={data} />
+                    <AboutSection data={data} />
+                    <TipsSection data={data} />
+                    <GallerySection data={data} />
+                    <ContactSection data={data} />
+                </main>
+                <Footer data={data} />
+            </LandingThemeProvider>
+        </>
     )
 }
