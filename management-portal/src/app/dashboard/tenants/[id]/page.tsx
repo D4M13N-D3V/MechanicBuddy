@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Building2, Users, Database, Activity, AlertCircle } from "lucide-react";
 import { getTenant } from "@/_lib/api";
 import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
+import { SuspendTenantButton } from "@/_components/SuspendTenantButton";
 import { TenantOperationsButtons } from "@/_components/TenantOperationsButtons";
 import { getCurrentUser } from "@/_lib/auth";
 
@@ -75,7 +76,7 @@ export default async function TenantDetailPage({
         </div>
         {isSuperAdmin && (
           <div className="flex gap-2">
-            <Button variant="outline">Suspend</Button>
+            <SuspendTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} currentStatus={tenant.status} />
             <DeleteTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} />
           </div>
         )}
