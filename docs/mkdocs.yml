@@ -1,0 +1,72 @@
+site_name: MechanicBuddy Documentation
+site_description: Technical and user documentation for MechanicBuddy workshop management system
+site_author: MechanicBuddy Team
+
+repo_url: https://github.com/your-org/mechanicbuddy
+repo_name: mechanicbuddy
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - tags
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Technical Documentation:
+    - Overview: technical/index.md
+    - Architecture: technical/architecture.md
+    - API Reference: technical/api-reference.md
+    - Database Schema: technical/database-schema.md
+    - Development Setup: technical/development-setup.md
+    - Deployment Guide: technical/deployment.md
+  - User Guide:
+    - Overview: user-guide/index.md
+    - Getting Started: user-guide/getting-started.md
+    - Workshop Staff Guide: user-guide/workshop-staff-guide.md
+    - Administrator Guide: user-guide/administrator-guide.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/mechanicbuddy
