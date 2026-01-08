@@ -49,6 +49,16 @@ public class DashboardController : ControllerBase
         var teamCount = tierCounts.GetValueOrDefault("team", 0);
         var monthlyRecurringRevenue = teamCount * 20m;
 
+        // Get total subscription months for team (for historical revenue calculation)
+        var teamSubscriptionMonths = await _tenantRepository.GetTotalSubscriptionMonthsByTierAsync("team");
+        var teamHistoricalRevenue = teamSubscriptionMonths * 20m;
+
+        // Use historical revenue if billing events are empty
+        if (revenueByTier.GetValueOrDefault("team", 0) == 0 && teamHistoricalRevenue > 0)
+        {
+            revenueByTier["team"] = teamHistoricalRevenue;
+        }
+
         // Get demo request stats
         var pendingDemos = await _demoRequestRepository.GetCountByStatusAsync("pending");
         var totalDemos = await _demoRequestRepository.GetTotalCountAsync();
@@ -57,15 +67,25 @@ public class DashboardController : ControllerBase
         // Get recent tenants
         var recentTenants = await _tenantRepository.GetAllAsync(0, 5);
 
-        // Calculate revenue by month (last 6 months) - use actual billing events
+        // Calculate revenue by month (last 6 months)
+        // Use billing events if available, otherwise calculate from team subscriptions
         var revenueByMonth = new List<object>();
         for (int i = 5; i >= 0; i--)
         {
             var monthDate = now.AddMonths(-i);
             var start = new DateTime(monthDate.Year, monthDate.Month, 1);
             var end = start.AddMonths(1);
-            var revenue = await _billingEventRepository.GetTotalRevenueAsync(start, end);
+            var billingRevenue = await _billingEventRepository.GetTotalRevenueAsync(start, end);
             var tenantCount = await _tenantRepository.GetCountCreatedBetweenAsync(start, end);
+
+            // If no billing events, calculate MRR based on team count for that period
+            // For current/past months where team subscribers existed, show $20 per team tenant
+            decimal revenue = billingRevenue;
+            if (billingRevenue == 0 && teamCount > 0 && start <= now)
+            {
+                // Show MRR for months where team subscriptions were active
+                revenue = teamCount * 20m;
+            }
 
             revenueByMonth.Add(new
             {

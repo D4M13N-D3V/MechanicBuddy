@@ -19,4 +19,5 @@ public interface ITenantRepository
     Task<Dictionary<string, int>> GetCountByStatusAsync();
     Task<int> GetCountCreatedBetweenAsync(DateTime start, DateTime end);
     Task<IEnumerable<Tenant>> GetExpiredSubscriptionsAsync();
+    Task<int> GetTotalSubscriptionMonthsByTierAsync(string tier);
 }

@@ -211,4 +211,19 @@ public class TenantRepository : ITenantRepository
                     AND tier NOT IN ('solo', 'free', 'lifetime')";
         return await connection.QueryAsync<Tenant>(sql, new { Now = DateTime.UtcNow });
     }
+
+    public async Task<int> GetTotalSubscriptionMonthsByTierAsync(string tier)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        // Calculate total months subscribed for all tenants of a given tier
+        // Each tenant contributes: ceil(months since created_at)
+        // Minimum 1 month per tenant
+        var sql = @"
+            SELECT COALESCE(SUM(
+                GREATEST(1, CEIL(EXTRACT(EPOCH FROM (NOW() - created_at)) / (30 * 24 * 60 * 60)))
+            ), 0)::int
+            FROM management.tenants
+            WHERE tier = @Tier";
+        return await connection.ExecuteScalarAsync<int>(sql, new { Tier = tier });
+    }
 }
