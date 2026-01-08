@@ -311,6 +311,103 @@ public class TenantsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Restarts all active tenant API and frontend deployments.
+    /// </summary>
+    [HttpPost("restart-all")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> RestartAll()
+    {
+        try
+        {
+            var tenants = await _tenantService.GetAllAsync(0, 1000);
+            var activeTenants = tenants.Where(t => t.Status == "active").ToList();
+
+            _logger.LogInformation("Restarting all {Count} active tenant deployments", activeTenants.Count);
+
+            var results = new List<object>();
+            var errors = new List<object>();
+
+            foreach (var tenant in activeTenants)
+            {
+                try
+                {
+                    await _kubernetesClient.RestartDeploymentAsync(tenant.TenantId, "api");
+                    await _kubernetesClient.RestartDeploymentAsync(tenant.TenantId, "frontend");
+                    results.Add(new { tenantId = tenant.TenantId, success = true });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to restart deployments for tenant {TenantId}", tenant.TenantId);
+                    errors.Add(new { tenantId = tenant.TenantId, error = ex.Message });
+                }
+            }
+
+            return Ok(new
+            {
+                message = $"Restart initiated for {results.Count} tenants",
+                totalTenants = activeTenants.Count,
+                successCount = results.Count,
+                errorCount = errors.Count,
+                results,
+                errors
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restart all tenant deployments");
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Runs database migrations for all active tenants.
+    /// </summary>
+    [HttpPost("migrate-all")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> MigrateAll()
+    {
+        try
+        {
+            var tenants = await _tenantService.GetAllAsync(0, 1000);
+            var activeTenants = tenants.Where(t => t.Status == "active").ToList();
+
+            _logger.LogInformation("Running migrations for all {Count} active tenants", activeTenants.Count);
+
+            var results = new List<object>();
+            var errors = new List<object>();
+
+            foreach (var tenant in activeTenants)
+            {
+                try
+                {
+                    var jobName = await _kubernetesClient.RunMigrationJobAsync(tenant.TenantId);
+                    results.Add(new { tenantId = tenant.TenantId, jobName, success = true });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to run migration for tenant {TenantId}", tenant.TenantId);
+                    errors.Add(new { tenantId = tenant.TenantId, error = ex.Message });
+                }
+            }
+
+            return Ok(new
+            {
+                message = $"Migration jobs started for {results.Count} tenants",
+                totalTenants = activeTenants.Count,
+                successCount = results.Count,
+                errorCount = errors.Count,
+                results,
+                errors
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to run migrations for all tenants");
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public record CreateTenantRequest(string CompanyName, string OwnerEmail, string OwnerName, string? Tier, bool IsDemo);

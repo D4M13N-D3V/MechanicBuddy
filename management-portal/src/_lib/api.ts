@@ -280,6 +280,35 @@ export async function runTenantMigration(tenantId: string): Promise<ApiResponse<
   });
 }
 
+// Bulk Tenant Operations
+export interface BulkOperationResult {
+  tenantId: string;
+  success?: boolean;
+  jobName?: string;
+  error?: string;
+}
+
+export interface BulkTenantOperationResponse {
+  message: string;
+  totalTenants: number;
+  successCount: number;
+  errorCount: number;
+  results: BulkOperationResult[];
+  errors: BulkOperationResult[];
+}
+
+export async function restartAllTenants(): Promise<ApiResponse<BulkTenantOperationResponse>> {
+  return fetchApi<BulkTenantOperationResponse>("/api/tenants/restart-all", {
+    method: "POST",
+  });
+}
+
+export async function migrateAllTenants(): Promise<ApiResponse<BulkTenantOperationResponse>> {
+  return fetchApi<BulkTenantOperationResponse>("/api/tenants/migrate-all", {
+    method: "POST",
+  });
+}
+
 // User API
 export async function getCurrentUser(): Promise<ApiResponse<PortalUser>> {
   return fetchApi<PortalUser>("/api/user/me");

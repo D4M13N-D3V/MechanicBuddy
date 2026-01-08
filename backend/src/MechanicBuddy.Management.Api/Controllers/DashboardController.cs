@@ -118,13 +118,16 @@ public class DashboardController : ControllerBase
 
     private static decimal GetRevenueByTier(string tier, int count)
     {
-        // Approximate revenue based on tier pricing
-        return tier switch
+        // Monthly recurring revenue based on tier pricing
+        // Team: $25/month subscription
+        // Lifetime: One-time purchase, no MRR contribution
+        // Free/Solo: No cost
+        return tier?.ToLower() switch
         {
             "free" => 0,
-            "starter" => count * 20m,
-            "professional" => count * 15m * 15, // Avg 15 mechanics
-            "enterprise" => count * 10m * 30,   // Avg 30 mechanics
+            "solo" => 0,
+            "team" => count * 25m,
+            "lifetime" => 0, // One-time purchase, not recurring revenue
             _ => 0
         };
     }

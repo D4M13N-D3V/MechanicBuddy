@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/_lib/auth";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { AddTenantButton } from "@/_components/TenantsPageClient";
+import { BulkTenantOperationsButtons } from "@/_components/BulkTenantOperationsButtons";
 
 const ADMIN_ROLES = ["super_admin", "admin", "support"];
 
@@ -62,7 +63,10 @@ export default async function TenantsPage() {
           <h1 className="text-3xl font-bold text-dark-900">Tenants</h1>
           <p className="text-dark-500 mt-1">Manage all workshop tenants</p>
         </div>
-        <AddTenantButton />
+        <div className="flex items-center gap-4">
+          <BulkTenantOperationsButtons />
+          <AddTenantButton />
+        </div>
       </div>
 
       <Card>
