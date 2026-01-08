@@ -118,6 +118,32 @@ namespace MechanicBuddy.Core.Repository.Postgres
                 new UserIdentifier(user.TenantName, user.EmployeeId));
         }
 
+        public void Add(User user)
+        {
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+
+            if (user.Id == null)
+                throw new ArgumentException("Cannot add user without a valid identifier");
+
+            using (var connection = CreateConnection(GetUserListDatabase()))
+            {
+                connection.Execute(
+                    @"INSERT INTO public.user (tenantname, employeeid, username, password, email, validated, profile_image)
+                      VALUES (@TenantName, @EmployeeId, @UserName, @Password, @Email, @Validated, @ProfileImage)",
+                    new
+                    {
+                        TenantName = user.Id.TenantName,
+                        EmployeeId = user.Id.EmployeeId,
+                        UserName = user.UserName,
+                        Password = user.Password,
+                        Email = user.Email,
+                        Validated = user.Validated,
+                        ProfileImage = user.ProfileImage
+                    });
+            }
+        }
+
         public void Update(User user)
         {
             if (user == null)

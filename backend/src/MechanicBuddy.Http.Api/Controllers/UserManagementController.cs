@@ -269,7 +269,7 @@ namespace MechanicBuddy.Http.Api.Controllers
                 null, // profile image
                 new UserIdentifier(tenantName, employee.Id));
 
-            userRepository.Update(user);
+            userRepository.Add(user);
 
             // Set must_change_password flag if needed
             if (model.MustChangePassword)
