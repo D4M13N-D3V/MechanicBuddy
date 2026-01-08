@@ -10,6 +10,7 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { AddTenantButton } from "@/_components/TenantsPageClient";
 import { BulkTenantOperationsButtons } from "@/_components/BulkTenantOperationsButtons";
+import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
 
 const ADMIN_ROLES = ["super_admin", "admin", "support"];
 
@@ -27,6 +28,7 @@ export default async function TenantsPage() {
   if (!user || !ADMIN_ROLES.includes(user.role)) {
     redirect("/dashboard/account");
   }
+  const isSuperAdmin = user.role === "super_admin";
 
   const response = await getTenants(1, 50);
 
@@ -117,9 +119,14 @@ export default async function TenantsPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/dashboard/tenants/${tenant.id}`}>
-                        <Button variant="ghost" size="sm">View</Button>
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/dashboard/tenants/${tenant.id}`}>
+                          <Button variant="ghost" size="sm">View</Button>
+                        </Link>
+                        {isSuperAdmin && (
+                          <DeleteTenantButton tenantId={tenant.tenantId} companyName={tenant.companyName} />
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
