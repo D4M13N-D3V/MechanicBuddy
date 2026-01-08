@@ -20,4 +20,12 @@ public interface ITenantDatabaseProvisioner
     /// </summary>
     /// <param name="tenantId">The tenant identifier</param>
     Task<bool> TenantDatabaseExistsAsync(string tenantId);
+
+    /// <summary>
+    /// Disables all non-admin users for a tenant by setting validated = false.
+    /// Used when downgrading from team tier to solo.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier</param>
+    /// <returns>Number of users disabled</returns>
+    Task<int> DisableNonAdminUsersAsync(string tenantId);
 }

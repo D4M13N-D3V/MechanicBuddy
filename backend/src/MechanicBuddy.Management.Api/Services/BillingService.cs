@@ -12,6 +12,7 @@ public class BillingService
     private readonly Infrastructure.IStripeClient _stripeClient;
     private readonly Infrastructure.IKubernetesClient _kubernetesClient;
     private readonly Infrastructure.ICloudflareClient _cloudflareClient;
+    private readonly Infrastructure.ITenantDatabaseProvisioner _tenantDatabaseProvisioner;
     private readonly IConfiguration _configuration;
     private readonly ILogger<BillingService> _logger;
 
@@ -29,6 +30,7 @@ public class BillingService
         Infrastructure.IStripeClient stripeClient,
         Infrastructure.IKubernetesClient kubernetesClient,
         Infrastructure.ICloudflareClient cloudflareClient,
+        Infrastructure.ITenantDatabaseProvisioner tenantDatabaseProvisioner,
         IConfiguration configuration,
         ILogger<BillingService> logger)
     {
@@ -37,6 +39,7 @@ public class BillingService
         _stripeClient = stripeClient;
         _kubernetesClient = kubernetesClient;
         _cloudflareClient = cloudflareClient;
+        _tenantDatabaseProvisioner = tenantDatabaseProvisioner;
         _configuration = configuration;
         _logger = logger;
     }
@@ -921,6 +924,17 @@ public class BillingService
             tenant.MaxMechanics = 1;
             await _tenantRepository.UpdateAsync(tenant);
 
+            // Disable all non-admin users (solo tier only allows 1 user)
+            try
+            {
+                var disabledCount = await _tenantDatabaseProvisioner.DisableNonAdminUsersAsync(tenant.TenantId);
+                _logger.LogInformation("Disabled {Count} non-admin users for suspended tenant {TenantId}", disabledCount, tenant.TenantId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to disable non-admin users for tenant {TenantId}", tenant.TenantId);
+            }
+
             // Delete the K8s namespace (removes all tenant resources)
             try
             {
@@ -963,6 +977,7 @@ public class BillingService
                     ["new_tier"] = "solo",
                     ["new_status"] = "suspended",
                     ["expired_at"] = tenant.SubscriptionEndsAt?.ToString("o") ?? "",
+                    ["users_disabled"] = true,
                     ["k8s_deleted"] = true,
                     ["dns_deleted"] = true
                 }

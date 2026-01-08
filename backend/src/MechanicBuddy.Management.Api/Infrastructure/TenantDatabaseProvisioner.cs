@@ -145,6 +145,30 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         return result is bool exists && exists;
     }
 
+    public async Task<int> DisableNonAdminUsersAsync(string tenantId)
+    {
+        // Disable all non-admin users by setting validated = false
+        // This is used when downgrading from team tier to solo (only 1 user allowed)
+        var tenancyConnectionString = BuildConnectionString(_tenancyDbName);
+
+        await using var connection = new NpgsqlConnection(tenancyConnectionString);
+        await connection.OpenAsync();
+
+        // Set validated = false for all users except the default admin
+        await using var cmd = new NpgsqlCommand(@"
+            UPDATE public.""user""
+            SET validated = false
+            WHERE tenantname = @tenantId
+              AND COALESCE(is_default_admin, false) = false", connection);
+        cmd.Parameters.AddWithValue("tenantId", tenantId);
+
+        var rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+        _logger.LogInformation("Disabled {Count} non-admin users for tenant {TenantId}", rowsAffected, tenantId);
+
+        return rowsAffected;
+    }
+
     private string GetTenantDbName(string tenantId)
     {
         // Database naming: mechanicbuddy-{tenantId}
