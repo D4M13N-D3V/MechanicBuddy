@@ -89,20 +89,22 @@ export default async function TenantDetailPage({
         )}
       </div>
 
-      {/* Operations Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Deployment Operations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
-            Manage the Kubernetes deployments and database for this tenant.
-          </p>
-          <TenantOperationsButtons tenantId={tenant.tenantId} />
-        </CardContent>
-      </Card>
+      {/* Operations Card - Admin Only */}
+      {isSuperAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Deployment Operations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Manage the Kubernetes deployments and database for this tenant.
+            </p>
+            <TenantOperationsButtons tenantId={tenant.tenantId} />
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Subscription Management Card */}
+      {/* Subscription Management Card - Admin Only */}
       {isSuperAdmin && (
         <Card>
           <CardHeader>
