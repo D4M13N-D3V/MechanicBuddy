@@ -160,7 +160,13 @@ public class NpmClient : INpmClient
             var existingHost = await GetProxyHostByDomainAsync(customDomain);
             if (existingHost != null)
             {
-                _logger.LogInformation("Proxy host for custom domain {Domain} already exists with ID {Id}", customDomain, existingHost.Id);
+                _logger.LogInformation("Proxy host for custom domain {Domain} already exists with ID {Id}, checking SSL", customDomain, existingHost.Id);
+
+                // If existing host doesn't have SSL, try to add it
+                if (existingHost.CertificateId == null || existingHost.CertificateId == 0)
+                {
+                    return await UpdateProxyHostWithSslAsync(existingHost.Id, customDomain);
+                }
                 return true;
             }
 
@@ -211,6 +217,52 @@ public class NpmClient : INpmClient
         }
     }
 
+    private async Task<bool> UpdateProxyHostWithSslAsync(int proxyHostId, string domain)
+    {
+        try
+        {
+            _logger.LogInformation("Updating proxy host {Id} for {Domain} with SSL certificate", proxyHostId, domain);
+
+            // Request Let's Encrypt certificate
+            var certificateId = await RequestLetsEncryptCertificateAsync(domain);
+            if (certificateId == null)
+            {
+                _logger.LogWarning("Could not obtain Let's Encrypt certificate for {Domain}", domain);
+                return false;
+            }
+
+            // Update the proxy host with the certificate
+            var updatePayload = new
+            {
+                certificate_id = certificateId,
+                ssl_forced = true,
+                http2_support = true
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(updatePayload),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PutAsync($"{_baseUrl}/api/nginx/proxy-hosts/{proxyHostId}", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to update proxy host {Id} with SSL: {Error}", proxyHostId, error);
+                return false;
+            }
+
+            _logger.LogInformation("Updated proxy host {Id} for {Domain} with SSL certificate {CertId}", proxyHostId, domain, certificateId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating proxy host {Id} with SSL", proxyHostId);
+            return false;
+        }
+    }
+
     public async Task<bool> DeleteCustomDomainProxyHostAsync(string customDomain)
     {
         try
@@ -254,8 +306,7 @@ public class NpmClient : INpmClient
                 meta = new
                 {
                     letsencrypt_agree = true,
-                    letsencrypt_email = _email,
-                    dns_challenge = false
+                    letsencrypt_email = _email
                 },
                 provider = "letsencrypt"
             };
@@ -264,6 +315,8 @@ public class NpmClient : INpmClient
                 JsonSerializer.Serialize(certRequest),
                 Encoding.UTF8,
                 "application/json");
+
+            _logger.LogInformation("Requesting Let's Encrypt certificate for {Domain}", domain);
 
             var response = await _httpClient.PostAsync($"{_baseUrl}/api/nginx/certificates", content);
 
@@ -313,6 +366,9 @@ public class NpmClient : INpmClient
 
         [JsonPropertyName("domain_names")]
         public string[]? DomainNames { get; set; }
+
+        [JsonPropertyName("certificate_id")]
+        public int? CertificateId { get; set; }
     }
 
     private class NpmProxyHostCreate
