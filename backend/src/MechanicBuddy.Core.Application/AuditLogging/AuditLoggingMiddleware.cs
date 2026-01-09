@@ -136,6 +136,7 @@ namespace MechanicBuddy.Core.Application.AuditLogging
                     durationMs: (int)durationMs);
 
                 repository.Add(auditLog);
+                repository.Flush();
             }
             catch (Exception ex)
             {

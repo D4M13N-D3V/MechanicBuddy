@@ -40,6 +40,11 @@ namespace MechanicBuddy.Core.Repository.Postgres
             context.Delete(entity);
         }
 
+        public void Flush()
+        {
+            context.Flush();
+        }
+
         public IDbConnection GetConnection()
         {
             return context.Connection;
