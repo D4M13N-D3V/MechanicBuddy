@@ -76,6 +76,10 @@ spec:
                 secretKeyRef:
                   name: management-api-secrets
                   key: stripe-webhook-secret
+            - name: Stripe__PriceIds__Team
+              value: "price_1SnYf4FBVHqgtqXd66EsdhkX"
+            - name: Stripe__PriceIds__Lifetime
+              value: "price_1SnYfVFBVHqgtqXdHLniz1lC"
             - name: Email__ResendApiKey
               valueFrom:
                 secretKeyRef:
