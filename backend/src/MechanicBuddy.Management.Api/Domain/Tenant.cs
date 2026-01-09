@@ -17,6 +17,7 @@ public class Tenant
     public DateTime? TrialEndsAt { get; set; }
     public DateTime? SubscriptionEndsAt { get; set; }
     public DateTime? LastBilledAt { get; set; }
+    public DateTime? LastActivityAt { get; set; }
     public int MaxMechanics { get; set; } = 1;
     public int MaxStorage { get; set; } = 1024; // MB
     public bool IsDemo { get; set; }

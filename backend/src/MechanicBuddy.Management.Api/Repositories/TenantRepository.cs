@@ -74,12 +74,12 @@ public class TenantRepository : ITenantRepository
             INSERT INTO management.tenants (
                 tenant_id, company_name, tier, status, owner_email, owner_name,
                 stripe_customer_id, stripe_subscription_id, custom_domain, domain_verified,
-                created_at, trial_ends_at, subscription_ends_at, max_mechanics, max_storage,
+                created_at, trial_ends_at, subscription_ends_at, last_activity_at, max_mechanics, max_storage,
                 is_demo, k8s_namespace, db_connection_string, api_url, metadata
             ) VALUES (
                 @TenantId, @CompanyName, @Tier, @Status, @OwnerEmail, @OwnerName,
                 @StripeCustomerId, @StripeSubscriptionId, @CustomDomain, @DomainVerified,
-                @CreatedAt, @TrialEndsAt, @SubscriptionEndsAt, @MaxMechanics, @MaxStorage,
+                @CreatedAt, @TrialEndsAt, @SubscriptionEndsAt, @LastActivityAt, @MaxMechanics, @MaxStorage,
                 @IsDemo, @K8sNamespace, @DbConnectionString, @ApiUrl, @Metadata::jsonb
             ) RETURNING id";
 
@@ -98,6 +98,7 @@ public class TenantRepository : ITenantRepository
             tenant.CreatedAt,
             tenant.TrialEndsAt,
             tenant.SubscriptionEndsAt,
+            LastActivityAt = tenant.LastActivityAt ?? DateTime.UtcNow,
             tenant.MaxMechanics,
             tenant.MaxStorage,
             tenant.IsDemo,
@@ -124,6 +125,7 @@ public class TenantRepository : ITenantRepository
                 domain_verified = @DomainVerified,
                 trial_ends_at = @TrialEndsAt,
                 subscription_ends_at = @SubscriptionEndsAt,
+                last_activity_at = @LastActivityAt,
                 max_mechanics = @MaxMechanics,
                 max_storage = @MaxStorage,
                 is_demo = @IsDemo,
@@ -147,6 +149,7 @@ public class TenantRepository : ITenantRepository
             tenant.DomainVerified,
             tenant.TrialEndsAt,
             tenant.SubscriptionEndsAt,
+            tenant.LastActivityAt,
             tenant.MaxMechanics,
             tenant.MaxStorage,
             tenant.IsDemo,
@@ -225,5 +228,30 @@ public class TenantRepository : ITenantRepository
             FROM management.tenants
             WHERE tier = @Tier";
         return await connection.ExecuteScalarAsync<int>(sql, new { Tier = tier });
+    }
+
+    public async Task<IEnumerable<Tenant>> GetInactiveFreeTierTenantsAsync(int inactiveDays)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var cutoffDate = DateTime.UtcNow.AddDays(-inactiveDays);
+        var sql = @"
+            SELECT * FROM management.tenants
+            WHERE status = 'active'
+            AND tier IN ('free', 'solo')
+            AND tier != 'lifetime'
+            AND (last_activity_at IS NULL OR last_activity_at < @CutoffDate)
+            ORDER BY last_activity_at ASC";
+        return await connection.QueryAsync<Tenant>(sql, new { CutoffDate = cutoffDate });
+    }
+
+    public async Task<bool> UpdateLastActivityAsync(string tenantId, DateTime activityAt)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        var sql = @"
+            UPDATE management.tenants
+            SET last_activity_at = @ActivityAt
+            WHERE tenant_id = @TenantId";
+        var rowsAffected = await connection.ExecuteAsync(sql, new { TenantId = tenantId, ActivityAt = activityAt });
+        return rowsAffected > 0;
     }
 }

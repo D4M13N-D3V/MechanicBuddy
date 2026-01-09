@@ -899,7 +899,8 @@ public class BillingService
     }
 
     /// <summary>
-    /// Checks for expired subscriptions and suspends the tenant.
+    /// Checks for expired subscriptions and downgrades the tenant to free tier.
+    /// Tenant remains active but non-admin users are disabled.
     /// Should be called by a scheduled job (e.g., daily CronJob).
     /// </summary>
     public async Task<int> ProcessExpiredSubscriptionsAsync()
@@ -918,56 +919,32 @@ public class BillingService
             var previousTier = tenant.Tier;
             var previousStatus = tenant.Status;
 
-            // Suspend the tenant and downgrade to solo tier
+            // Downgrade to solo tier but keep active (do NOT suspend)
             tenant.Tier = "solo";
-            tenant.Status = "suspended";
+            // Keep status as "active" - tenant can still use the system on free tier
             tenant.MaxMechanics = 1;
             await _tenantRepository.UpdateAsync(tenant);
 
             // Disable all non-admin users (solo tier only allows 1 user)
+            var disabledCount = 0;
             try
             {
-                var disabledCount = await _tenantDatabaseProvisioner.DisableNonAdminUsersAsync(tenant.TenantId);
-                _logger.LogInformation("Disabled {Count} non-admin users for suspended tenant {TenantId}", disabledCount, tenant.TenantId);
+                disabledCount = await _tenantDatabaseProvisioner.DisableNonAdminUsersAsync(tenant.TenantId);
+                _logger.LogInformation("Disabled {Count} non-admin users for downgraded tenant {TenantId}", disabledCount, tenant.TenantId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to disable non-admin users for tenant {TenantId}", tenant.TenantId);
             }
 
-            // Delete the K8s namespace (removes all tenant resources)
-            try
-            {
-                await _kubernetesClient.DeleteNamespaceAsync(tenant.TenantId);
-                _logger.LogInformation("Deleted K8s namespace for suspended tenant {TenantId}", tenant.TenantId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to delete K8s namespace for tenant {TenantId}", tenant.TenantId);
-            }
-
-            // Delete Cloudflare DNS record
-            try
-            {
-                var dnsDeleted = await _cloudflareClient.DeleteTenantDnsRecordAsync(tenant.TenantId);
-                if (dnsDeleted)
-                {
-                    _logger.LogInformation("Deleted Cloudflare DNS record for suspended tenant {TenantId}", tenant.TenantId);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to delete Cloudflare DNS record for tenant {TenantId}", tenant.TenantId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to delete Cloudflare DNS for tenant {TenantId}", tenant.TenantId);
-            }
+            // NOTE: K8s and Cloudflare resources are NOT deleted on free tier downgrade
+            // Tenant stays running and accessible on free tier
+            // Resources are only deleted when tenant is suspended due to inactivity
 
             await _billingEventRepository.CreateAsync(new BillingEvent
             {
                 TenantId = tenant.TenantId,
-                EventType = "subscription_expired",
+                EventType = "subscription_expired_downgraded",
                 Amount = 0,
                 CreatedAt = DateTime.UtcNow,
                 Metadata = new Dictionary<string, object>
@@ -975,15 +952,16 @@ public class BillingService
                     ["previous_tier"] = previousTier,
                     ["previous_status"] = previousStatus,
                     ["new_tier"] = "solo",
-                    ["new_status"] = "suspended",
+                    ["new_status"] = "active",
                     ["expired_at"] = tenant.SubscriptionEndsAt?.ToString("o") ?? "",
-                    ["users_disabled"] = true,
-                    ["k8s_deleted"] = true,
-                    ["dns_deleted"] = true
+                    ["users_disabled"] = disabledCount > 0,
+                    ["users_disabled_count"] = disabledCount,
+                    ["k8s_deleted"] = false,
+                    ["dns_deleted"] = false
                 }
             });
 
-            _logger.LogInformation("Tenant {TenantId} suspended and downgraded from {PreviousTier} to solo due to expired subscription",
+            _logger.LogInformation("Tenant {TenantId} downgraded from {PreviousTier} to solo (kept active) due to expired subscription",
                 tenant.TenantId, previousTier);
 
             processedCount++;

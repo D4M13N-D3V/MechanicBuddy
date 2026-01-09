@@ -14,17 +14,20 @@ public class TenantsController : ControllerBase
     private readonly TenantService _tenantService;
     private readonly ITenantDatabaseProvisioner _dbProvisioner;
     private readonly IKubernetesClient _kubernetesClient;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<TenantsController> _logger;
 
     public TenantsController(
         TenantService tenantService,
         ITenantDatabaseProvisioner dbProvisioner,
         IKubernetesClient kubernetesClient,
+        IConfiguration configuration,
         ILogger<TenantsController> logger)
     {
         _tenantService = tenantService;
         _dbProvisioner = dbProvisioner;
         _kubernetesClient = kubernetesClient;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -118,6 +121,34 @@ public class TenantsController : ControllerBase
         }
 
         return Ok(new { message = "Tenant resumed successfully" });
+    }
+
+    /// <summary>
+    /// Records activity heartbeat from tenant API.
+    /// Called by tenant instances to report that users are actively using the system.
+    /// </summary>
+    [HttpPost("{tenantId}/heartbeat")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RecordHeartbeat(string tenantId, [FromHeader(Name = "X-Service-Key")] string? serviceKey)
+    {
+        // Validate service key for security
+        var expectedKey = _configuration["ServiceAuth:HeartbeatKey"];
+        if (!string.IsNullOrEmpty(expectedKey) && serviceKey != expectedKey)
+        {
+            return Unauthorized(new { message = "Invalid service key" });
+        }
+
+        var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+        if (tenant == null)
+        {
+            return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+        }
+
+        tenant.LastActivityAt = DateTime.UtcNow;
+        await _tenantService.UpdateTenantAsync(tenant);
+
+        _logger.LogDebug("Recorded heartbeat for tenant {TenantId}", tenantId);
+        return Ok(new { message = "Heartbeat recorded", timestamp = DateTime.UtcNow });
     }
 
     [HttpDelete("{tenantId}")]

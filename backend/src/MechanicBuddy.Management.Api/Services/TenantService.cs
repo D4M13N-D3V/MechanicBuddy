@@ -19,6 +19,7 @@ public class TenantService
     private readonly ITenantRepository _tenantRepository;
     private readonly IKubernetesClient _k8sClient;
     private readonly ICloudflareClient _cloudflareClient;
+    private readonly INpmClient _npmClient;
     private readonly IEmailClient _emailClient;
     private readonly ILogger<TenantService> _logger;
 
@@ -29,12 +30,14 @@ public class TenantService
         ITenantRepository tenantRepository,
         IKubernetesClient k8sClient,
         ICloudflareClient cloudflareClient,
+        INpmClient npmClient,
         IEmailClient emailClient,
         ILogger<TenantService> logger)
     {
         _tenantRepository = tenantRepository;
         _k8sClient = k8sClient;
         _cloudflareClient = cloudflareClient;
+        _npmClient = npmClient;
         _emailClient = emailClient;
         _logger = logger;
     }
@@ -175,14 +178,47 @@ public class TenantService
         tenant.Metadata["suspension_reason"] = reason;
         tenant.Metadata["suspended_at"] = DateTime.UtcNow;
 
-        // Scale down Kubernetes resources
-        await _k8sClient.ScaleTenantInstanceAsync(tenantId, 0);
+        // Delete Kubernetes namespace (full cleanup, not just scale down)
+        try
+        {
+            await _k8sClient.DeleteNamespaceAsync(tenantId);
+            _logger.LogInformation("Deleted K8s namespace for suspended tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete K8s namespace for tenant {TenantId}", tenantId);
+        }
+
+        // Remove NPM proxy entries
+        try
+        {
+            var npmDeleted = await _npmClient.DeleteProxyHostAsync(tenantId);
+            if (npmDeleted)
+            {
+                _logger.LogInformation("Deleted NPM proxy host for suspended tenant {TenantId}", tenantId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to delete NPM proxy host for tenant {TenantId}", tenantId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete NPM proxy host for tenant {TenantId}", tenantId);
+        }
 
         // Remove Cloudflare DNS entries
         try
         {
-            await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
-            _logger.LogInformation("Deleted Cloudflare DNS record for suspended tenant {TenantId}", tenantId);
+            var dnsDeleted = await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
+            if (dnsDeleted)
+            {
+                _logger.LogInformation("Deleted Cloudflare DNS record for suspended tenant {TenantId}", tenantId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to delete Cloudflare DNS record for tenant {TenantId}", tenantId);
+            }
         }
         catch (Exception ex)
         {
@@ -201,11 +237,44 @@ public class TenantService
         }
 
         tenant.Status = "active";
+        tenant.LastActivityAt = DateTime.UtcNow;
         tenant.Metadata?.Remove("suspension_reason");
         tenant.Metadata?.Remove("suspended_at");
 
-        // Scale up Kubernetes resources
-        await _k8sClient.ScaleTenantInstanceAsync(tenantId, 1);
+        // Redeploy Kubernetes resources (namespace was deleted on suspend)
+        try
+        {
+            var k8sNamespace = await _k8sClient.CreateNamespaceAsync(tenantId);
+            tenant.K8sNamespace = k8sNamespace;
+
+            var apiUrl = await _k8sClient.DeployTenantInstanceAsync(tenantId, tenant.Tier);
+            tenant.ApiUrl = apiUrl;
+
+            _logger.LogInformation("Redeployed K8s resources for resumed tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to redeploy K8s resources for tenant {TenantId}", tenantId);
+            throw;
+        }
+
+        // Recreate NPM proxy entries
+        try
+        {
+            var npmCreated = await _npmClient.CreateProxyHostAsync(tenantId);
+            if (npmCreated)
+            {
+                _logger.LogInformation("Created NPM proxy host for resumed tenant {TenantId}", tenantId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to create NPM proxy host for tenant {TenantId}", tenantId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to create NPM proxy host for tenant {TenantId}", tenantId);
+        }
 
         // Recreate Cloudflare DNS entries
         try

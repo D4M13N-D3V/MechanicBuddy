@@ -138,6 +138,7 @@ builder.Services.AddSingleton<JwtService>();
 
 // Register Background Services
 builder.Services.AddHostedService<DemoCleanupService>();
+builder.Services.AddHostedService<InactivityCheckService>();
 
 // Register Provisioning Services
 builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();

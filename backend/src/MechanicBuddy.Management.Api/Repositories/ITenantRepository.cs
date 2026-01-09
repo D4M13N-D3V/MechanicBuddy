@@ -20,4 +20,6 @@ public interface ITenantRepository
     Task<int> GetCountCreatedBetweenAsync(DateTime start, DateTime end);
     Task<IEnumerable<Tenant>> GetExpiredSubscriptionsAsync();
     Task<int> GetTotalSubscriptionMonthsByTierAsync(string tier);
+    Task<IEnumerable<Tenant>> GetInactiveFreeTierTenantsAsync(int inactiveDays);
+    Task<bool> UpdateLastActivityAsync(string tenantId, DateTime activityAt);
 }
