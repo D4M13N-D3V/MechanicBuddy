@@ -300,14 +300,11 @@ public class NpmClient : INpmClient
     {
         try
         {
+            // NPM's Let's Encrypt certificate request requires empty meta object for HTTP challenge
             var certRequest = new
             {
                 domain_names = new[] { domain },
-                meta = new
-                {
-                    letsencrypt_agree = true,
-                    letsencrypt_email = _email
-                },
+                meta = new { },
                 provider = "letsencrypt"
             };
 
