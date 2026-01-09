@@ -28,7 +28,7 @@ export default async function TenantsPage() {
   if (!user || !ADMIN_ROLES.includes(user.role)) {
     redirect("/dashboard/account");
   }
-  const isSuperAdmin = user.role === "admin" || user.role === "owner";
+  const isSuperAdmin = user.role === "admin";
 
   const response = await getTenants(1, 50);
 
@@ -66,7 +66,7 @@ export default async function TenantsPage() {
           <p className="text-dark-500 mt-1">Manage all workshop tenants</p>
         </div>
         <div className="flex items-center gap-4">
-          <BulkTenantOperationsButtons />
+          {isSuperAdmin && <BulkTenantOperationsButtons />}
           <AddTenantButton />
         </div>
       </div>

@@ -31,7 +31,7 @@ export default async function TenantDetailPage({
     getCurrentUser(),
     getTenantDomains(tenantId),
   ]);
-  const isSuperAdmin = user?.role === "admin" || user?.role === "owner";
+  const isSuperAdmin = user?.role === "admin";
   const domains = domainsResponse.success && domainsResponse.data ? domainsResponse.data.domains : [];
   const verifiedDomain = domains.find((d) => d.isVerified);
   const pendingDomain = domains.find((d) => !d.isVerified);
