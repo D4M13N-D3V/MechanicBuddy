@@ -8,6 +8,7 @@ import { getTenant, getTenantDomains } from "@/_lib/api";
 import { DeleteTenantButton } from "@/_components/DeleteTenantButton";
 import { SuspendTenantButton } from "@/_components/SuspendTenantButton";
 import { TenantOperationsButtons } from "@/_components/TenantOperationsButtons";
+import { SubscriptionButtons } from "@/_components/SubscriptionButtons";
 import { getCurrentUser } from "@/_lib/auth";
 
 const statusColors: Record<string, "default" | "success" | "warning" | "danger" | "info"> = {
@@ -100,6 +101,21 @@ export default async function TenantDetailPage({
           <TenantOperationsButtons tenantId={tenant.tenantId} />
         </CardContent>
       </Card>
+
+      {/* Subscription Management Card */}
+      {isSuperAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Grant subscription access to this tenant. Lifetime access never expires. 30-day access adds time to any existing subscription.
+            </p>
+            <SubscriptionButtons tenantId={tenant.tenantId} currentTier={tenant.tier} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Overview Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

@@ -458,3 +458,23 @@ export async function getAuditLogs(
 export async function getAuditLogStats(days = 7): Promise<ApiResponse<AuditLogStats>> {
   return fetchApi<AuditLogStats>(`/api/auditlogs/stats?days=${days}`);
 }
+
+// Subscription Management API
+export interface GrantSubscriptionResponse {
+  message: string;
+  tenantId: string;
+  tier: string;
+  subscriptionEndsAt: string | null;
+}
+
+export async function grantLifetimeAccess(tenantId: string): Promise<ApiResponse<GrantSubscriptionResponse>> {
+  return fetchApi<GrantSubscriptionResponse>(`/api/tenants/${tenantId}/grant-lifetime`, {
+    method: "POST",
+  });
+}
+
+export async function grant30DaysAccess(tenantId: string): Promise<ApiResponse<GrantSubscriptionResponse>> {
+  return fetchApi<GrantSubscriptionResponse>(`/api/tenants/${tenantId}/grant-30-days`, {
+    method: "POST",
+  });
+}

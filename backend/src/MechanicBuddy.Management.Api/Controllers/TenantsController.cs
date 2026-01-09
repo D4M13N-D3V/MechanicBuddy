@@ -408,7 +408,94 @@ public class TenantsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    /// <summary>
+    /// Grants lifetime access to a tenant.
+    /// </summary>
+    [HttpPost("{tenantId}/grant-lifetime")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> GrantLifetimeAccess(string tenantId)
+    {
+        try
+        {
+            var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+            }
+
+            tenant.Tier = "lifetime";
+            tenant.Status = "active";
+            tenant.SubscriptionEndsAt = null; // Lifetime = no expiration
+            tenant.MaxMechanics = 999; // Unlimited
+            tenant.MaxStorage = 102400; // 100 GB
+
+            await _tenantService.UpdateTenantAsync(tenant);
+
+            _logger.LogInformation("Granted lifetime access to tenant {TenantId}", tenantId);
+
+            return Ok(new GrantSubscriptionResponse(
+                $"Granted lifetime access to tenant '{tenantId}'",
+                tenantId,
+                "lifetime",
+                null
+            ));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to grant lifetime access to tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Grants 30 days of membership to a tenant.
+    /// </summary>
+    [HttpPost("{tenantId}/grant-30-days")]
+    [Authorize(Policy = "SuperAdminOnly")]
+    public async Task<IActionResult> Grant30DaysAccess(string tenantId)
+    {
+        try
+        {
+            var tenant = await _tenantService.GetByTenantIdAsync(tenantId);
+            if (tenant == null)
+            {
+                return NotFound(new { message = $"Tenant '{tenantId}' not found" });
+            }
+
+            var expiryDate = DateTime.UtcNow.AddDays(30);
+
+            // If they already have time remaining, add 30 days to that
+            if (tenant.SubscriptionEndsAt.HasValue && tenant.SubscriptionEndsAt.Value > DateTime.UtcNow)
+            {
+                expiryDate = tenant.SubscriptionEndsAt.Value.AddDays(30);
+            }
+
+            tenant.Tier = "team";
+            tenant.Status = "active";
+            tenant.SubscriptionEndsAt = expiryDate;
+            tenant.MaxMechanics = 999; // Unlimited
+            tenant.MaxStorage = 102400; // 100 GB
+
+            await _tenantService.UpdateTenantAsync(tenant);
+
+            _logger.LogInformation("Granted 30 days access to tenant {TenantId}, expires {ExpiryDate}", tenantId, expiryDate);
+
+            return Ok(new GrantSubscriptionResponse(
+                $"Granted 30 days access to tenant '{tenantId}'",
+                tenantId,
+                "team",
+                expiryDate
+            ));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to grant 30 days access to tenant {TenantId}", tenantId);
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public record CreateTenantRequest(string CompanyName, string OwnerEmail, string OwnerName, string? Tier, bool IsDemo);
 public record SuspendTenantRequest(string Reason);
+public record GrantSubscriptionResponse(string Message, string TenantId, string Tier, DateTime? SubscriptionEndsAt);
