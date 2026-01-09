@@ -150,6 +150,143 @@ public class NpmClient : INpmClient
         }
     }
 
+    public async Task<bool> CreateCustomDomainProxyHostAsync(string tenantId, string customDomain)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            // Check if proxy host already exists
+            var existingHost = await GetProxyHostByDomainAsync(customDomain);
+            if (existingHost != null)
+            {
+                _logger.LogInformation("Proxy host for custom domain {Domain} already exists with ID {Id}", customDomain, existingHost.Id);
+                return true;
+            }
+
+            // First, request a Let's Encrypt certificate for the custom domain
+            var certificateId = await RequestLetsEncryptCertificateAsync(customDomain);
+            if (certificateId == null)
+            {
+                _logger.LogWarning("Could not obtain Let's Encrypt certificate for {Domain}, creating proxy without SSL", customDomain);
+            }
+
+            var proxyHost = new NpmProxyHostCreate
+            {
+                DomainNames = new[] { customDomain },
+                ForwardScheme = "http",
+                ForwardHost = _forwardHost,
+                ForwardPort = _forwardPort,
+                CertificateId = certificateId,
+                SslForced = certificateId.HasValue,
+                Http2Support = true,
+                BlockExploits = true,
+                AllowWebsocketUpgrade = true,
+                AccessListId = 0,
+                Meta = new NpmProxyHostMeta { LetsencryptAgree = false, DnsChallenge = false },
+                Locations = Array.Empty<object>()
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(proxyHost, new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync($"{_baseUrl}/api/nginx/proxy-hosts", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to create NPM proxy host for custom domain {Domain}: {Error}", customDomain, error);
+                return false;
+            }
+
+            _logger.LogInformation("Created NPM proxy host for custom domain {Domain} (tenant {TenantId})", customDomain, tenantId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating NPM proxy host for custom domain {Domain}", customDomain);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteCustomDomainProxyHostAsync(string customDomain)
+    {
+        try
+        {
+            await EnsureAuthenticatedAsync();
+
+            var existingHost = await GetProxyHostByDomainAsync(customDomain);
+
+            if (existingHost == null)
+            {
+                _logger.LogWarning("Proxy host for custom domain {Domain} not found, nothing to delete", customDomain);
+                return true;
+            }
+
+            var response = await _httpClient.DeleteAsync($"{_baseUrl}/api/nginx/proxy-hosts/{existingHost.Id}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to delete NPM proxy host for custom domain {Domain}: {Error}", customDomain, error);
+                return false;
+            }
+
+            _logger.LogInformation("Deleted NPM proxy host for custom domain {Domain}", customDomain);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting NPM proxy host for custom domain {Domain}", customDomain);
+            return false;
+        }
+    }
+
+    private async Task<int?> RequestLetsEncryptCertificateAsync(string domain)
+    {
+        try
+        {
+            var certRequest = new
+            {
+                domain_names = new[] { domain },
+                meta = new
+                {
+                    letsencrypt_agree = true,
+                    letsencrypt_email = _email,
+                    dns_challenge = false
+                },
+                provider = "letsencrypt"
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(certRequest),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync($"{_baseUrl}/api/nginx/certificates", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to request Let's Encrypt certificate for {Domain}: {Error}", domain, error);
+                return null;
+            }
+
+            var result = await response.Content.ReadAsStringAsync();
+            var certResponse = JsonSerializer.Deserialize<NpmCertificateResponse>(result);
+
+            _logger.LogInformation("Obtained Let's Encrypt certificate for {Domain} with ID {Id}", domain, certResponse?.Id);
+            return certResponse?.Id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error requesting Let's Encrypt certificate for {Domain}", domain);
+            return null;
+        }
+    }
+
     private async Task<NpmProxyHost?> GetProxyHostByDomainAsync(string domain)
     {
         var response = await _httpClient.GetAsync($"{_baseUrl}/api/nginx/proxy-hosts");
@@ -224,5 +361,11 @@ public class NpmClient : INpmClient
 
         [JsonPropertyName("dns_challenge")]
         public bool DnsChallenge { get; set; }
+    }
+
+    private class NpmCertificateResponse
+    {
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
     }
 }

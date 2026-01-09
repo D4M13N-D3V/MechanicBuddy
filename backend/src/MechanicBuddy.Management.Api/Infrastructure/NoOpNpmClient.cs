@@ -23,4 +23,16 @@ public class NoOpNpmClient : INpmClient
         _logger.LogWarning("NPM not configured. Skipping proxy host deletion for tenant {TenantId}", tenantId);
         return Task.FromResult(true);
     }
+
+    public Task<bool> CreateCustomDomainProxyHostAsync(string tenantId, string customDomain)
+    {
+        _logger.LogWarning("NPM not configured. Skipping custom domain proxy host creation for {Domain} (tenant {TenantId})", customDomain, tenantId);
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> DeleteCustomDomainProxyHostAsync(string customDomain)
+    {
+        _logger.LogWarning("NPM not configured. Skipping custom domain proxy host deletion for {Domain}", customDomain);
+        return Task.FromResult(true);
+    }
 }

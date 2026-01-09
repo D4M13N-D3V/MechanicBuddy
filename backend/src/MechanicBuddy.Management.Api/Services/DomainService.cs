@@ -1,4 +1,5 @@
 using MechanicBuddy.Management.Api.Domain;
+using MechanicBuddy.Management.Api.Infrastructure;
 using MechanicBuddy.Management.Api.Repositories;
 using System.Security.Cryptography;
 using System.Text;
@@ -34,6 +35,7 @@ public class DomainService
     private readonly IDomainVerificationRepository _domainVerificationRepository;
     private readonly ITenantRepository _tenantRepository;
     private readonly IKubernetesClientService _kubernetesClient;
+    private readonly INpmClient _npmClient;
     private readonly ILogger<DomainService> _logger;
     private readonly ILookupClient _dnsClient;
     private readonly string _namespacePrefix;
@@ -42,12 +44,14 @@ public class DomainService
         IDomainVerificationRepository domainVerificationRepository,
         ITenantRepository tenantRepository,
         IKubernetesClientService kubernetesClient,
+        INpmClient npmClient,
         ILogger<DomainService> logger,
         IConfiguration configuration)
     {
         _domainVerificationRepository = domainVerificationRepository;
         _tenantRepository = tenantRepository;
         _kubernetesClient = kubernetesClient;
+        _npmClient = npmClient;
         _logger = logger;
         _dnsClient = new LookupClient();
         _namespacePrefix = configuration.GetValue<string>("Provisioning:NamespacePrefix") ?? "mechanicbuddy-";
@@ -127,6 +131,9 @@ public class DomainService
 
                 // Update Kubernetes Ingress with custom domain
                 await UpdateTenantIngressAsync(tenant.TenantId, domain);
+
+                // Create NPM proxy host for custom domain
+                await _npmClient.CreateCustomDomainProxyHostAsync(tenant.TenantId, domain);
             }
 
             _logger.LogInformation("Successfully verified domain {Domain} for tenant {TenantId}", domain, verification.TenantId);
@@ -189,6 +196,9 @@ public class DomainService
 
                 // Update Kubernetes Ingress with custom domain
                 await UpdateTenantIngressAsync(tenant.TenantId, domain);
+
+                // Create NPM proxy host for custom domain
+                await _npmClient.CreateCustomDomainProxyHostAsync(tenant.TenantId, domain);
             }
 
             _logger.LogInformation("Successfully verified domain {Domain} for tenant {TenantId}", domain, verification.TenantId);
@@ -287,6 +297,12 @@ public class DomainService
         if (tenant == null)
         {
             return false;
+        }
+
+        // Delete NPM proxy host for custom domain
+        if (!string.IsNullOrEmpty(tenant.CustomDomain))
+        {
+            await _npmClient.DeleteCustomDomainProxyHostAsync(tenant.CustomDomain);
         }
 
         tenant.CustomDomain = null;
