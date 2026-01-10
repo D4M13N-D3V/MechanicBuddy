@@ -60,7 +60,9 @@ namespace MechanicBuddy.Core.Repository.Postgres
             }
 
             services.AddScoped<IUserRepository>(x => {
-                return new UserRepository(x.GetRequiredService<IOptions<DbOptions>>());
+                return new UserRepository(
+                    x.GetRequiredService<IOptions<DbOptions>>(),
+                    x.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>());
             });
             services.AddScoped<NHibernate.ISession>(x =>{
 

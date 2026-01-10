@@ -5,6 +5,7 @@ using MechanicBuddy.Core.Application.Model;
 using MechanicBuddy.Core.Domain;
 using MechanicBuddy.Http.Api.Models;
 using Dapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using NHibernate;
 using System;
@@ -22,34 +23,98 @@ namespace MechanicBuddy.Core.Repository.Postgres
     public class UserRepository :  IUserRepository
     {
         private readonly DbOptions dbOptions;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private const string UserSelectQuery =
             "SELECT profile_image as ProfileImage, UserName, Password, TenantName, Email, Validated, EmployeeId FROM public.user";
 
-        public UserRepository(Microsoft.Extensions.Options.IOptions<DbOptions> dbOptions)
+        public UserRepository(Microsoft.Extensions.Options.IOptions<DbOptions> dbOptions, IHttpContextAccessor httpContextAccessor = null)
         {
             this.dbOptions = dbOptions.Value;
+            this._httpContextAccessor = httpContextAccessor;
         }
 
         public User GetBy(string userName)
         {
             // When multitenancy is enabled, filter by tenant to avoid duplicate username conflicts
-            if (dbOptions.MultiTenancy?.Enabled == true && !string.IsNullOrEmpty(dbOptions.MultiTenancy.TenantId))
+            if (dbOptions.MultiTenancy?.Enabled == true)
             {
-                return QuerySingleUser(
-                    $"{UserSelectQuery} WHERE UserName = @UserName AND TenantName = @TenantName",
-                    new { UserName = userName, TenantName = dbOptions.MultiTenancy.TenantId });
+                var tenantId = ResolveTenantId();
+                if (!string.IsNullOrEmpty(tenantId))
+                {
+                    return QuerySingleUser(
+                        $"{UserSelectQuery} WHERE UserName = @UserName AND TenantName = @TenantName",
+                        new { UserName = userName, TenantName = tenantId });
+                }
             }
             return QuerySingleUser($"{UserSelectQuery} WHERE UserName = @UserName", new { UserName = userName });
+        }
+
+        /// <summary>
+        /// Resolves the tenant ID from configuration or HTTP headers
+        /// </summary>
+        private string ResolveTenantId()
+        {
+            // First check if tenant ID is configured (dedicated instance)
+            if (!string.IsNullOrEmpty(dbOptions.MultiTenancy?.TenantId))
+            {
+                return dbOptions.MultiTenancy.TenantId;
+            }
+
+            // For shared instances, resolve from HTTP headers
+            var httpContext = _httpContextAccessor?.HttpContext;
+            if (httpContext == null)
+            {
+                return null;
+            }
+
+            // Priority: X-Tenant-ID > X-Forwarded-Host > Host
+            if (httpContext.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
+            {
+                var headerValue = tenantIdHeader.ToString();
+                if (!string.IsNullOrEmpty(headerValue))
+                {
+                    return headerValue;
+                }
+            }
+
+            if (httpContext.Request?.Headers?.TryGetValue("X-Forwarded-Host", out var forwardedHost) == true)
+            {
+                var host = forwardedHost.ToString();
+                if (!string.IsNullOrEmpty(host))
+                {
+                    var parts = host.Split('.');
+                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                    {
+                        return parts[0];
+                    }
+                }
+            }
+
+            if (httpContext.Request?.Host.Host != null)
+            {
+                var host = httpContext.Request.Host.Host;
+                var parts = host.Split('.');
+                if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                {
+                    return parts[0];
+                }
+            }
+
+            return null;
         }
 
         public User GetByEmail(string email)
         {
             // When multitenancy is enabled, filter by tenant to avoid duplicate email conflicts
-            if (dbOptions.MultiTenancy?.Enabled == true && !string.IsNullOrEmpty(dbOptions.MultiTenancy.TenantId))
+            if (dbOptions.MultiTenancy?.Enabled == true)
             {
-                return QuerySingleUser(
-                    $"{UserSelectQuery} WHERE Email = @Email AND TenantName = @TenantName",
-                    new { Email = email, TenantName = dbOptions.MultiTenancy.TenantId });
+                var tenantId = ResolveTenantId();
+                if (!string.IsNullOrEmpty(tenantId))
+                {
+                    return QuerySingleUser(
+                        $"{UserSelectQuery} WHERE Email = @Email AND TenantName = @TenantName",
+                        new { Email = email, TenantName = tenantId });
+                }
             }
             return QuerySingleUser($"{UserSelectQuery} WHERE Email = @Email", new { Email = email });
         }
