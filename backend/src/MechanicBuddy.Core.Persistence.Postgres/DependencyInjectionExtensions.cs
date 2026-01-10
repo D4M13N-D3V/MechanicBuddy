@@ -94,7 +94,8 @@ namespace MechanicBuddy.Core.Repository.Postgres
 
                 // For shared multi-tenant instances, try to resolve tenant from hostname
                 // Hostname format: {tenantId}.mechanicbuddy.app
-                if (allowAnonymous && httpContext?.Request?.Host.Host != null)
+                // This handles unauthenticated requests like login page
+                if (httpContext?.Request?.Host.Host != null)
                 {
                     var host = httpContext.Request.Host.Host;
                     var parts = host.Split('.');
