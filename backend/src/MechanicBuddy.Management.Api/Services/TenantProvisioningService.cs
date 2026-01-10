@@ -43,8 +43,9 @@ public class TenantProvisioningService : ITenantProvisioningService
         TenantProvisioningRequest request,
         CancellationToken cancellationToken = default)
     {
-        // Route free-tier to shared instance if enabled
-        if (request.SubscriptionTier == "free" && _options.FreeTier.Enabled)
+        // Route free-tier and demo to shared instance if enabled
+        var sharedTiers = new[] { "free", "demo" };
+        if (sharedTiers.Contains(request.SubscriptionTier?.ToLowerInvariant()) && _options.FreeTier.Enabled)
         {
             return await ProvisionFreeTierTenantAsync(request, cancellationToken);
         }
