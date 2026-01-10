@@ -2,11 +2,40 @@ import { Navigation } from "./_components/landing/Navigation"
 import { HeroSection, ServicesSection, AboutSection, TipsSection, GallerySection, ContactSection, Footer } from "./_components/landing/Sections"
 import { LandingThemeProvider } from "@/_components/ThemeProvider"
 import { IPublicLandingData } from "./home/settings/branding/model"
+import { headers } from "next/headers"
+
+// Extract tenant ID from hostname for multi-tenant routing
+async function getTenantIdFromHost(): Promise<string | null> {
+    const headersList = await headers();
+    const host = headersList.get('host');
+    if (!host) return null;
+
+    const parts = host.split('.');
+    if (parts.length >= 2) {
+        const tenantId = parts[0];
+        // Skip common subdomains that aren't tenant IDs
+        if (tenantId && tenantId !== 'www' && tenantId !== 'api' && tenantId !== 'localhost') {
+            return tenantId;
+        }
+    }
+    return null;
+}
 
 async function getLandingData(): Promise<IPublicLandingData | null> {
     try {
+        const requestHeaders: HeadersInit = {
+            'Content-Type': 'application/json',
+        };
+
+        // Add tenant ID header for multi-tenant routing
+        const tenantId = await getTenantIdFromHost();
+        if (tenantId) {
+            requestHeaders['X-Tenant-ID'] = tenantId;
+        }
+
         const response = await fetch(`${process.env.API_URL}/api/publiclanding`, {
             cache: 'no-store',
+            headers: requestHeaders,
         });
 
         if (!response.ok) {
