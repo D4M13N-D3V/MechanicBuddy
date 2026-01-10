@@ -650,6 +650,146 @@ public class KubernetesClientService : IKubernetesClientService
         }
     }
 
+    public async Task<bool> CreateFreeTierIngressAsync(
+        string tenantId,
+        string freeTierNamespace,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var domain = $"{tenantId}.mechanicbuddy.app";
+            var ingressName = $"tenant-{tenantId}";
+
+            _logger.LogInformation("Creating free-tier ingress {IngressName} for tenant {TenantId} in namespace {Namespace}",
+                ingressName, tenantId, freeTierNamespace);
+
+            // Check if ingress already exists
+            try
+            {
+                var existingIngress = await _kubernetesClient.NetworkingV1.ReadNamespacedIngressAsync(
+                    ingressName, freeTierNamespace, cancellationToken: cancellationToken);
+                if (existingIngress != null)
+                {
+                    _logger.LogInformation("Ingress {IngressName} already exists", ingressName);
+                    return true;
+                }
+            }
+            catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Ingress doesn't exist, continue to create
+            }
+
+            // Create ingress for this tenant's hostname pointing to shared services
+            var ingress = new V1Ingress
+            {
+                Metadata = new V1ObjectMeta
+                {
+                    Name = ingressName,
+                    NamespaceProperty = freeTierNamespace,
+                    Labels = new Dictionary<string, string>
+                    {
+                        ["app.kubernetes.io/managed-by"] = "mechanicbuddy-management",
+                        ["mechanicbuddy.app/tenant"] = tenantId,
+                        ["mechanicbuddy.app/tier"] = "free"
+                    },
+                    Annotations = new Dictionary<string, string>
+                    {
+                        ["nginx.ingress.kubernetes.io/proxy-body-size"] = "50m",
+                        ["nginx.ingress.kubernetes.io/proxy-read-timeout"] = "300",
+                        ["nginx.ingress.kubernetes.io/proxy-send-timeout"] = "300"
+                    }
+                },
+                Spec = new V1IngressSpec
+                {
+                    IngressClassName = "nginx",
+                    Rules = new List<V1IngressRule>
+                    {
+                        new V1IngressRule
+                        {
+                            Host = domain,
+                            Http = new V1HTTPIngressRuleValue
+                            {
+                                Paths = new List<V1HTTPIngressPath>
+                                {
+                                    // API routes - /api/* goes to shared API service
+                                    new V1HTTPIngressPath
+                                    {
+                                        Path = "/api",
+                                        PathType = "Prefix",
+                                        Backend = new V1IngressBackend
+                                        {
+                                            Service = new V1IngressServiceBackend
+                                            {
+                                                Name = "mechanicbuddy-free-tier-api",
+                                                Port = new V1ServiceBackendPort { Number = 15567 }
+                                            }
+                                        }
+                                    },
+                                    // All other routes go to shared Web service
+                                    new V1HTTPIngressPath
+                                    {
+                                        Path = "/",
+                                        PathType = "Prefix",
+                                        Backend = new V1IngressBackend
+                                        {
+                                            Service = new V1IngressServiceBackend
+                                            {
+                                                Name = "mechanicbuddy-free-tier-web",
+                                                Port = new V1ServiceBackendPort { Number = 3000 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            await _kubernetesClient.NetworkingV1.CreateNamespacedIngressAsync(
+                ingress, freeTierNamespace, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Successfully created free-tier ingress {IngressName} for tenant {TenantId}",
+                ingressName, tenantId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create free-tier ingress for tenant {TenantId}", tenantId);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteFreeTierIngressAsync(
+        string tenantId,
+        string freeTierNamespace,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var ingressName = $"tenant-{tenantId}";
+
+            _logger.LogInformation("Deleting free-tier ingress {IngressName} for tenant {TenantId}",
+                ingressName, tenantId);
+
+            await _kubernetesClient.NetworkingV1.DeleteNamespacedIngressAsync(
+                ingressName, freeTierNamespace, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Successfully deleted free-tier ingress {IngressName}", ingressName);
+            return true;
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            _logger.LogWarning("Ingress tenant-{TenantId} not found, nothing to delete", tenantId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete free-tier ingress for tenant {TenantId}", tenantId);
+            return false;
+        }
+    }
+
     private bool IsPodReady(V1Pod pod)
     {
         // Check if pod is in Running phase

@@ -225,6 +225,30 @@ public interface IKubernetesClientService
         List<string> domains,
         string clusterIssuer = "letsencrypt-prod",
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an Ingress for a free-tier tenant that routes to the shared services.
+    /// </summary>
+    /// <param name="tenantId">Tenant ID (used to generate the hostname).</param>
+    /// <param name="freeTierNamespace">Namespace where the shared free-tier services run.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if Ingress was created successfully.</returns>
+    Task<bool> CreateFreeTierIngressAsync(
+        string tenantId,
+        string freeTierNamespace,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes a free-tier tenant's Ingress.
+    /// </summary>
+    /// <param name="tenantId">Tenant ID.</param>
+    /// <param name="freeTierNamespace">Namespace where the shared free-tier services run.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if Ingress was deleted successfully.</returns>
+    Task<bool> DeleteFreeTierIngressAsync(
+        string tenantId,
+        string freeTierNamespace,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

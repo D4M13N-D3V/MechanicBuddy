@@ -120,14 +120,16 @@ public class TenantProvisioningService : ITenantProvisioningService
             AddLog(result, "Info", "CreateDns", "Creating DNS record");
             await _cloudflareClient.CreateTenantDnsRecordAsync(tenantId);
 
-            // Step 6: Create NPM proxy host pointing to shared instance
-            AddLog(result, "Info", "CreateProxy", "Creating proxy host for shared instance");
-            await _npmClient.CreateProxyHostAsync(
-                tenantId,
-                _options.FreeTier.ApiServiceHost,
-                _options.FreeTier.ApiServicePort);
+            // Step 6: Create NPM proxy host (uses default NodePort, same as dedicated tenants)
+            // NPM forwards to K8s ingress NodePort, then ingress routes to correct service
+            AddLog(result, "Info", "CreateProxy", "Creating proxy host");
+            await _npmClient.CreateProxyHostAsync(tenantId);
 
-            AddLog(result, "Info", "CreateProxy", "Proxy host created successfully");
+            // Step 7: Create Ingress in free-tier namespace to route tenant hostname to shared services
+            AddLog(result, "Info", "CreateIngress", "Creating ingress for tenant hostname");
+            await _k8sClient.CreateFreeTierIngressAsync(tenantId, _options.FreeTier.Namespace, cancellationToken);
+
+            AddLog(result, "Info", "CreateIngress", "Ingress created successfully");
 
             // Step 7: Set tenant URLs
             var domain = $"{tenantId}.{_options.BaseDomain}";
