@@ -78,12 +78,11 @@ public class TenantMigrationService : ITenantMigrationService
                 _options.FreeTier.PostgresPort);
 
             // Step 4: Update NPM proxy to point to shared instance
+            // NPM is external to K8s, so we use the default forward host (external ingress IP)
+            // The K8s ingress then routes to the internal service based on hostname
             result.Steps.Add("Updating proxy host to point to shared instance");
             await _npmClient.DeleteProxyHostAsync(tenantId);
-            await _npmClient.CreateProxyHostAsync(
-                tenantId,
-                _options.FreeTier.ApiServiceHost,
-                _options.FreeTier.ApiServicePort);
+            await _npmClient.CreateProxyHostAsync(tenantId); // Uses default forward host from config
 
             // Step 5: Delete dedicated namespace
             result.Steps.Add("Deleting dedicated namespace");
