@@ -92,28 +92,36 @@ namespace MechanicBuddy.Core.Repository.Postgres
                     return anonymousFactory.OpenSession();
                 }
 
-                // For shared multi-tenant instances, try to resolve tenant from X-Tenant-ID header first
-                // This is set by the frontend when making API calls
-                string tenantIdFromHeader = null;
+                // For shared multi-tenant instances, try to resolve tenant from headers
+                // Priority: X-Tenant-ID > X-Forwarded-Host > Host
+                string resolvedTenantId = null;
+
+                // 1. Check X-Tenant-ID header (explicit tenant identification)
                 if (httpContext?.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
                 {
-                    tenantIdFromHeader = tenantIdHeader.ToString();
+                    resolvedTenantId = tenantIdHeader.ToString();
                 }
 
-                // Fall back to hostname resolution if no header
-                // Hostname format: {tenantId}.mechanicbuddy.app
-                string resolvedTenantId = tenantIdFromHeader;
+                // 2. Check X-Forwarded-Host header (set by ingress when proxying)
+                if (string.IsNullOrEmpty(resolvedTenantId) &&
+                    httpContext?.Request?.Headers?.TryGetValue("X-Forwarded-Host", out var forwardedHost) == true)
+                {
+                    var host = forwardedHost.ToString();
+                    var parts = host.Split('.');
+                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                    {
+                        resolvedTenantId = parts[0];
+                    }
+                }
+
+                // 3. Fall back to Host header
                 if (string.IsNullOrEmpty(resolvedTenantId) && httpContext?.Request?.Host.Host != null)
                 {
                     var host = httpContext.Request.Host.Host;
                     var parts = host.Split('.');
-                    if (parts.Length >= 2)
+                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
                     {
-                        var tenantId = parts[0]; // e.g., "demo-1b94f2" from "demo-1b94f2.mechanicbuddy.app"
-                        if (!string.IsNullOrEmpty(tenantId) && tenantId != "www" && tenantId != "api")
-                        {
-                            resolvedTenantId = tenantId;
-                        }
+                        resolvedTenantId = parts[0];
                     }
                 }
 
