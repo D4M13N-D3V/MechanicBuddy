@@ -6,15 +6,15 @@
 # Use commit SHA tag from latest build
 api:
   image:
-    tag: "f6222af"
+    tag: "61c1a1f"
 
 web:
   image:
-    tag: "f6222af"
+    tag: "61c1a1f"
 
 migrations:
   image:
-    tag: "f6222af"
+    tag: "61c1a1f"
 
 # PostgreSQL - use existing shared cluster
 postgresql:
