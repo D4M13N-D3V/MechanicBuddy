@@ -107,13 +107,13 @@ configMapGenerator:
 images:
 - name: management-api
   newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-api
-  newTag: 2be62ed
+  newTag: 1f66757
 - name: management-dbup
   newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-dbup
-  newTag: 2be62ed
+  newTag: 1f66757
 - name: management-portal
   newName: ghcr.io/d4m13n-d3v/mechanicbuddy-management-portal
-  newTag: 2be62ed
+  newTag: 1f66757
 
 labels:
 - pairs:
