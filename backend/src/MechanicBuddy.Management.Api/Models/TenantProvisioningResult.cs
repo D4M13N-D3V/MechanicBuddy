@@ -41,14 +41,19 @@ public class TenantProvisioningResult
     public string AdminPassword { get; set; } = string.Empty;
 
     /// <summary>
-    /// Helm release name.
+    /// Helm release name (null for shared deployments).
     /// </summary>
-    public string HelmRelease { get; set; } = string.Empty;
+    public string? HelmRelease { get; set; }
 
     /// <summary>
     /// Subscription tier.
     /// </summary>
     public string SubscriptionTier { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Deployment mode: "dedicated" for individual Helm releases, "shared" for shared free-tier instance.
+    /// </summary>
+    public string DeploymentMode { get; set; } = "dedicated";
 
     /// <summary>
     /// Database connection string (for admin purposes).

@@ -1,0 +1,175 @@
+# =============================================================================
+# MechanicBuddy Free-Tier Shared Instance Helm Chart Values
+# =============================================================================
+# This chart deploys a shared multi-tenant instance for all free-tier users.
+# Multi-tenancy is ENABLED - each tenant's database is routed via JWT claims.
+
+# -----------------------------------------------------------------------------
+# Instance Configuration
+# -----------------------------------------------------------------------------
+instance:
+  # Instance identifier
+  id: "free-tier"
+  # Namespace for the shared instance
+  namespace: "mechanicbuddy-free-tier"
+
+# -----------------------------------------------------------------------------
+# Domain Configuration
+# -----------------------------------------------------------------------------
+domains:
+  # Base domain for the platform
+  baseDomain: "mechanicbuddy.app"
+  # TLS certificate issuer
+  clusterIssuer: "letsencrypt-prod"
+
+# -----------------------------------------------------------------------------
+# PostgreSQL (CloudNativePG) - Shared for all free-tier tenants
+# -----------------------------------------------------------------------------
+postgresql:
+  # Number of instances (2 for HA in shared mode)
+  instances: 2
+  # Base database name (tenants get mechanicbuddy-{tenantId})
+  database: "mechanicbuddy"
+  # Database user
+  username: "mechanicbuddy"
+  # Storage configuration - larger for shared use
+  storage:
+    size: "100Gi"
+    storageClass: "local-path"
+  # Resource limits - higher for shared workload
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+  # PostgreSQL parameters for multi-tenant workload
+  parameters:
+    shared_buffers: "512MB"
+    max_connections: "500"
+    work_mem: "16MB"
+    effective_cache_size: "2GB"
+  # Backup configuration
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    retentionDays: 7
+    s3Bucket: ""
+
+# -----------------------------------------------------------------------------
+# API Service (.NET) - Multi-tenancy ENABLED
+# -----------------------------------------------------------------------------
+api:
+  # Number of replicas for shared workload
+  replicas: 2
+  # Container image
+  image:
+    repository: "ghcr.io/mechanicbuddy/api"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  # Service port
+  port: 15567
+  # Resource limits - higher for shared workload
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  # Health check paths
+  healthCheck:
+    liveness: "/health/live"
+    readiness: "/health/ready"
+  # Additional environment variables
+  extraEnv: []
+
+# -----------------------------------------------------------------------------
+# Web Frontend (Next.js) - Shared for all free-tier tenants
+# -----------------------------------------------------------------------------
+web:
+  # Number of replicas
+  replicas: 2
+  # Container image
+  image:
+    repository: "ghcr.io/mechanicbuddy/web"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  # Service port
+  port: 3000
+  # Resource limits
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  # Additional environment variables
+  extraEnv: []
+
+# -----------------------------------------------------------------------------
+# Database Migrations (DbUp)
+# -----------------------------------------------------------------------------
+migrations:
+  # Run migrations on install/upgrade (for template database)
+  enabled: true
+  # Migration job image
+  image:
+    repository: "ghcr.io/mechanicbuddy/dbup"
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+  # Timeout for migration job
+  timeout: 300
+
+# -----------------------------------------------------------------------------
+# Email Configuration (Resend SMTP Relay)
+# -----------------------------------------------------------------------------
+email:
+  host: "smtp.resend.com"
+  port: 587
+  apiKey: ""
+  fromAddress: "noreply@mechanicbuddy.app"
+
+# -----------------------------------------------------------------------------
+# Secrets (auto-generated if not provided)
+# -----------------------------------------------------------------------------
+secrets:
+  jwtSecret: ""
+  consumerSecret: ""
+  sessionSecret: ""
+
+# -----------------------------------------------------------------------------
+# Image Pull Secrets
+# -----------------------------------------------------------------------------
+imagePullSecrets: []
+
+# -----------------------------------------------------------------------------
+# Pod Security Context
+# -----------------------------------------------------------------------------
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -----------------------------------------------------------------------------
+# Service Account
+# -----------------------------------------------------------------------------
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# -----------------------------------------------------------------------------
+# Resource Quotas for the namespace
+# -----------------------------------------------------------------------------
+resourceQuota:
+  enabled: true
+  requests:
+    cpu: "4"
+    memory: "8Gi"
+  limits:
+    cpu: "8"
+    memory: "16Gi"
+  pods: "20"

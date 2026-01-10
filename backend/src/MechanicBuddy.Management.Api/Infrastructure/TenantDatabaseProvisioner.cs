@@ -42,13 +42,29 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
 
     public async Task<string> ProvisionTenantDatabaseAsync(string tenantId)
     {
-        var tenantDbName = GetTenantDbName(tenantId);
+        // Use default PostgreSQL host
+        return await ProvisionTenantDatabaseAsync(tenantId, null, null);
+    }
 
-        _logger.LogInformation("Provisioning database {DbName} for tenant {TenantId} from template {Template}",
-            tenantDbName, tenantId, _templateDbName);
+    /// <summary>
+    /// Provisions a tenant database on a specific PostgreSQL host.
+    /// Used for shared free-tier instances where databases are created on a shared cluster.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="targetPostgresHost">Target PostgreSQL host (null = use default).</param>
+    /// <param name="targetPostgresPort">Target PostgreSQL port (null = use default).</param>
+    /// <returns>Connection string to the tenant database.</returns>
+    public async Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort)
+    {
+        var tenantDbName = GetTenantDbName(tenantId);
+        var postgresHost = targetPostgresHost ?? _postgresHost;
+        var postgresPort = targetPostgresPort ?? _postgresPort;
+
+        _logger.LogInformation("Provisioning database {DbName} for tenant {TenantId} from template {Template} on host {Host}:{Port}",
+            tenantDbName, tenantId, _templateDbName, postgresHost, postgresPort);
 
         // Connect to postgres database to create new database
-        var adminConnectionString = BuildConnectionString("postgres");
+        var adminConnectionString = BuildConnectionString("postgres", postgresHost, postgresPort);
         await using (var adminConnection = new NpgsqlConnection(adminConnectionString))
         {
             await adminConnection.OpenAsync();
@@ -78,23 +94,39 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         }
 
         // Update the user table in the cloned tenant database to use the correct tenant name
-        await UpdateTenantUserTableAsync(tenantId, tenantDbName);
+        await UpdateTenantUserTableAsync(tenantId, tenantDbName, postgresHost, postgresPort);
 
-        // Create admin user in tenancy database
+        // Create admin user in tenancy database (always uses default host - shared tenancy DB)
         await CreateDefaultAdminAsync(tenantId);
 
-        _logger.LogInformation("Successfully provisioned database for tenant {TenantId}", tenantId);
+        _logger.LogInformation("Successfully provisioned database for tenant {TenantId} on host {Host}", tenantId, postgresHost);
 
-        return BuildTenantConnectionString(tenantDbName);
+        return BuildTenantConnectionString(tenantDbName, postgresHost, postgresPort);
     }
 
     public async Task DeleteTenantDatabaseAsync(string tenantId)
     {
+        // Use default PostgreSQL host
+        await DeleteTenantDatabaseAsync(tenantId, null, null);
+    }
+
+    /// <summary>
+    /// Deletes a tenant database from a specific PostgreSQL host.
+    /// Used for shared free-tier instances where databases are hosted on a shared cluster.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="targetPostgresHost">Target PostgreSQL host (null = use default).</param>
+    /// <param name="targetPostgresPort">Target PostgreSQL port (null = use default).</param>
+    public async Task DeleteTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort)
+    {
         var tenantDbName = GetTenantDbName(tenantId);
+        var postgresHost = targetPostgresHost ?? _postgresHost;
+        var postgresPort = targetPostgresPort ?? _postgresPort;
 
-        _logger.LogInformation("Deleting database {DbName} for tenant {TenantId}", tenantDbName, tenantId);
+        _logger.LogInformation("Deleting database {DbName} for tenant {TenantId} from host {Host}:{Port}",
+            tenantDbName, tenantId, postgresHost, postgresPort);
 
-        // First, delete the user from tenancy database
+        // First, delete the user from tenancy database (always uses default host - shared tenancy DB)
         var tenancyConnectionString = BuildConnectionString(_tenancyDbName);
         await using (var tenancyConnection = new NpgsqlConnection(tenancyConnectionString))
         {
@@ -106,8 +138,8 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             await cmd.ExecuteNonQueryAsync();
         }
 
-        // Then drop the database (connect to postgres database to do this)
-        var adminConnectionString = BuildConnectionString("postgres");
+        // Then drop the database from the target host (connect to postgres database to do this)
+        var adminConnectionString = BuildConnectionString("postgres", postgresHost, postgresPort);
         await using (var adminConnection = new NpgsqlConnection(adminConnectionString))
         {
             await adminConnection.OpenAsync();
@@ -128,13 +160,28 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             }
         }
 
-        _logger.LogInformation("Deleted database {DbName} for tenant {TenantId}", tenantDbName, tenantId);
+        _logger.LogInformation("Deleted database {DbName} for tenant {TenantId} from host {Host}", tenantDbName, tenantId, postgresHost);
     }
 
     public async Task<bool> TenantDatabaseExistsAsync(string tenantId)
     {
+        // Use default PostgreSQL host
+        return await TenantDatabaseExistsAsync(tenantId, null, null);
+    }
+
+    /// <summary>
+    /// Checks if a tenant database exists on a specific PostgreSQL host.
+    /// </summary>
+    /// <param name="tenantId">The tenant identifier.</param>
+    /// <param name="targetPostgresHost">Target PostgreSQL host (null = use default).</param>
+    /// <param name="targetPostgresPort">Target PostgreSQL port (null = use default).</param>
+    /// <returns>True if the database exists.</returns>
+    public async Task<bool> TenantDatabaseExistsAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort)
+    {
         var tenantDbName = GetTenantDbName(tenantId);
-        var adminConnectionString = BuildConnectionString("postgres");
+        var postgresHost = targetPostgresHost ?? _postgresHost;
+        var postgresPort = targetPostgresPort ?? _postgresPort;
+        var adminConnectionString = BuildConnectionString("postgres", postgresHost, postgresPort);
 
         await using var connection = new NpgsqlConnection(adminConnectionString);
         await connection.OpenAsync();
@@ -177,11 +224,11 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         return $"{_tenantDbPrefix}-{tenantId}";
     }
 
-    private async Task UpdateTenantUserTableAsync(string tenantId, string tenantDbName)
+    private async Task UpdateTenantUserTableAsync(string tenantId, string tenantDbName, string postgresHost, int postgresPort)
     {
         // Update the user table in the cloned tenant database to use the correct tenant name
         // The template database has users with the template's tenant name, we need to update them
-        var tenantConnectionString = BuildConnectionString(tenantDbName);
+        var tenantConnectionString = BuildConnectionString(tenantDbName, postgresHost, postgresPort);
 
         await using var connection = new NpgsqlConnection(tenantConnectionString);
         await connection.OpenAsync();
@@ -266,10 +313,15 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
 
     private string BuildConnectionString(string databaseName)
     {
+        return BuildConnectionString(databaseName, _postgresHost, _postgresPort);
+    }
+
+    private string BuildConnectionString(string databaseName, string host, int port)
+    {
         var builder = new NpgsqlConnectionStringBuilder
         {
-            Host = _postgresHost,
-            Port = _postgresPort,
+            Host = host,
+            Port = port,
             Username = _postgresUser,
             Password = _postgresPassword,
             Database = databaseName
@@ -279,10 +331,15 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
 
     private string BuildTenantConnectionString(string tenantDbName)
     {
+        return BuildTenantConnectionString(tenantDbName, _postgresHost, _postgresPort);
+    }
+
+    private string BuildTenantConnectionString(string tenantDbName, string host, int port)
+    {
         var builder = new NpgsqlConnectionStringBuilder
         {
-            Host = _postgresHost,
-            Port = _postgresPort,
+            Host = host,
+            Port = port,
             Username = _postgresUser,
             Password = _postgresPassword,
             Database = tenantDbName,

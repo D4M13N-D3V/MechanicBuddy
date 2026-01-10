@@ -1,0 +1,19 @@
+apiVersion: v2
+name: mechanicbuddy-free-tier
+description: MechanicBuddy shared free-tier instance - multi-tenant deployment for free users
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+
+keywords:
+  - mechanicbuddy
+  - workshop
+  - saas
+  - multi-tenant
+  - free-tier
+
+maintainers:
+  - name: MechanicBuddy Team
+    email: support@mechanicbuddy.app
+
+dependencies: []

@@ -1,0 +1,16 @@
+{{- if .Values.resourceQuota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ include "mechanicbuddy-free-tier.fullname" . }}-quota
+  namespace: {{ include "mechanicbuddy-free-tier.namespace" . }}
+  labels:
+    {{- include "mechanicbuddy-free-tier.labels" . | nindent 4 }}
+spec:
+  hard:
+    requests.cpu: {{ .Values.resourceQuota.requests.cpu | quote }}
+    requests.memory: {{ .Values.resourceQuota.requests.memory | quote }}
+    limits.cpu: {{ .Values.resourceQuota.limits.cpu | quote }}
+    limits.memory: {{ .Values.resourceQuota.limits.memory | quote }}
+    pods: {{ .Values.resourceQuota.pods | quote }}
+{{- end }}

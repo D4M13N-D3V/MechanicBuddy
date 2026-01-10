@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "mechanicbuddy-free-tier.namespace" . }}
+  labels:
+    {{- include "mechanicbuddy-free-tier.labels" . | nindent 4 }}
+    mechanicbuddy.app/namespace-type: shared-free-tier
+  annotations:
+    mechanicbuddy.app/description: "Shared multi-tenant instance for free-tier users"

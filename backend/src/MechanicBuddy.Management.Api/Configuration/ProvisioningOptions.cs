@@ -160,6 +160,11 @@ public class ProvisioningOptions
         DefaultTag = "latest",
         PullPolicy = "IfNotPresent"
     };
+
+    /// <summary>
+    /// Configuration for the shared free-tier instance.
+    /// </summary>
+    public FreeTierOptions FreeTier { get; set; } = new();
 }
 
 /// <summary>
@@ -208,4 +213,61 @@ public class ContainerRegistry
     public string DbUpRepository { get; set; } = string.Empty;
     public string DefaultTag { get; set; } = string.Empty;
     public string PullPolicy { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Configuration for the shared free-tier instance.
+/// </summary>
+public class FreeTierOptions
+{
+    /// <summary>
+    /// Whether to use the shared instance for free-tier tenants.
+    /// When true, free-tier tenants are provisioned on the shared instance.
+    /// When false, free-tier tenants get dedicated instances (legacy behavior).
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// Kubernetes namespace where the shared free-tier instance is deployed.
+    /// </summary>
+    public string Namespace { get; set; } = "mechanicbuddy-free-tier";
+
+    /// <summary>
+    /// PostgreSQL host for the shared free-tier instance.
+    /// This is the internal Kubernetes service DNS name.
+    /// </summary>
+    public string PostgresHost { get; set; } = "mechanicbuddy-free-tier-postgres-rw.mechanicbuddy-free-tier.svc.cluster.local";
+
+    /// <summary>
+    /// PostgreSQL port for the shared free-tier instance.
+    /// </summary>
+    public int PostgresPort { get; set; } = 5432;
+
+    /// <summary>
+    /// API service host for the shared free-tier instance.
+    /// Used for configuring NPM proxy hosts.
+    /// </summary>
+    public string ApiServiceHost { get; set; } = "mechanicbuddy-free-tier-api.mechanicbuddy-free-tier.svc.cluster.local";
+
+    /// <summary>
+    /// API service port for the shared free-tier instance.
+    /// </summary>
+    public int ApiServicePort { get; set; } = 15567;
+
+    /// <summary>
+    /// Web service host for the shared free-tier instance.
+    /// Used for configuring NPM proxy hosts.
+    /// </summary>
+    public string WebServiceHost { get; set; } = "mechanicbuddy-free-tier-web.mechanicbuddy-free-tier.svc.cluster.local";
+
+    /// <summary>
+    /// Web service port for the shared free-tier instance.
+    /// </summary>
+    public int WebServicePort { get; set; } = 3000;
+
+    /// <summary>
+    /// Maximum number of tenants allowed on a single shared instance.
+    /// When exceeded, a new shared instance should be provisioned.
+    /// </summary>
+    public int MaxTenantsPerInstance { get; set; } = 100;
 }

@@ -62,6 +62,12 @@ public class NpmClient : INpmClient
 
     public async Task<bool> CreateProxyHostAsync(string tenantId)
     {
+        // Use default forward host/port from configuration
+        return await CreateProxyHostAsync(tenantId, _forwardHost, _forwardPort);
+    }
+
+    public async Task<bool> CreateProxyHostAsync(string tenantId, string forwardHost, int forwardPort)
+    {
         try
         {
             await EnsureAuthenticatedAsync();
@@ -80,8 +86,8 @@ public class NpmClient : INpmClient
             {
                 DomainNames = new[] { domain },
                 ForwardScheme = "http",
-                ForwardHost = _forwardHost,
-                ForwardPort = _forwardPort,
+                ForwardHost = forwardHost,
+                ForwardPort = forwardPort,
                 CertificateId = _wildcardCertificateId > 0 ? _wildcardCertificateId : null,
                 SslForced = _wildcardCertificateId > 0,
                 Http2Support = true,
@@ -106,7 +112,7 @@ public class NpmClient : INpmClient
                 return false;
             }
 
-            _logger.LogInformation("Created NPM proxy host for {Domain}", domain);
+            _logger.LogInformation("Created NPM proxy host for {Domain} forwarding to {ForwardHost}:{ForwardPort}", domain, forwardHost, forwardPort);
             return true;
         }
         catch (Exception ex)

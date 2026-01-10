@@ -1,4 +1,5 @@
 using MechanicBuddy.Management.Api.Configuration;
+using MechanicBuddy.Management.Api.Infrastructure;
 using MechanicBuddy.Management.Api.Models;
 using Microsoft.Extensions.Options;
 using System.Globalization;
@@ -14,17 +15,26 @@ public class TenantProvisioningService : ITenantProvisioningService
 {
     private readonly IKubernetesClientService _k8sClient;
     private readonly IHelmService _helmService;
+    private readonly ITenantDatabaseProvisioner _dbProvisioner;
+    private readonly INpmClient _npmClient;
+    private readonly ICloudflareClient _cloudflareClient;
     private readonly ILogger<TenantProvisioningService> _logger;
     private readonly ProvisioningOptions _options;
 
     public TenantProvisioningService(
         IKubernetesClientService k8sClient,
         IHelmService helmService,
+        ITenantDatabaseProvisioner dbProvisioner,
+        INpmClient npmClient,
+        ICloudflareClient cloudflareClient,
         ILogger<TenantProvisioningService> logger,
         IOptions<ProvisioningOptions> options)
     {
         _k8sClient = k8sClient;
         _helmService = helmService;
+        _dbProvisioner = dbProvisioner;
+        _npmClient = npmClient;
+        _cloudflareClient = cloudflareClient;
         _logger = logger;
         _options = options.Value;
     }
@@ -33,11 +43,149 @@ public class TenantProvisioningService : ITenantProvisioningService
         TenantProvisioningRequest request,
         CancellationToken cancellationToken = default)
     {
+        // Route free-tier to shared instance if enabled
+        if (request.SubscriptionTier == "free" && _options.FreeTier.Enabled)
+        {
+            return await ProvisionFreeTierTenantAsync(request, cancellationToken);
+        }
+
+        // Dedicated instance provisioning for paid tiers (and free tier when shared is disabled)
+        return await ProvisionDedicatedTenantAsync(request, cancellationToken);
+    }
+
+    /// <summary>
+    /// Provisions a tenant on the shared free-tier instance.
+    /// Creates database on shared PostgreSQL cluster, sets up routing, but skips Helm deployment.
+    /// </summary>
+    private async Task<TenantProvisioningResult> ProvisionFreeTierTenantAsync(
+        TenantProvisioningRequest request,
+        CancellationToken cancellationToken = default)
+    {
         var startTime = DateTime.UtcNow;
         var result = new TenantProvisioningResult
         {
             ProvisionedAt = startTime,
-            SubscriptionTier = request.SubscriptionTier
+            SubscriptionTier = request.SubscriptionTier,
+            DeploymentMode = "shared"
+        };
+
+        try
+        {
+            // Step 1: Validate request (skip namespace check for shared instance)
+            AddLog(result, "Info", "ValidateRequest", "Validating free-tier provisioning request");
+            var validation = await ValidateProvisioningRequestAsync(request, cancellationToken);
+            if (!validation.IsValid)
+            {
+                result.Success = false;
+                result.ErrorMessage = $"Validation failed: {string.Join(", ", validation.Errors)}";
+                return result;
+            }
+
+            // Step 2: Generate or use provided tenant ID
+            var tenantId = string.IsNullOrEmpty(request.TenantId)
+                ? GenerateTenantId(request.CompanyName)
+                : request.TenantId;
+
+            result.TenantId = tenantId;
+            result.Namespace = _options.FreeTier.Namespace; // Shared namespace
+            result.HelmRelease = null; // No dedicated Helm release
+
+            AddLog(result, "Info", "GenerateTenantId", $"Generated tenant ID: {tenantId}");
+
+            // Step 3: Check if tenant database already exists on shared PostgreSQL
+            var dbExists = await _dbProvisioner.TenantDatabaseExistsAsync(
+                tenantId,
+                _options.FreeTier.PostgresHost,
+                _options.FreeTier.PostgresPort);
+
+            if (dbExists)
+            {
+                result.Success = false;
+                result.ErrorMessage = $"Tenant with ID '{tenantId}' already exists on shared instance";
+                AddLog(result, "Error", "CheckDatabase", result.ErrorMessage);
+                return result;
+            }
+
+            // Step 4: Create tenant database on shared PostgreSQL cluster
+            AddLog(result, "Info", "CreateDatabase", "Creating database on shared PostgreSQL cluster");
+            await _dbProvisioner.ProvisionTenantDatabaseAsync(
+                tenantId,
+                _options.FreeTier.PostgresHost,
+                _options.FreeTier.PostgresPort);
+
+            AddLog(result, "Info", "CreateDatabase", "Database created successfully");
+
+            // Step 5: Create Cloudflare DNS record
+            AddLog(result, "Info", "CreateDns", "Creating DNS record");
+            await _cloudflareClient.CreateTenantDnsRecordAsync(tenantId);
+
+            // Step 6: Create NPM proxy host pointing to shared instance
+            AddLog(result, "Info", "CreateProxy", "Creating proxy host for shared instance");
+            await _npmClient.CreateProxyHostAsync(
+                tenantId,
+                _options.FreeTier.ApiServiceHost,
+                _options.FreeTier.ApiServicePort);
+
+            AddLog(result, "Info", "CreateProxy", "Proxy host created successfully");
+
+            // Step 7: Set tenant URLs
+            var domain = $"{tenantId}.{_options.BaseDomain}";
+            result.TenantUrl = $"https://{domain}";
+            result.ApiUrl = $"https://{domain}/api";
+
+            // Step 8: Set admin credentials
+            result.AdminUsername = _options.DefaultAdmin.Username;
+            result.AdminPassword = _options.DefaultAdmin.Password;
+
+            // Step 9: Set resource allocation (shared instance limits)
+            var tierLimits = GetTierLimits(request.SubscriptionTier, request.ResourceOverrides);
+            result.Resources = new ResourceAllocation
+            {
+                PostgresInstances = 0, // Shared
+                PostgresStorage = "Shared",
+                ApiReplicas = 0, // Shared
+                WebReplicas = 0, // Shared
+                MechanicLimit = tierLimits.MechanicLimit,
+                BackupEnabled = false
+            };
+
+            // Step 10: Set Stripe information
+            result.StripeCustomerId = request.StripeCustomerId;
+
+            // Success!
+            result.Success = true;
+            result.ProvisioningDuration = DateTime.UtcNow - startTime;
+            AddLog(result, "Info", "Complete", $"Free-tier tenant provisioned successfully in {result.ProvisioningDuration.TotalSeconds:F1}s");
+
+            _logger.LogInformation("Successfully provisioned free-tier tenant {TenantId} on shared instance in {Duration}s",
+                tenantId, result.ProvisioningDuration.TotalSeconds);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to provision free-tier tenant");
+            result.Success = false;
+            result.ErrorMessage = $"Unexpected error: {ex.Message}";
+            result.ProvisioningDuration = DateTime.UtcNow - startTime;
+            AddLog(result, "Error", "Exception", ex.Message);
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Provisions a tenant with dedicated infrastructure (namespace, PostgreSQL, API, Web).
+    /// </summary>
+    private async Task<TenantProvisioningResult> ProvisionDedicatedTenantAsync(
+        TenantProvisioningRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var startTime = DateTime.UtcNow;
+        var result = new TenantProvisioningResult
+        {
+            ProvisionedAt = startTime,
+            SubscriptionTier = request.SubscriptionTier,
+            DeploymentMode = "dedicated"
         };
 
         try
@@ -208,43 +356,124 @@ public class TenantProvisioningService : ITenantProvisioningService
         string tenantId,
         CancellationToken cancellationToken = default)
     {
+        // Try to determine deployment mode by checking if dedicated namespace exists
+        var namespace_ = $"{_options.NamespacePrefix}{tenantId}";
+        var namespaceExists = await _k8sClient.NamespaceExistsAsync(namespace_, cancellationToken);
+
+        var deploymentMode = namespaceExists ? "dedicated" : "shared";
+        return await DeprovisionTenantAsync(tenantId, deploymentMode, cancellationToken);
+    }
+
+    public async Task<bool> DeprovisionTenantAsync(
+        string tenantId,
+        string deploymentMode,
+        CancellationToken cancellationToken = default)
+    {
         try
         {
-            _logger.LogInformation("Deprovisioning tenant {TenantId}", tenantId);
+            _logger.LogInformation("Deprovisioning tenant {TenantId} (mode: {Mode})", tenantId, deploymentMode);
 
-            var namespace_ = $"{_options.NamespacePrefix}{tenantId}";
-            var releaseName = $"tenant-{tenantId}";
-
-            // Uninstall Helm release
-            var (helmSuccess, helmOutput) = await _helmService.UninstallAsync(
-                releaseName,
-                namespace_,
-                timeout: 300,
-                cancellationToken: cancellationToken);
-
-            if (!helmSuccess)
+            if (deploymentMode == "shared")
             {
-                _logger.LogWarning("Failed to uninstall Helm release for tenant {TenantId}: {Output}",
-                    tenantId, helmOutput);
+                return await DeprovisionSharedTenantAsync(tenantId, cancellationToken);
             }
-
-            // Delete namespace (this will clean up all resources)
-            var namespaceDeleted = await _k8sClient.DeleteNamespaceAsync(namespace_, cancellationToken);
-
-            if (!namespaceDeleted)
+            else
             {
-                _logger.LogError("Failed to delete namespace for tenant {TenantId}", tenantId);
-                return false;
+                return await DeprovisionDedicatedTenantAsync(tenantId, cancellationToken);
             }
-
-            _logger.LogInformation("Successfully deprovisioned tenant {TenantId}", tenantId);
-            return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to deprovision tenant {TenantId}", tenantId);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Deprovisions a shared free-tier tenant (deletes database, proxy, DNS).
+    /// </summary>
+    private async Task<bool> DeprovisionSharedTenantAsync(
+        string tenantId,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Deprovisioning shared tenant {TenantId}", tenantId);
+
+        // Step 1: Delete tenant database from shared PostgreSQL
+        try
+        {
+            await _dbProvisioner.DeleteTenantDatabaseAsync(
+                tenantId,
+                _options.FreeTier.PostgresHost,
+                _options.FreeTier.PostgresPort);
+            _logger.LogInformation("Deleted database for shared tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete database for shared tenant {TenantId}", tenantId);
+        }
+
+        // Step 2: Delete NPM proxy host
+        try
+        {
+            await _npmClient.DeleteProxyHostAsync(tenantId);
+            _logger.LogInformation("Deleted proxy host for shared tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete proxy host for shared tenant {TenantId}", tenantId);
+        }
+
+        // Step 3: Delete Cloudflare DNS record
+        try
+        {
+            await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
+            _logger.LogInformation("Deleted DNS record for shared tenant {TenantId}", tenantId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to delete DNS record for shared tenant {TenantId}", tenantId);
+        }
+
+        _logger.LogInformation("Successfully deprovisioned shared tenant {TenantId}", tenantId);
+        return true;
+    }
+
+    /// <summary>
+    /// Deprovisions a dedicated tenant (Helm uninstall + namespace delete).
+    /// </summary>
+    private async Task<bool> DeprovisionDedicatedTenantAsync(
+        string tenantId,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Deprovisioning dedicated tenant {TenantId}", tenantId);
+
+        var namespace_ = $"{_options.NamespacePrefix}{tenantId}";
+        var releaseName = $"tenant-{tenantId}";
+
+        // Uninstall Helm release
+        var (helmSuccess, helmOutput) = await _helmService.UninstallAsync(
+            releaseName,
+            namespace_,
+            timeout: 300,
+            cancellationToken: cancellationToken);
+
+        if (!helmSuccess)
+        {
+            _logger.LogWarning("Failed to uninstall Helm release for tenant {TenantId}: {Output}",
+                tenantId, helmOutput);
+        }
+
+        // Delete namespace (this will clean up all resources)
+        var namespaceDeleted = await _k8sClient.DeleteNamespaceAsync(namespace_, cancellationToken);
+
+        if (!namespaceDeleted)
+        {
+            _logger.LogError("Failed to delete namespace for tenant {TenantId}", tenantId);
+            return false;
+        }
+
+        _logger.LogInformation("Successfully deprovisioned dedicated tenant {TenantId}", tenantId);
+        return true;
     }
 
     public async Task<TenantProvisioningResult> UpdateTenantAsync(

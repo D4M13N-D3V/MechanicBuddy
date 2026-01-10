@@ -52,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IKubernetesClientService, KubernetesClientService>();
         services.AddScoped<IHelmService, HelmService>();
         services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
+        services.AddScoped<ITenantMigrationService, TenantMigrationService>();
 
         return services;
     }

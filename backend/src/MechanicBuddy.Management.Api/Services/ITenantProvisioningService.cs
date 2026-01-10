@@ -19,12 +19,25 @@ public interface ITenantProvisioningService
 
     /// <summary>
     /// Deprovisions a tenant and cleans up all resources.
+    /// Attempts to determine deployment mode automatically.
     /// </summary>
     /// <param name="tenantId">Tenant ID to deprovision.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if deprovisioning was successful.</returns>
     Task<bool> DeprovisionTenantAsync(
         string tenantId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deprovisions a tenant with specified deployment mode.
+    /// </summary>
+    /// <param name="tenantId">Tenant ID to deprovision.</param>
+    /// <param name="deploymentMode">"dedicated" for dedicated namespace, "shared" for shared free-tier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if deprovisioning was successful.</returns>
+    Task<bool> DeprovisionTenantAsync(
+        string tenantId,
+        string deploymentMode,
         CancellationToken cancellationToken = default);
 
     /// <summary>

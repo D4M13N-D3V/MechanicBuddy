@@ -18,6 +18,12 @@ public class NoOpNpmClient : INpmClient
         return Task.FromResult(true);
     }
 
+    public Task<bool> CreateProxyHostAsync(string tenantId, string forwardHost, int forwardPort)
+    {
+        _logger.LogWarning("NPM not configured. Skipping proxy host creation for tenant {TenantId} (forward: {Host}:{Port})", tenantId, forwardHost, forwardPort);
+        return Task.FromResult(true);
+    }
+
     public Task<bool> DeleteProxyHostAsync(string tenantId)
     {
         _logger.LogWarning("NPM not configured. Skipping proxy host deletion for tenant {TenantId}", tenantId);
