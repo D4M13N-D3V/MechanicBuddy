@@ -6,9 +6,25 @@ import {
 const basePath = '/backend-api';
 
 const getJwtToken =()=>{
-  
+
     const jwt = getCookie('jwt');
     return jwt;
+}
+
+// Extract tenant ID from hostname (e.g., "demo-1b94f2" from "demo-1b94f2.mechanicbuddy.app")
+const getTenantIdFromHost = (): string | null => {
+  if (typeof window === 'undefined') return null;
+
+  const host = window.location.hostname;
+  const parts = host.split('.');
+  if (parts.length >= 2) {
+    const tenantId = parts[0];
+    // Skip common subdomains that aren't tenant IDs
+    if (tenantId && tenantId !== 'www' && tenantId !== 'api' && tenantId !== 'localhost') {
+      return tenantId;
+    }
+  }
+  return null;
 }
 
  
@@ -64,12 +80,12 @@ const dataPage =({
     }):void
   }
 
-  const query = ({ 
-     url, 
-     method, 
-     body, 
-     onSuccess, 
-     onFailure 
+  const query = ({
+     url,
+     method,
+     body,
+     onSuccess,
+     onFailure
     }:{
         url:string,
         method:string,
@@ -78,13 +94,19 @@ const dataPage =({
         onFailure:IOnQueryFailure
 
     }) => {
-   
+
     const jwt = getJwtToken();
     const headers:HeadersInit = {
       'Content-Type': 'application/json',
     };
     if (jwt) {
       headers['Authorization'] = 'Bearer ' + jwt;
+    }
+
+    // Pass tenant ID to API for multi-tenant routing
+    const tenantId = getTenantIdFromHost();
+    if (tenantId) {
+      headers['X-Tenant-ID'] = tenantId;
     }
      
     // basePath is now a relative path that gets rewritten by Next.js to the backend API

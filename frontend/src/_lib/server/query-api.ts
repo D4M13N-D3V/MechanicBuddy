@@ -1,6 +1,6 @@
 'server-only'
 import { redirect } from "next/navigation";
-import { getJwt } from "./session"; 
+import { getJwt } from "./session";
 import { headers } from "next/headers";
 import { pushToast } from "./pushToast";
 
@@ -12,19 +12,43 @@ interface IAPICall
   method: string
 }
 
+// Extract tenant ID from hostname (e.g., "demo-1b94f2" from "demo-1b94f2.mechanicbuddy.app")
+async function getTenantIdFromHost(): Promise<string | null> {
+  const headersList = await headers();
+  const host = headersList.get('host');
+  if (!host) return null;
+
+  const parts = host.split('.');
+  if (parts.length >= 2) {
+    const tenantId = parts[0];
+    // Skip common subdomains that aren't tenant IDs
+    if (tenantId && tenantId !== 'www' && tenantId !== 'api' && tenantId !== 'localhost') {
+      return tenantId;
+    }
+  }
+  return null;
+}
+
 async function apiCall({
   url,
   authorize=true,
   method,
   body =null
-}:IAPICall) { 
+}:IAPICall) {
   const  requestHeaders:HeadersInit =   {
    "Content-Type": "application/json",
   };
-  if(authorize) { 
-    const jwt = await getJwt(); 
+  if(authorize) {
+    const jwt = await getJwt();
     requestHeaders["Authorization"] =  'Bearer ' + jwt;
-  } 
+  }
+
+  // Pass tenant ID to API for multi-tenant routing
+  const tenantId = await getTenantIdFromHost();
+  if (tenantId) {
+    requestHeaders["X-Tenant-ID"] = tenantId;
+  }
+
   const fullUrl = process.env.API_URL +`/api/${url}`;
   const request = {
     method,

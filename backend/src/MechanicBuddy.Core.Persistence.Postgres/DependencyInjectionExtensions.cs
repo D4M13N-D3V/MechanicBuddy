@@ -92,10 +92,18 @@ namespace MechanicBuddy.Core.Repository.Postgres
                     return anonymousFactory.OpenSession();
                 }
 
-                // For shared multi-tenant instances, try to resolve tenant from hostname
+                // For shared multi-tenant instances, try to resolve tenant from X-Tenant-ID header first
+                // This is set by the frontend when making API calls
+                string? tenantIdFromHeader = null;
+                if (httpContext?.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
+                {
+                    tenantIdFromHeader = tenantIdHeader.FirstOrDefault();
+                }
+
+                // Fall back to hostname resolution if no header
                 // Hostname format: {tenantId}.mechanicbuddy.app
-                // This handles unauthenticated requests like login page
-                if (httpContext?.Request?.Host.Host != null)
+                string? resolvedTenantId = tenantIdFromHeader;
+                if (string.IsNullOrEmpty(resolvedTenantId) && httpContext?.Request?.Host.Host != null)
                 {
                     var host = httpContext.Request.Host.Host;
                     var parts = host.Split('.');
@@ -104,20 +112,26 @@ namespace MechanicBuddy.Core.Repository.Postgres
                         var tenantId = parts[0]; // e.g., "demo-1b94f2" from "demo-1b94f2.mechanicbuddy.app"
                         if (!string.IsNullOrEmpty(tenantId) && tenantId != "www" && tenantId != "api")
                         {
-                            // Build a session factory for this tenant's database
-                            var tenantConnectionBuilder = new Npgsql.NpgsqlConnectionStringBuilder();
-                            tenantConnectionBuilder.Host = options.Host;
-                            tenantConnectionBuilder.Port = options.Port;
-                            tenantConnectionBuilder.Username = options.UserId;
-                            tenantConnectionBuilder.Password = options.Password;
-                            tenantConnectionBuilder.Database = new MultiTenancyDbName(options, tenantId);
-
-                            var tenantFactory = NNhibernateFactory.BuildSessionFactory(
-                                new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly },
-                                tenantConnectionBuilder.ToString());
-                            return tenantFactory.OpenSession();
+                            resolvedTenantId = tenantId;
                         }
                     }
+                }
+
+                // If we have a tenant ID, build session factory for that tenant's database
+                if (!string.IsNullOrEmpty(resolvedTenantId))
+                {
+                    // Build a session factory for this tenant's database
+                    var tenantConnectionBuilder = new Npgsql.NpgsqlConnectionStringBuilder();
+                    tenantConnectionBuilder.Host = options.Host;
+                    tenantConnectionBuilder.Port = options.Port;
+                    tenantConnectionBuilder.Username = options.UserId;
+                    tenantConnectionBuilder.Password = options.Password;
+                    tenantConnectionBuilder.Database = new MultiTenancyDbName(options, resolvedTenantId);
+
+                    var tenantFactory = NNhibernateFactory.BuildSessionFactory(
+                        new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly },
+                        tenantConnectionBuilder.ToString());
+                    return tenantFactory.OpenSession();
                 }
 
                 throw new System.Exception("Unable to open database session, user not authenticated.");
