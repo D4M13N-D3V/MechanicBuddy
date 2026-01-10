@@ -235,8 +235,9 @@ public class FreeTierOptions
     /// <summary>
     /// PostgreSQL host for the shared free-tier instance.
     /// This is the internal Kubernetes service DNS name.
+    /// Uses the same shared PostgreSQL cluster as other services.
     /// </summary>
-    public string PostgresHost { get; set; } = "mechanicbuddy-free-tier-postgres-rw.mechanicbuddy-free-tier.svc.cluster.local";
+    public string PostgresHost { get; set; } = "mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local";
 
     /// <summary>
     /// PostgreSQL port for the shared free-tier instance.
