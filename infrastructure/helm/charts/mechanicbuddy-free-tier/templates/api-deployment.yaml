@@ -135,9 +135,19 @@ spec:
           volumeMounts:
             - name: pdf-storage
               mountPath: /var/mechanicbuddy/pdf
+            - name: secrets-config
+              mountPath: /app/appsettings.Secrets.json
+              subPath: appsettings.Secrets.json
+              readOnly: true
       volumes:
         - name: pdf-storage
           emptyDir: {}
+        - name: secrets-config
+          secret:
+            secretName: {{ include "mechanicbuddy-free-tier.appSecretName" . }}
+            items:
+              - key: appsettings.Secrets.json
+                path: appsettings.Secrets.json
 ---
 apiVersion: v1
 kind: Service
