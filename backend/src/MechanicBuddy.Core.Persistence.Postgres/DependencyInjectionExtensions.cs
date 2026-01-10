@@ -99,18 +99,22 @@ namespace MechanicBuddy.Core.Repository.Postgres
                 // 1. Check X-Tenant-ID header (explicit tenant identification)
                 if (httpContext?.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
                 {
-                    resolvedTenantId = tenantIdHeader.ToString();
+                    // Use FirstOrDefault() as ToString() on StringValues may not work as expected
+                    resolvedTenantId = tenantIdHeader.FirstOrDefault();
                 }
 
                 // 2. Check X-Forwarded-Host header (set by ingress when proxying)
                 if (string.IsNullOrEmpty(resolvedTenantId) &&
                     httpContext?.Request?.Headers?.TryGetValue("X-Forwarded-Host", out var forwardedHost) == true)
                 {
-                    var host = forwardedHost.ToString();
-                    var parts = host.Split('.');
-                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                    var host = forwardedHost.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(host))
                     {
-                        resolvedTenantId = parts[0];
+                        var parts = host.Split('.');
+                        if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                        {
+                            resolvedTenantId = parts[0];
+                        }
                     }
                 }
 
