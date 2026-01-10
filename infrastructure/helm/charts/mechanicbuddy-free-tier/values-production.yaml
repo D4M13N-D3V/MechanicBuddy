@@ -37,3 +37,7 @@ imagePullSecrets:
 # Email - Resend API key should be set via sealed secret or ArgoCD
 # email:
 #   apiKey: "" # Set via ArgoCD secret or sealed-secrets
+
+# Disable resource quota (blacklisted in ArgoCD project)
+resourceQuota:
+  enabled: false
