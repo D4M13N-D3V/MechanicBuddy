@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using Npgsql;
 
 namespace MechanicBuddy.Management.Api.Infrastructure;
@@ -18,9 +17,10 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     // Template employee ID (from mechanicbuddy-testt template database)
     private const string TemplateEmployeeId = "a7227c1f-3bbc-4367-a9b8-baa83d0f19ca";
 
-    // Security: Characters for generating secure passwords
-    private const string PasswordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    private const int GeneratedPasswordLength = 16;
+    // Default admin password - same as the application default "carcare"
+    private const string DefaultAdminPassword = "carcare";
+    // BCrypt hash of "carcare" - precomputed for consistency
+    private const string DefaultAdminPasswordHash = "$2a$11$zsTS62pGn5Cfca4CgqRJxebx45je/3nJj.puxIArFwtAjHew67m6i";
 
     public TenantDatabaseProvisioner(
         IConfiguration configuration,
@@ -42,8 +42,8 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
 
     public async Task<string> ProvisionTenantDatabaseAsync(string tenantId)
     {
-        // Use default PostgreSQL host
-        return await ProvisionTenantDatabaseAsync(tenantId, null, null);
+        // Use default PostgreSQL host with default owner info
+        return await ProvisionTenantDatabaseAsync(tenantId, null, null, null, null);
     }
 
     /// <summary>
@@ -53,8 +53,10 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     /// <param name="tenantId">The tenant identifier.</param>
     /// <param name="targetPostgresHost">Target PostgreSQL host (null = use default).</param>
     /// <param name="targetPostgresPort">Target PostgreSQL port (null = use default).</param>
+    /// <param name="ownerEmail">Owner's email address for the admin account (null = use default).</param>
+    /// <param name="ownerName">Owner's name for the admin account (null = use default).</param>
     /// <returns>Connection string to the tenant database.</returns>
-    public async Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort)
+    public async Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort, string? ownerEmail = null, string? ownerName = null)
     {
         var tenantDbName = GetTenantDbName(tenantId);
         var postgresHost = targetPostgresHost ?? _postgresHost;
@@ -97,7 +99,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         await UpdateTenantUserTableAsync(tenantId, tenantDbName, postgresHost, postgresPort);
 
         // Create admin user in tenancy database (always uses default host - shared tenancy DB)
-        await CreateDefaultAdminAsync(tenantId);
+        await CreateDefaultAdminAsync(tenantId, ownerEmail, ownerName);
 
         _logger.LogInformation("Successfully provisioned database for tenant {TenantId} on host {Host}", tenantId, postgresHost);
 
@@ -243,12 +245,15 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             rowsAffected, tenantDbName, tenantId);
     }
 
-    private async Task CreateDefaultAdminAsync(string tenantId)
+    private async Task CreateDefaultAdminAsync(string tenantId, string? ownerEmail = null, string? ownerName = null)
     {
         // Create admin user in the tenancy database (where all users are stored)
         // The employee record already exists in the cloned tenant database from the template
         var tenancyConnectionString = BuildConnectionString(_tenancyDbName);
         var employeeId = Guid.Parse(TemplateEmployeeId);
+
+        // Use provided email or default
+        var email = !string.IsNullOrWhiteSpace(ownerEmail) ? ownerEmail : "admin@example.com";
 
         await using var connection = new NpgsqlConnection(tenancyConnectionString);
         await connection.OpenAsync();
@@ -267,48 +272,62 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             }
         }
 
-        // Security: Generate a unique secure password for each new tenant
-        var generatedPassword = GenerateSecurePassword();
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(generatedPassword);
-
-        // Create the admin user with the template employee ID
+        // Create the admin user with the default "carcare" password
+        // Users will be prompted to change password on first login
         await using (var cmd = new NpgsqlCommand(@"
-            INSERT INTO public.""user"" (username, password, tenantname, email, validated, profile_image, employeeid)
-            VALUES (@username, @password, @tenantname, @email, @validated, @profileImage, @employeeId)", connection))
+            INSERT INTO public.""user"" (username, password, tenantname, email, validated, profile_image, employeeid, must_change_password)
+            VALUES (@username, @password, @tenantname, @email, @validated, @profileImage, @employeeId, @mustChangePassword)", connection))
         {
             cmd.Parameters.AddWithValue("username", "admin");
-            cmd.Parameters.AddWithValue("password", passwordHash);
+            cmd.Parameters.AddWithValue("password", DefaultAdminPasswordHash);
             cmd.Parameters.AddWithValue("tenantname", tenantId);
-            cmd.Parameters.AddWithValue("email", "admin@example.com");
+            cmd.Parameters.AddWithValue("email", email);
             cmd.Parameters.AddWithValue("validated", true);
             cmd.Parameters.AddWithValue("profileImage", DBNull.Value);
             cmd.Parameters.AddWithValue("employeeId", employeeId);
+            cmd.Parameters.AddWithValue("mustChangePassword", true); // Force password change on first login
             await cmd.ExecuteNonQueryAsync();
         }
 
-        // Note: In production, the generated password should be sent to the tenant admin via secure channel
-        _logger.LogInformation("Created default admin user for tenant {TenantId} with employee ID {EmployeeId}. Initial password generated securely.", tenantId, employeeId);
+        // Also update the employee name in the tenant database if owner name is provided
+        if (!string.IsNullOrWhiteSpace(ownerName))
+        {
+            await UpdateEmployeeNameAsync(tenantId, employeeId, ownerName);
+        }
+
+        _logger.LogInformation("Created default admin user for tenant {TenantId} with email {Email}. Default password: {Password}",
+            tenantId, email, DefaultAdminPassword);
     }
 
-    /// <summary>
-    /// Security: Generates a cryptographically secure random password
-    /// </summary>
-    private static string GenerateSecurePassword()
+    private async Task UpdateEmployeeNameAsync(string tenantId, Guid employeeId, string fullName)
     {
-        var password = new char[GeneratedPasswordLength];
-        var randomBytes = new byte[GeneratedPasswordLength];
-
-        using (var rng = RandomNumberGenerator.Create())
+        try
         {
-            rng.GetBytes(randomBytes);
-        }
+            // Parse the full name into first and last name
+            var nameParts = fullName.Trim().Split(' ', 2);
+            var firstName = nameParts[0];
+            var lastName = nameParts.Length > 1 ? nameParts[1] : "";
 
-        for (int i = 0; i < GeneratedPasswordLength; i++)
+            var tenantDbName = GetTenantDbName(tenantId);
+            var tenantConnectionString = BuildConnectionString(tenantDbName);
+
+            await using var connection = new NpgsqlConnection(tenantConnectionString);
+            await connection.OpenAsync();
+
+            await using var cmd = new NpgsqlCommand(
+                @"UPDATE domain.employee SET firstname = @firstName, lastname = @lastName WHERE id = @employeeId", connection);
+            cmd.Parameters.AddWithValue("firstName", firstName);
+            cmd.Parameters.AddWithValue("lastName", lastName);
+            cmd.Parameters.AddWithValue("employeeId", employeeId);
+            await cmd.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Updated employee name for tenant {TenantId}: {FirstName} {LastName}", tenantId, firstName, lastName);
+        }
+        catch (Exception ex)
         {
-            password[i] = PasswordChars[randomBytes[i] % PasswordChars.Length];
+            _logger.LogWarning(ex, "Failed to update employee name for tenant {TenantId}", tenantId);
+            // Non-critical - don't fail provisioning if this fails
         }
-
-        return new string(password);
     }
 
     private string BuildConnectionString(string databaseName)

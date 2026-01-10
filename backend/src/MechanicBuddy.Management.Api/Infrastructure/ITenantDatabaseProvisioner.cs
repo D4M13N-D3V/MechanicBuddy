@@ -16,8 +16,10 @@ public interface ITenantDatabaseProvisioner
     /// <param name="tenantId">The tenant identifier (e.g., "testt")</param>
     /// <param name="targetPostgresHost">Target PostgreSQL host (null = use default)</param>
     /// <param name="targetPostgresPort">Target PostgreSQL port (null = use default)</param>
+    /// <param name="ownerEmail">Owner's email address for the admin account (null = use default)</param>
+    /// <param name="ownerName">Owner's name for the admin account (null = use default)</param>
     /// <returns>The connection string for the tenant database</returns>
-    Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort);
+    Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort, string? ownerEmail = null, string? ownerName = null);
 
     /// <summary>
     /// Deletes a tenant's database schema and all associated data from the default PostgreSQL host.

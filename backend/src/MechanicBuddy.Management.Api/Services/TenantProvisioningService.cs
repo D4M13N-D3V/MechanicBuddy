@@ -109,10 +109,13 @@ public class TenantProvisioningService : ITenantProvisioningService
 
             // Step 4: Create tenant database on shared PostgreSQL cluster
             AddLog(result, "Info", "CreateDatabase", "Creating database on shared PostgreSQL cluster");
+            var ownerFullName = $"{request.OwnerFirstName} {request.OwnerLastName}".Trim();
             await _dbProvisioner.ProvisionTenantDatabaseAsync(
                 tenantId,
                 _options.FreeTier.PostgresHost,
-                _options.FreeTier.PostgresPort);
+                _options.FreeTier.PostgresPort,
+                request.OwnerEmail,
+                ownerFullName);
 
             AddLog(result, "Info", "CreateDatabase", "Database created successfully");
 
