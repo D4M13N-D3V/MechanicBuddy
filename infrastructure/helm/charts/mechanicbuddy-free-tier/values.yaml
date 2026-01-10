@@ -31,8 +31,8 @@ postgresql:
   port: 5432
   # Base database name (tenants get mechanicbuddy-{tenantId})
   database: "mechanicbuddy"
-  # Database user
-  username: "mechanicbuddy"
+  # Database user (must match existing cluster user)
+  username: "management"
   # Database password (required - must match existing cluster)
   password: ""
 
