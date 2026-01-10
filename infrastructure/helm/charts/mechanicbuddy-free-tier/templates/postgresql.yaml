@@ -37,8 +37,6 @@ spec:
       work_mem: {{ .Values.postgresql.parameters.work_mem | quote }}
       effective_cache_size: {{ .Values.postgresql.parameters.effective_cache_size | quote }}
       log_statement: "ddl"
-      log_destination: "stderr"
-      logging_collector: "off"
 
   monitoring:
     enablePodMonitor: false
