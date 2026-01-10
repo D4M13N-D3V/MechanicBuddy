@@ -89,15 +89,20 @@ export default function SignupPage() {
             autoComplete="email"
           />
 
-          <Input
-            label="Company Name"
-            type="text"
-            placeholder="Your Workshop Name"
-            value={formData.companyName}
-            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            required
-            autoComplete="organization"
-          />
+          <div>
+            <Input
+              label="Company Name"
+              type="text"
+              placeholder="Your Workshop Name"
+              value={formData.companyName}
+              onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+              required
+              autoComplete="organization"
+            />
+            <p className="mt-1 text-xs text-dark-400">
+              This will be used for your subdomain (e.g., your-company.mechanicbuddy.app)
+            </p>
+          </div>
 
           <Input
             label="Password"
