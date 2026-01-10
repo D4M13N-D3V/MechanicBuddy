@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using MechanicBuddy.Core.Application.Configuration;
+﻿using MechanicBuddy.Core.Application.Configuration;
 using MechanicBuddy.Core.Application.Database;
 using MechanicBuddy.Core.Application.Services;
 using MechanicBuddy.Core.Domain;
@@ -98,23 +96,14 @@ namespace MechanicBuddy.Core.Repository.Postgres
                 // Priority: X-Tenant-ID > X-Forwarded-Host > Host
                 string resolvedTenantId = null;
 
-                // Debug logging for header inspection
-                Console.WriteLine($"[MultiTenancy Debug] Attempting tenant resolution...");
-                Console.WriteLine($"[MultiTenancy Debug] All headers: {string.Join(", ", httpContext?.Request?.Headers?.Keys ?? Enumerable.Empty<string>())}");
-
                 // 1. Check X-Tenant-ID header (explicit tenant identification)
                 if (httpContext?.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
                 {
                     var headerValue = tenantIdHeader.ToString();
-                    Console.WriteLine($"[MultiTenancy Debug] X-Tenant-ID header found: '{headerValue}'");
                     if (!string.IsNullOrEmpty(headerValue))
                     {
                         resolvedTenantId = headerValue;
                     }
-                }
-                else
-                {
-                    Console.WriteLine($"[MultiTenancy Debug] X-Tenant-ID header NOT found");
                 }
 
                 // 2. Check X-Forwarded-Host header (set by ingress when proxying)
@@ -122,15 +111,12 @@ namespace MechanicBuddy.Core.Repository.Postgres
                     httpContext?.Request?.Headers?.TryGetValue("X-Forwarded-Host", out var forwardedHost) == true)
                 {
                     var host = forwardedHost.ToString();
-                    Console.WriteLine($"[MultiTenancy Debug] X-Forwarded-Host header found: '{host}'");
                     if (!string.IsNullOrEmpty(host))
                     {
                         var parts = host.Split('.');
-                        Console.WriteLine($"[MultiTenancy Debug] X-Forwarded-Host parts: {string.Join(", ", parts)} (count: {parts.Length})");
                         if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
                         {
                             resolvedTenantId = parts[0];
-                            Console.WriteLine($"[MultiTenancy Debug] Resolved tenant from X-Forwarded-Host: '{resolvedTenantId}'");
                         }
                     }
                 }
@@ -139,17 +125,12 @@ namespace MechanicBuddy.Core.Repository.Postgres
                 if (string.IsNullOrEmpty(resolvedTenantId) && httpContext?.Request?.Host.Host != null)
                 {
                     var host = httpContext.Request.Host.Host;
-                    Console.WriteLine($"[MultiTenancy Debug] Host header: '{host}'");
                     var parts = host.Split('.');
-                    Console.WriteLine($"[MultiTenancy Debug] Host parts: {string.Join(", ", parts)} (count: {parts.Length})");
                     if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
                     {
                         resolvedTenantId = parts[0];
-                        Console.WriteLine($"[MultiTenancy Debug] Resolved tenant from Host: '{resolvedTenantId}'");
                     }
                 }
-
-                Console.WriteLine($"[MultiTenancy Debug] Final resolvedTenantId: '{resolvedTenantId ?? "NULL"}'");
 
                 // If we have a tenant ID, build session factory for that tenant's database
                 if (!string.IsNullOrEmpty(resolvedTenantId))
