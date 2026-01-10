@@ -94,15 +94,15 @@ namespace MechanicBuddy.Core.Repository.Postgres
 
                 // For shared multi-tenant instances, try to resolve tenant from X-Tenant-ID header first
                 // This is set by the frontend when making API calls
-                string? tenantIdFromHeader = null;
+                string tenantIdFromHeader = null;
                 if (httpContext?.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
                 {
-                    tenantIdFromHeader = tenantIdHeader.FirstOrDefault();
+                    tenantIdFromHeader = tenantIdHeader.ToString();
                 }
 
                 // Fall back to hostname resolution if no header
                 // Hostname format: {tenantId}.mechanicbuddy.app
-                string? resolvedTenantId = tenantIdFromHeader;
+                string resolvedTenantId = tenantIdFromHeader;
                 if (string.IsNullOrEmpty(resolvedTenantId) && httpContext?.Request?.Host.Host != null)
                 {
                     var host = httpContext.Request.Host.Host;
