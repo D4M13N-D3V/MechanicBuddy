@@ -14,6 +14,7 @@ public class NpmClient : INpmClient
     private readonly string _password;
     private readonly string _forwardHost;
     private readonly int _forwardPort;
+    private readonly string _forwardScheme;
     private readonly int _wildcardCertificateId;
     private readonly string _baseDomain;
     private string? _token;
@@ -27,8 +28,9 @@ public class NpmClient : INpmClient
         _baseUrl = configuration["Npm:BaseUrl"] ?? throw new InvalidOperationException("Npm:BaseUrl is required");
         _email = configuration["Npm:Email"] ?? throw new InvalidOperationException("Npm:Email is required");
         _password = configuration["Npm:Password"] ?? throw new InvalidOperationException("Npm:Password is required");
-        _forwardHost = configuration["Npm:ForwardHost"] ?? "192.168.1.100";
-        _forwardPort = int.TryParse(configuration["Npm:ForwardPort"], out var port) ? port : 31840;
+        _forwardHost = configuration["Npm:ForwardHost"] ?? "192.168.1.101";
+        _forwardPort = int.TryParse(configuration["Npm:ForwardPort"], out var port) ? port : 443;
+        _forwardScheme = configuration["Npm:ForwardScheme"] ?? "https";
         _wildcardCertificateId = int.TryParse(configuration["Npm:WildcardCertificateId"], out var certId) ? certId : 0;
         _baseDomain = configuration["Cloudflare:BaseDomain"] ?? "mechanicbuddy.app";
     }
@@ -85,7 +87,7 @@ public class NpmClient : INpmClient
             var proxyHost = new NpmProxyHostCreate
             {
                 DomainNames = new[] { domain },
-                ForwardScheme = "http",
+                ForwardScheme = _forwardScheme,
                 ForwardHost = forwardHost,
                 ForwardPort = forwardPort,
                 CertificateId = _wildcardCertificateId > 0 ? _wildcardCertificateId : null,
