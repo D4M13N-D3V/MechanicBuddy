@@ -1,0 +1,39 @@
+# =============================================================================
+# MechanicBuddy Free-Tier Production Values
+# =============================================================================
+# Override values for production deployment
+
+# Use commit SHA tag from latest build
+api:
+  image:
+    tag: "aec3f00"
+
+web:
+  image:
+    tag: "aec3f00"
+
+migrations:
+  image:
+    tag: "aec3f00"
+
+# PostgreSQL production settings
+postgresql:
+  storage:
+    size: "50Gi"
+    storageClass: "local-path"
+  # Production resource limits
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+# Image pull secrets for GHCR
+imagePullSecrets:
+  - name: ghcr-credentials
+
+# Email - Resend API key should be set via sealed secret or ArgoCD
+# email:
+#   apiKey: "" # Set via ArgoCD secret or sealed-secrets

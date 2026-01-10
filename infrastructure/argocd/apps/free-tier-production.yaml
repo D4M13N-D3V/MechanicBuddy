@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mechanicbuddy-free-tier
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: mechanicbuddy
+
+  source:
+    repoURL: https://github.com/D4m13n-D3v/mechanicbuddy.git
+    targetRevision: main
+    path: infrastructure/helm/charts/mechanicbuddy-free-tier
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-production.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mechanicbuddy-free-tier
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+  # Health checks
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ''
+      kind: Secret
+      jsonPointers:
+        - /data
+
+  info:
+    - name: Environment
+      value: production
+    - name: Team
+      value: platform
+    - name: Description
+      value: Shared multi-tenant instance for free-tier users

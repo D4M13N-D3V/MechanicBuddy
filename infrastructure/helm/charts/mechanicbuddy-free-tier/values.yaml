@@ -65,7 +65,7 @@ api:
   replicas: 2
   # Container image
   image:
-    repository: "ghcr.io/mechanicbuddy/api"
+    repository: "ghcr.io/d4m13n-d3v/mechanicbuddy-api"
     tag: "latest"
     pullPolicy: "IfNotPresent"
   # Service port
@@ -93,7 +93,7 @@ web:
   replicas: 2
   # Container image
   image:
-    repository: "ghcr.io/mechanicbuddy/web"
+    repository: "ghcr.io/d4m13n-d3v/mechanicbuddy-web"
     tag: "latest"
     pullPolicy: "IfNotPresent"
   # Service port
@@ -117,7 +117,7 @@ migrations:
   enabled: true
   # Migration job image
   image:
-    repository: "ghcr.io/mechanicbuddy/dbup"
+    repository: "ghcr.io/d4m13n-d3v/mechanicbuddy-dbup"
     tag: "latest"
     pullPolicy: "IfNotPresent"
   # Timeout for migration job
