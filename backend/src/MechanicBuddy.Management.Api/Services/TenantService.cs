@@ -1,6 +1,9 @@
+using MechanicBuddy.Management.Api.Configuration;
 using MechanicBuddy.Management.Api.Domain;
+using MechanicBuddy.Management.Api.Models;
 using MechanicBuddy.Management.Api.Repositories;
 using MechanicBuddy.Management.Api.Infrastructure;
+using Microsoft.Extensions.Options;
 
 namespace MechanicBuddy.Management.Api.Services;
 
@@ -18,28 +21,37 @@ public class TenantService
 {
     private readonly ITenantRepository _tenantRepository;
     private readonly IKubernetesClient _k8sClient;
+    private readonly ITenantProvisioningService _provisioningService;
     private readonly ICloudflareClient _cloudflareClient;
     private readonly INpmClient _npmClient;
     private readonly IEmailClient _emailClient;
     private readonly ILogger<TenantService> _logger;
+    private readonly ProvisioningOptions _provisioningOptions;
 
     private const string DefaultAdminUsername = "admin";
     private const string DefaultAdminPassword = "carcare";
 
+    // Tiers that should use the shared free-tier instance
+    private static readonly string[] SharedTiers = { "free", "demo" };
+
     public TenantService(
         ITenantRepository tenantRepository,
         IKubernetesClient k8sClient,
+        ITenantProvisioningService provisioningService,
         ICloudflareClient cloudflareClient,
         INpmClient npmClient,
         IEmailClient emailClient,
-        ILogger<TenantService> logger)
+        ILogger<TenantService> logger,
+        IOptions<ProvisioningOptions> provisioningOptions)
     {
         _tenantRepository = tenantRepository;
         _k8sClient = k8sClient;
+        _provisioningService = provisioningService;
         _cloudflareClient = cloudflareClient;
         _npmClient = npmClient;
         _emailClient = emailClient;
         _logger = logger;
+        _provisioningOptions = provisioningOptions.Value;
     }
 
     public async Task<Tenant?> GetByIdAsync(int id)
@@ -64,6 +76,76 @@ public class TenantService
 
     public async Task<Tenant> CreateTenantAsync(string companyName, string ownerEmail, string ownerName, string tier = "free", bool isDemo = false)
     {
+        // Check if this tier should use the shared free-tier instance
+        var useSharedInstance = SharedTiers.Contains(tier.ToLowerInvariant()) && _provisioningOptions.FreeTier.Enabled;
+
+        if (useSharedInstance)
+        {
+            return await CreateSharedTenantAsync(companyName, ownerEmail, ownerName, tier, isDemo);
+        }
+
+        return await CreateDedicatedTenantAsync(companyName, ownerEmail, ownerName, tier, isDemo);
+    }
+
+    /// <summary>
+    /// Creates a tenant on the shared free-tier instance using TenantProvisioningService.
+    /// </summary>
+    private async Task<Tenant> CreateSharedTenantAsync(string companyName, string ownerEmail, string ownerName, string tier, bool isDemo)
+    {
+        _logger.LogInformation("Creating shared instance tenant for {CompanyName} (tier: {Tier})", companyName, tier);
+
+        var request = new TenantProvisioningRequest
+        {
+            CompanyName = companyName,
+            OwnerEmail = ownerEmail,
+            SubscriptionTier = tier,
+            PopulateSampleData = isDemo
+        };
+
+        var result = await _provisioningService.ProvisionTenantAsync(request);
+
+        if (!result.Success)
+        {
+            _logger.LogError("Failed to provision shared tenant: {Error}", result.ErrorMessage);
+            throw new Exception($"Failed to provision tenant: {result.ErrorMessage}");
+        }
+
+        var tenant = new Tenant
+        {
+            TenantId = result.TenantId!,
+            CompanyName = companyName,
+            OwnerEmail = ownerEmail,
+            OwnerName = ownerName,
+            Tier = tier,
+            Status = isDemo ? "trial" : "active",
+            IsDemo = isDemo,
+            CreatedAt = DateTime.UtcNow,
+            TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(7) : null,
+            MaxMechanics = GetMaxMechanicsForTier(tier),
+            MaxStorage = GetMaxStorageForTier(tier),
+            K8sNamespace = result.Namespace,
+            ApiUrl = result.TenantUrl,
+            DeploymentMode = result.DeploymentMode
+        };
+
+        // Save to database
+        var id = await _tenantRepository.CreateAsync(tenant);
+        tenant.Id = id;
+
+        _logger.LogInformation("Created shared tenant {TenantId} for {OwnerEmail} (deployment mode: {Mode})",
+            tenant.TenantId, ownerEmail, result.DeploymentMode);
+
+        // Send welcome email
+        await SendWelcomeEmailAsync(tenant, isDemo);
+
+        return tenant;
+    }
+
+    /// <summary>
+    /// Creates a tenant with dedicated infrastructure using the legacy KubernetesClient.
+    /// </summary>
+    private async Task<Tenant> CreateDedicatedTenantAsync(string companyName, string ownerEmail, string ownerName, string tier, bool isDemo)
+    {
         // Generate unique tenant ID
         var tenantId = GenerateTenantId(companyName);
 
@@ -86,7 +168,8 @@ public class TenantService
             CreatedAt = DateTime.UtcNow,
             TrialEndsAt = isDemo ? DateTime.UtcNow.AddDays(7) : null, // No expiration for regular signups
             MaxMechanics = GetMaxMechanicsForTier(tier),
-            MaxStorage = GetMaxStorageForTier(tier)
+            MaxStorage = GetMaxStorageForTier(tier),
+            DeploymentMode = "dedicated"
         };
 
         try
@@ -107,38 +190,10 @@ public class TenantService
             var id = await _tenantRepository.CreateAsync(tenant);
             tenant.Id = id;
 
-            _logger.LogInformation("Created new tenant {TenantId} for {OwnerEmail}", tenantId, ownerEmail);
+            _logger.LogInformation("Created dedicated tenant {TenantId} for {OwnerEmail}", tenantId, ownerEmail);
 
-            // Send welcome email with credentials (non-blocking)
-            try
-            {
-                if (isDemo)
-                {
-                    await _emailClient.SendWelcomeEmailAsync(
-                        ownerEmail,
-                        companyName,
-                        tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.com",
-                        DefaultAdminUsername,
-                        DefaultAdminPassword,
-                        tenant.TrialEndsAt ?? DateTime.UtcNow.AddDays(7)
-                    );
-                }
-                else
-                {
-                    await _emailClient.SendAccountCreatedEmailAsync(
-                        ownerEmail,
-                        companyName,
-                        tenant.ApiUrl ?? $"https://{tenantId}.mechanicbuddy.com",
-                        DefaultAdminUsername,
-                        DefaultAdminPassword,
-                        tier
-                    );
-                }
-            }
-            catch (Exception emailEx)
-            {
-                _logger.LogWarning(emailEx, "Failed to send welcome email to {OwnerEmail}, but tenant was created", ownerEmail);
-            }
+            // Send welcome email
+            await SendWelcomeEmailAsync(tenant, isDemo);
 
             return tenant;
         }
@@ -157,6 +212,39 @@ public class TenantService
             }
 
             throw;
+        }
+    }
+
+    private async Task SendWelcomeEmailAsync(Tenant tenant, bool isDemo)
+    {
+        try
+        {
+            if (isDemo)
+            {
+                await _emailClient.SendWelcomeEmailAsync(
+                    tenant.OwnerEmail,
+                    tenant.CompanyName,
+                    tenant.ApiUrl ?? $"https://{tenant.TenantId}.mechanicbuddy.app",
+                    DefaultAdminUsername,
+                    DefaultAdminPassword,
+                    tenant.TrialEndsAt ?? DateTime.UtcNow.AddDays(7)
+                );
+            }
+            else
+            {
+                await _emailClient.SendAccountCreatedEmailAsync(
+                    tenant.OwnerEmail,
+                    tenant.CompanyName,
+                    tenant.ApiUrl ?? $"https://{tenant.TenantId}.mechanicbuddy.app",
+                    DefaultAdminUsername,
+                    DefaultAdminPassword,
+                    tenant.Tier
+                );
+            }
+        }
+        catch (Exception emailEx)
+        {
+            _logger.LogWarning(emailEx, "Failed to send welcome email to {OwnerEmail}, but tenant was created", tenant.OwnerEmail);
         }
     }
 

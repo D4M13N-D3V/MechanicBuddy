@@ -25,5 +25,7 @@ public class Tenant
     public string? K8sNamespace { get; set; }
     public string? DbConnectionString { get; set; }
     public string? ApiUrl { get; set; }
+    public string DeploymentMode { get; set; } = "dedicated"; // "dedicated" or "shared"
+    public string? SharedInstanceId { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
 }
