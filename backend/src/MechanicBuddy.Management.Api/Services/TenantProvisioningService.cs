@@ -118,17 +118,57 @@ public class TenantProvisioningService : ITenantProvisioningService
 
             // Step 5: Create Cloudflare DNS record
             AddLog(result, "Info", "CreateDns", "Creating DNS record");
-            await _cloudflareClient.CreateTenantDnsRecordAsync(tenantId);
+            var dnsCreated = await _cloudflareClient.CreateTenantDnsRecordAsync(tenantId);
+            if (!dnsCreated)
+            {
+                result.Success = false;
+                result.ErrorMessage = "Failed to create DNS record in Cloudflare";
+                AddLog(result, "Error", "CreateDns", result.ErrorMessage);
+                // Clean up database that was already created
+                await _dbProvisioner.DeleteTenantDatabaseAsync(
+                    tenantId,
+                    _options.FreeTier.PostgresHost,
+                    _options.FreeTier.PostgresPort);
+                return result;
+            }
+            AddLog(result, "Info", "CreateDns", "DNS record created successfully");
 
             // Step 6: Create NPM proxy host (uses default NodePort, same as dedicated tenants)
             // NPM forwards to K8s ingress NodePort, then ingress routes to correct service
             AddLog(result, "Info", "CreateProxy", "Creating proxy host");
-            await _npmClient.CreateProxyHostAsync(tenantId);
+            var proxyCreated = await _npmClient.CreateProxyHostAsync(tenantId);
+            if (!proxyCreated)
+            {
+                result.Success = false;
+                result.ErrorMessage = "Failed to create NPM proxy host";
+                AddLog(result, "Error", "CreateProxy", result.ErrorMessage);
+                // Clean up: delete DNS and database
+                await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
+                await _dbProvisioner.DeleteTenantDatabaseAsync(
+                    tenantId,
+                    _options.FreeTier.PostgresHost,
+                    _options.FreeTier.PostgresPort);
+                return result;
+            }
+            AddLog(result, "Info", "CreateProxy", "Proxy host created successfully");
 
             // Step 7: Create Ingress in free-tier namespace to route tenant hostname to shared services
             AddLog(result, "Info", "CreateIngress", "Creating ingress for tenant hostname");
-            await _k8sClient.CreateFreeTierIngressAsync(tenantId, _options.FreeTier.Namespace, cancellationToken);
-
+            var ingressCreated = await _k8sClient.CreateFreeTierIngressAsync(tenantId, _options.FreeTier.Namespace, cancellationToken);
+            if (!ingressCreated)
+            {
+                result.Success = false;
+                result.ErrorMessage = "Failed to create Kubernetes ingress";
+                AddLog(result, "Error", "CreateIngress", result.ErrorMessage);
+                // Clean up: delete proxy, DNS, and database
+                await _npmClient.DeleteProxyHostAsync(tenantId);
+                await _cloudflareClient.DeleteTenantDnsRecordAsync(tenantId);
+                await _dbProvisioner.DeleteTenantDatabaseAsync(
+                    tenantId,
+                    _options.FreeTier.PostgresHost,
+                    _options.FreeTier.PostgresPort);
+                return result;
+            }
             AddLog(result, "Info", "CreateIngress", "Ingress created successfully");
 
             // Step 7: Set tenant URLs
