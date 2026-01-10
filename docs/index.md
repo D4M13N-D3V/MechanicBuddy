@@ -23,6 +23,23 @@ For workshop staff and administrators who use MechanicBuddy daily.
 - **[Workshop Staff Guide](user-guide/workshop-staff-guide.md)** - Daily operations: work orders, clients, vehicles, invoicing
 - **[Administrator Guide](user-guide/administrator-guide.md)** - System configuration, user management, branding
 
+## Multi-Tenant Architecture
+
+MechanicBuddy implements a hybrid multi-tenant architecture optimized for both cost efficiency and performance:
+
+- **Free & Demo Tiers**: Tenants share a common deployment with isolated databases
+- **Paid Tiers**: Tenants receive dedicated Kubernetes namespaces with full resource isolation
+
+This approach allows us to:
+- Support unlimited free-tier users cost-effectively
+- Provide premium performance and isolation for paying customers
+- Maintain strong security boundaries at the database level for all tiers
+
+For detailed architecture information, see:
+- [Technical Architecture](technical/architecture.md) - Complete system design and deployment patterns
+- [Deployment Guide](technical/deployment.md) - Step-by-step deployment instructions
+- [Management API](../backend/src/MechanicBuddy.Management.Api/README.md) - Tenant provisioning and management
+
 ## Quick Start
 
 ## Technology Stack

@@ -85,6 +85,39 @@ API communication: Frontend makes server-side calls to `API_URL`, uses `NEXT_PUB
 
 PostgreSQL 16+ with multitenancy via schemas. Migrations run via DbUp project before API starts.
 
+## Multi-Tenant Architecture
+
+MechanicBuddy uses a **hybrid deployment model** with two distinct modes:
+
+### Shared Deployment (Free/Demo Tiers)
+- Namespace: `mechanicbuddy-free-tier`
+- All free-tier tenants share API/Web services (2 replicas each)
+- Each tenant gets a separate database on shared PostgreSQL cluster
+- Provisioned via: Database creation + NPM routing (no Helm deployment)
+- Max capacity: 100 tenants per instance
+- DeploymentMode: `"shared"`
+
+### Dedicated Deployment (Paid Tiers)
+- Namespace: `tenant-{tenantId}` (per tenant)
+- Each tenant gets dedicated PostgreSQL, API, and Web deployments
+- Resource scaling based on tier (professional: 2 replicas, enterprise: 3 replicas)
+- Provisioned via: Full Helm chart deployment
+- DeploymentMode: `"dedicated"`
+
+### Tenant Isolation
+- **Database**: All tenants have separate databases (even on shared instances)
+- **Routing**: JWT claims (`ClaimTypes.Spn`) route to correct database
+- **Network**: Namespace isolation for paid tiers
+- **Domains**: All tenants get `{tenantId}.mechanicbuddy.app` subdomain
+
+### Key Components
+- **TenantProvisioningService**: [MechanicBuddy.Management.Api/Services/TenantProvisioningService.cs](backend/src/MechanicBuddy.Management.Api/Services/TenantProvisioningService.cs)
+  - `ProvisionFreeTierTenantAsync()`: Creates tenant on shared instance
+  - `ProvisionDedicatedTenantAsync()`: Deploys dedicated Helm chart
+- **Free-Tier Helm Chart**: [infrastructure/helm/charts/mechanicbuddy-free-tier/](infrastructure/helm/charts/mechanicbuddy-free-tier/)
+- **Tenant Helm Chart**: [infrastructure/helm/charts/mechanicbuddy-tenant/](infrastructure/helm/charts/mechanicbuddy-tenant/)
+- **Configuration**: [MechanicBuddy.Management.Api/Configuration/ProvisioningOptions.cs](backend/src/MechanicBuddy.Management.Api/Configuration/ProvisioningOptions.cs)
+
 ## Configuration
 
 Backend secrets: `backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json`

@@ -141,6 +141,22 @@ serviceAccount:
   annotations: {}
 
 # -----------------------------------------------------------------------------
+# Autoscaling Configuration
+# -----------------------------------------------------------------------------
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  web:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# -----------------------------------------------------------------------------
 # Resource Quotas for the namespace
 # -----------------------------------------------------------------------------
 resourceQuota:
@@ -151,4 +167,4 @@ resourceQuota:
   limits:
     cpu: "8"
     memory: "16Gi"
-  pods: "20"
+  pods: "30"

@@ -160,14 +160,121 @@ curl -X POST http://localhost:5100/api/auth/login \
 - `Stripe__SecretKey`: Stripe API key
 - `Email__ResendApiKey`: Resend API key
 
-## Kubernetes Integration
+## Deployment Modes
 
-The Management API deploys tenant instances to Kubernetes. Each tenant gets:
+The Management API supports two deployment modes for tenant instances:
+
+### Shared Mode
+
+Used for **Demo** and **Free** tiers. Multiple tenants run within a single shared infrastructure:
+
+- Tenants share common API and Web deployments
+- Each tenant still has an isolated PostgreSQL schema
+- Resource-efficient for low-usage tiers
+- Configured via the Free-Tier configuration (see below)
+
+**Benefits:**
+- Lower infrastructure costs
+- Efficient resource utilization
+- Faster provisioning
+
+**Tradeoffs:**
+- Shared resources may have performance limitations
+- Resource contention possible during peak usage
+
+### Dedicated Mode
+
+Used for **Professional** and **Enterprise** tiers. Each tenant gets its own isolated infrastructure:
 
 - Dedicated namespace (`mb-{tenantId}`)
+- Dedicated API and Web deployments
+- Dedicated or HA PostgreSQL instances
+- Isolated resource limits per tenant
+
+**Benefits:**
+- Better performance isolation
+- Dedicated resources per tenant
+- Enhanced security boundaries
+- Customizable resource allocation
+
+**Tradeoffs:**
+- Higher infrastructure costs
+- More complex management
+
+## Free-Tier Configuration
+
+Free and demo tier tenants use shared infrastructure, controlled by this configuration in `appsettings.json`:
+
+```json
+"Provisioning": {
+  "FreeTier": {
+    "Enabled": true,
+    "Namespace": "mechanicbuddy-free-tier",
+    "MaxTenantsPerInstance": 100,
+    "ApiServiceName": "mechanicbuddy-free-tier-api",
+    "WebServiceName": "mechanicbuddy-free-tier-web"
+  }
+}
+```
+
+### Configuration Options
+
+- **Enabled**: When `true`, demo and free-tier tenants are provisioned in shared mode. When `false`, all tiers use dedicated mode (not recommended for production).
+- **Namespace**: Kubernetes namespace where shared infrastructure is deployed.
+- **MaxTenantsPerInstance**: Maximum number of tenants allowed per shared instance. Used for capacity planning and triggering scale-out scenarios.
+- **ApiServiceName**: Name of the shared API service in Kubernetes.
+- **WebServiceName**: Name of the shared Web service in Kubernetes.
+
+### Capacity Planning
+
+The `MaxTenantsPerInstance` setting helps with capacity planning:
+
+- When the tenant count approaches this limit, consider scaling the shared infrastructure
+- Monitor resource utilization (CPU, memory, connections) of shared services
+- Plan for horizontal scaling by deploying additional shared clusters if needed
+
+## Tier Resource Limits
+
+Resource allocations differ based on deployment mode and tier:
+
+| Tier | Deployment | PostgreSQL | Storage | API Replicas | Web Replicas | Backup |
+|------|-----------|-----------|---------|--------------|--------------|--------|
+| Demo | Shared | Shared cluster | 5Gi | Shared (2) | Shared (2) | No |
+| Free | Shared | Shared cluster | 10Gi | Shared (2) | Shared (2) | No |
+| Professional | Dedicated | 1 instance | 50Gi | 2 | 2 | Yes |
+| Enterprise | Dedicated | 3 instances (HA) | 200Gi | 3 | 3 | Yes |
+
+### Shared vs Dedicated Resources
+
+**Shared Mode (Demo/Free):**
+- API and Web deployments are shared across all tenants in the tier
+- Each tenant gets an isolated PostgreSQL schema within the shared cluster
+- Storage limits apply per tenant schema
+- No dedicated replicas per tenant
+
+**Dedicated Mode (Professional/Enterprise):**
+- Each tenant gets dedicated API and Web deployments
+- Professional: Single PostgreSQL instance
+- Enterprise: High-availability PostgreSQL with 3 instances
+- Storage is dedicated per tenant
+- Replica counts are per tenant
+
+## Kubernetes Integration
+
+The Management API deploys tenant instances to Kubernetes based on their tier and deployment mode:
+
+**For Shared Mode (Demo/Free):**
+- Tenant is registered in the shared namespace
+- Connection details point to shared API and Web services
+- PostgreSQL schema created in shared database cluster
+
+**For Dedicated Mode (Professional/Enterprise):**
+- Dedicated namespace created (`mb-{tenantId}`)
 - API deployment with resource limits based on tier
-- ClusterIP service
-- PostgreSQL schema in shared database
+- Web deployment with resource limits based on tier
+- ClusterIP services for API and Web
+- PostgreSQL instance(s) deployed based on tier
+- Backup jobs configured (if enabled for tier)
 
 ## Monitoring
 

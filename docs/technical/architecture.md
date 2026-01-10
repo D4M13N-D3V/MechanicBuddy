@@ -354,48 +354,202 @@ export async function createSession(apiJwt: string, publicJwt: string) {
 
 ## Multi-tenancy Architecture
 
-### Database-per-Tenant Model
+MechanicBuddy uses a **hybrid multi-tenant architecture** with two distinct deployment models optimized for different subscription tiers.
+
+### Hybrid Deployment Model
 
 ```mermaid
 graph TB
-    subgraph "API Layer"
-        API[API Server]
+    subgraph "Shared Deployment (Free/Demo)"
+        NPM1[NPM Proxy]
+        NS_FREE[mechanicbuddy-free-tier namespace]
+
+        subgraph "Shared Resources"
+            API_FREE[API Pods x2]
+            WEB_FREE[Web Pods x2]
+        end
+
+        subgraph "Management DB Cluster"
+            DB_MGMT[(management-db)]
+            DB_FREE1[(tenant-demo)]
+            DB_FREE2[(tenant-trial)]
+        end
+
+        NPM1 --> API_FREE
+        NPM1 --> WEB_FREE
+        API_FREE --> DB_MGMT
+        API_FREE --> DB_FREE1
+        API_FREE --> DB_FREE2
     end
 
-    subgraph "Tenant Databases"
-        DB1[(tenant-acme)]
-        DB2[(tenant-demo)]
-        DB3[(tenant-xyz)]
+    subgraph "Dedicated Deployment (Professional)"
+        NPM2[NPM Proxy]
+        NS_PRO[tenant-acme namespace]
+
+        subgraph "Dedicated Resources"
+            API_PRO[API Pods x2]
+            WEB_PRO[Web Pods x2]
+        end
+
+        subgraph "Dedicated DB Cluster"
+            DB_PRO[(tenant-acme)]
+        end
+
+        NPM2 --> API_PRO
+        NPM2 --> WEB_PRO
+        API_PRO --> DB_PRO
     end
 
-    subgraph "Management"
-        MGMT_DB[(management-db)]
+    subgraph "Dedicated Deployment (Enterprise)"
+        NPM3[NPM Proxy]
+        NS_ENT[tenant-corp namespace]
+
+        subgraph "HA Resources"
+            API_ENT[API Pods x3]
+            WEB_ENT[Web Pods x3]
+        end
+
+        subgraph "HA DB Cluster"
+            DB_ENT1[(Primary)]
+            DB_ENT2[(Standby)]
+            DB_ENT3[(Standby)]
+        end
+
+        NPM3 --> API_ENT
+        NPM3 --> WEB_ENT
+        API_ENT --> DB_ENT1
+        DB_ENT1 -.replication.-> DB_ENT2
+        DB_ENT1 -.replication.-> DB_ENT3
     end
 
-    API --> DB1
-    API --> DB2
-    API --> DB3
-    API --> MGMT_DB
+    CLIENT1[demo.example.com] --> NPM1
+    CLIENT2[acme.example.com] --> NPM2
+    CLIENT3[corp.example.com] --> NPM3
 ```
 
+### Deployment Models
+
+#### 1. Shared Deployment (Free/Demo Tiers)
+
+**Architecture:**
+- All free-tier tenants share a single deployment in the `mechanicbuddy-free-tier` namespace
+- 2 API replicas and 2 Web replicas serve all free tenants
+- Each tenant has a separate database on the shared management PostgreSQL cluster
+- JWT-based tenant routing (`ClaimTypes.Spn`) ensures application-level isolation
+
+**Characteristics:**
+- **Namespace**: `mechanicbuddy-free-tier` (shared)
+- **API Replicas**: 2 (shared across all free tenants)
+- **Web Replicas**: 2 (shared across all free tenants)
+- **Database**: Separate database per tenant on shared PostgreSQL cluster
+- **Storage**: 5-10 Gi per tenant
+- **Limits**: 2-5 mechanics per tenant
+- **Backups**: None
+- **Resource Quotas**: Applied at namespace level
+
+**Provisioning:**
+- Skip Helm chart deployment
+- Create database only (no infrastructure deployment)
+- Configure NPM routing for subdomain
+- Register tenant in management database
+
+#### 2. Dedicated Deployment (Professional Tier)
+
+**Architecture:**
+- Each tenant gets a dedicated namespace: `tenant-{tenantId}`
+- Dedicated API and Web replicas serve only one tenant
+- Dedicated PostgreSQL cluster with single instance
+- Full network isolation via Kubernetes namespaces
+
+**Characteristics:**
+- **Namespace**: `tenant-{tenantId}` (dedicated)
+- **API Replicas**: 2 (dedicated)
+- **Web Replicas**: 2 (dedicated)
+- **Database**: Dedicated PostgreSQL cluster (1 instance)
+- **Storage**: 50 Gi
+- **Limits**: Up to 20 mechanics
+- **Backups**: Daily automated backups
+- **Resource Quotas**: Per-tenant namespace quotas
+
+**Provisioning:**
+- Full Helm chart deployment
+- Create dedicated namespace
+- Deploy PostgreSQL cluster
+- Deploy API and Web pods
+- Configure NPM routing
+- Setup resource quotas
+- Enable backup schedules
+
+#### 3. Dedicated Deployment (Enterprise Tier)
+
+**Architecture:**
+- Similar to Professional but with high availability
+- Dedicated namespace: `tenant-{tenantId}`
+- PostgreSQL cluster with 3 instances (primary + 2 standbys)
+- Higher replica counts for API and Web
+- Enhanced monitoring and alerting
+
+**Characteristics:**
+- **Namespace**: `tenant-{tenantId}` (dedicated)
+- **API Replicas**: 3+ (dedicated, auto-scaling enabled)
+- **Web Replicas**: 3+ (dedicated, auto-scaling enabled)
+- **Database**: HA PostgreSQL cluster (3 instances with replication)
+- **Storage**: 200+ Gi with auto-expansion
+- **Limits**: Unlimited mechanics
+- **Backups**: Hourly snapshots + PITR
+- **Resource Quotas**: Higher limits, auto-scaling enabled
+- **SLA**: 99.9% uptime guarantee
+
+**Provisioning:**
+- Full Helm chart deployment with HA configuration
+- Create dedicated namespace with enhanced quotas
+- Deploy HA PostgreSQL cluster (primary + standbys)
+- Deploy API and Web pods with HPA (Horizontal Pod Autoscaler)
+- Configure NPM routing with health checks
+- Setup comprehensive monitoring (Prometheus/Grafana)
+- Enable advanced backup strategies
+
+### Tenant Isolation Layers
+
+MechanicBuddy implements defense-in-depth isolation:
+
+| Layer | Free/Demo | Professional | Enterprise |
+|-------|-----------|--------------|------------|
+| **Application** | JWT claims routing via `ClaimTypes.Spn` | JWT claims routing | JWT claims routing |
+| **Database** | Separate database per tenant | Dedicated PostgreSQL cluster | Dedicated HA PostgreSQL cluster |
+| **Network** | Shared namespace (app-level isolation) | Dedicated namespace | Dedicated namespace + NetworkPolicies |
+| **Compute** | Shared API/Web pods | Dedicated API/Web pods | Dedicated HA API/Web pods |
+| **Storage** | Shared PVC pool | Dedicated PVC | Dedicated PVC with snapshots |
+| **Routing** | NPM subdomain routing | NPM subdomain routing | NPM subdomain routing + WAF |
+
 ### Tenant Resolution Flow
+
+All deployment models use the same tenant resolution mechanism:
 
 1. **JWT Token Contains Tenant**
    ```json
    {
-     "spn": "acme",        // Tenant identifier
+     "spn": "acme",        // Tenant identifier (ClaimTypes.Spn)
      "userData": "emp-123"  // Employee ID
    }
    ```
 
-2. **Connection Driver Selects Database**
+2. **NPM Routes to Correct Deployment**
+   - Free tenants: Routes to `mechanicbuddy-free-tier` namespace
+   - Paid tenants: Routes to `tenant-{tenantId}` namespace
+   - Based on subdomain mapping in NPM configuration
+
+3. **Connection Driver Selects Database**
    ```csharp
    // Extracts tenant from ClaimTypes.Spn
    var tenantName = principal.FindFirst(ClaimTypes.Spn)?.Value;
    var dbName = $"{baseName}-{tenantName}";
+
+   // Connects to correct database (on shared or dedicated cluster)
+   var connectionString = GetConnectionString(tenantName, dbName);
    ```
 
-3. **NHibernate Uses Scoped Connection**
+4. **NHibernate Uses Scoped Connection**
    ```csharp
    // Each request gets connection to correct tenant database
    var session = _sessionFactory.WithOptions()
@@ -403,17 +557,204 @@ graph TB
        .OpenSession();
    ```
 
-### Tenant Provisioning (SaaS)
+### Resource Allocation by Tier
 
-The Management API provisions new tenants:
+| Resource | Demo/Free | Professional | Enterprise |
+|----------|-----------|--------------|------------|
+| **API Pods** | 2 shared | 2 dedicated | 3+ dedicated (HPA) |
+| **Web Pods** | 2 shared | 2 dedicated | 3+ dedicated (HPA) |
+| **PostgreSQL** | Shared cluster | 1 dedicated | 3 HA (primary + standbys) |
+| **Storage** | 5-10 Gi | 50 Gi | 200+ Gi |
+| **CPU Limit** | Shared pool | 2 cores/pod | 4 cores/pod |
+| **Memory Limit** | Shared pool | 2 Gi/pod | 4 Gi/pod |
+| **Mechanics** | 2-5 | 20 | Unlimited |
+| **Backups** | None | Daily | Hourly + PITR |
+| **Monitoring** | Basic | Standard | Advanced + Alerts |
+| **Support** | Community | Business hours | 24/7 |
 
+### Tenant Provisioning Flow
+
+#### Free/Demo Tier Provisioning
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant M as Management API
+    participant P as PostgreSQL (Shared)
+    participant N as NPM
+    participant K as Kubernetes
+
+    U->>M: POST /tenants (tier=free)
+    M->>M: Validate tenant data
+    M->>P: CREATE DATABASE tenant-{id}
+    M->>P: Run DbUp migrations
+    M->>M: Register in management-db
+    M->>N: Configure subdomain routing
+    Note over M,K: Skip Helm deployment
+    M-->>U: Tenant created (uses shared pods)
+```
+
+**Steps:**
 1. Create PostgreSQL database from template
 2. Run migrations (DbUp)
-3. Create Kubernetes namespace
-4. Deploy tenant Helm chart
-5. Configure DNS (Cloudflare)
-6. Setup TLS certificate (cert-manager)
-7. Configure reverse proxy
+3. Register tenant in management database
+4. Configure NPM proxy routing for subdomain
+5. **Skip**: Kubernetes namespace creation
+6. **Skip**: Helm chart deployment
+7. Return tenant configuration
+
+#### Paid Tier Provisioning (Professional/Enterprise)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant M as Management API
+    participant K as Kubernetes
+    participant H as Helm
+    participant P as PostgreSQL (Dedicated)
+    participant N as NPM
+    participant C as Cloudflare
+
+    U->>M: POST /tenants (tier=professional)
+    M->>M: Validate tenant data
+    M->>K: Create namespace tenant-{id}
+    M->>K: Apply ResourceQuotas
+    M->>H: Deploy PostgreSQL chart
+    H->>K: Create PostgreSQL pods
+    K->>P: Initialize database cluster
+    M->>P: Run DbUp migrations
+    M->>H: Deploy MechanicBuddy chart
+    H->>K: Create API/Web deployments
+    M->>N: Configure subdomain routing
+    M->>C: Create DNS record (optional)
+    M->>K: Setup cert-manager (TLS)
+    M->>M: Register in management-db
+    M-->>U: Tenant provisioned successfully
+```
+
+**Steps:**
+1. Create Kubernetes namespace (`tenant-{tenantId}`)
+2. Apply resource quotas and limit ranges
+3. Deploy PostgreSQL Helm chart (dedicated cluster)
+4. Wait for PostgreSQL to be ready
+5. Run migrations (DbUp)
+6. Deploy MechanicBuddy Helm chart (API + Web)
+7. Configure NPM proxy routing for subdomain
+8. Create DNS record in Cloudflare (if enabled)
+9. Setup TLS certificate with cert-manager
+10. Configure backup schedules (Professional+)
+11. Setup monitoring and alerting (Enterprise)
+12. Register tenant in management database
+13. Return tenant configuration
+
+### Database Isolation Strategy
+
+**All tenants get separate databases**, even on shared infrastructure:
+
+```mermaid
+graph TB
+    subgraph "Shared PostgreSQL Cluster"
+        PG1[PostgreSQL Server]
+
+        subgraph "System Databases"
+            MGMT[(management-db)]
+        end
+
+        subgraph "Free Tenant Databases"
+            DB_FREE1[(tenant-demo)]
+            DB_FREE2[(tenant-trial-123)]
+            DB_FREE3[(tenant-trial-456)]
+        end
+    end
+
+    subgraph "Dedicated PostgreSQL Cluster (Professional)"
+        PG2[PostgreSQL Server]
+        DB_PRO[(tenant-acme)]
+    end
+
+    subgraph "HA PostgreSQL Cluster (Enterprise)"
+        PG3_PRIMARY[PostgreSQL Primary]
+        PG3_STANDBY1[PostgreSQL Standby 1]
+        PG3_STANDBY2[PostgreSQL Standby 2]
+
+        DB_ENT[(tenant-corp)]
+
+        PG3_PRIMARY --> DB_ENT
+        PG3_PRIMARY -.streaming replication.-> PG3_STANDBY1
+        PG3_PRIMARY -.streaming replication.-> PG3_STANDBY2
+    end
+
+    API_FREE[Free Tier API] --> PG1
+    API_PRO[Professional API] --> PG2
+    API_ENT[Enterprise API] --> PG3_PRIMARY
+```
+
+**Benefits:**
+- Complete data isolation between tenants
+- Simplified backup/restore (per database)
+- Easy tenant migration (dump/restore)
+- No shared schema vulnerabilities
+- Independent schema evolution
+
+**Connection Management:**
+- Connection pooling per database
+- JWT claim (`ClaimTypes.Spn`) determines target database
+- Middleware creates scoped connections per request
+- NHibernate session bound to tenant database
+
+### Migration Considerations
+
+#### Upgrading from Free to Paid
+
+When a tenant upgrades from Free to Professional/Enterprise:
+
+1. **Database Migration**
+   ```bash
+   # Dump from shared cluster
+   pg_dump -h shared-postgres tenant-{id} > backup.sql
+
+   # Provision new dedicated cluster
+   helm install tenant-{id}-postgres bitnami/postgresql
+
+   # Restore to dedicated cluster
+   psql -h tenant-{id}-postgres tenant-{id} < backup.sql
+   ```
+
+2. **Deployment Provisioning**
+   - Create dedicated namespace
+   - Deploy full Helm chart
+   - Update NPM routing to point to new pods
+
+3. **Cutover**
+   - Verify new deployment is healthy
+   - Update DNS/routing atomically
+   - Monitor for issues
+   - Cleanup old database after verification period
+
+4. **Zero-Downtime Options** (Enterprise)
+   - Dual-write during migration
+   - Blue-green deployment
+   - Database replication cutover
+
+### Security Considerations
+
+#### Shared Deployment Security (Free Tier)
+
+- **Application-level isolation**: JWT validation is critical
+- **Database isolation**: Separate databases prevent cross-tenant queries
+- **Rate limiting**: Per-tenant limits prevent resource exhaustion
+- **Resource quotas**: Namespace-level limits protect infrastructure
+- **Audit logging**: All tenant actions logged with tenant ID
+
+#### Dedicated Deployment Security (Paid Tiers)
+
+All of the above, plus:
+- **Network isolation**: NetworkPolicies restrict pod-to-pod traffic
+- **Dedicated compute**: No noisy neighbor issues
+- **Private databases**: Dedicated PostgreSQL clusters
+- **Enhanced monitoring**: Per-tenant metrics and alerts
+- **Backup encryption**: All backups encrypted at rest
+- **Compliance**: GDPR/HIPAA-ready isolation
 
 ---
 
