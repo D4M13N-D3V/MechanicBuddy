@@ -612,9 +612,12 @@ Client          Controller       Provisioning      Database      NPM
 
 ## Component Interaction
 
+### Dedicated Tier Component Flow (Path 2)
+
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │                   TenantProvisioningService                     │
+│                    (Dedicated Path)                             │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  Step 1: Validation                                      │  │
@@ -655,10 +658,61 @@ Client          Controller       Provisioning      Database      NPM
 │  └──────────────────────────────────────────────────────────┘  │
 │                              │                                  │
 │  ┌──────────────────────────▼───────────────────────────────┐  │
-│  │  Step 8-13: Finalization                                │  │
+│  │  Step 8: Finalization                                   │  │
 │  │  ┌──────────────┐  ┌─────────────┐  ┌────────────────┐  │  │
-│  │  │   Set URLs   │→ │   Set       │→ │   Build        │  │  │
-│  │  │   & Creds    │  │   Resources │  │   Result       │  │  │
+│  │  │   Set URLs   │→ │   Set Mode  │→ │   Build        │  │  │
+│  │  │   & Creds    │  │  "dedicated"│  │   Result       │  │  │
+│  │  └──────────────┘  └─────────────┘  └────────────────┘  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Free Tier Component Flow (Path 1)
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                   TenantProvisioningService                     │
+│                      (Free Tier Path)                           │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Step 1: Validation                                      │  │
+│  │  ┌──────────────┐  ┌─────────────┐  ┌────────────────┐  │  │
+│  │  │   Validate   │→ │   Check     │→ │   Validate     │  │  │
+│  │  │   Request    │  │   Capacity  │  │   Uniqueness   │  │  │
+│  │  └──────────────┘  └─────────────┘  └────────────────┘  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────▼───────────────────────────────┐  │
+│  │  Step 2: ID Generation                                  │  │
+│  │  ┌──────────────┐  ┌─────────────┐                      │  │
+│  │  │   Generate   │→ │   Create    │                      │  │
+│  │  │   Tenant ID  │  │   Creds     │                      │  │
+│  │  └──────────────┘  └─────────────┘                      │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────▼───────────────────────────────┐  │
+│  │  Step 3: Database Setup                                 │  │
+│  │  ┌──────────────┐  ┌─────────────┐  ┌────────────────┐  │  │
+│  │  │   Create     │→ │   Run       │→ │   Seed         │  │  │
+│  │  │   Schema     │  │  Migrations │  │   Data         │  │  │
+│  │  └──────────────┘  └─────────────┘  └────────────────┘  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────▼───────────────────────────────┐  │
+│  │  Step 4: NPM Routing Configuration                      │  │
+│  │  ┌──────────────┐  ┌─────────────┐  ┌────────────────┐  │  │
+│  │  │   Create     │→ │   Configure │→ │   Enable       │  │  │
+│  │  │   Host Route │  │  X-Tenant   │  │   SSL          │  │  │
+│  │  └──────────────┘  │   Header    │  └────────────────┘  │  │
+│  │                    └─────────────┘                      │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌──────────────────────────▼───────────────────────────────┐  │
+│  │  Step 5: Finalization                                   │  │
+│  │  ┌──────────────┐  ┌─────────────┐  ┌────────────────┐  │  │
+│  │  │   Set URLs   │→ │   Set Mode  │→ │   Build        │  │  │
+│  │  │   & Creds    │  │   "shared"  │  │   Result       │  │  │
 │  │  └──────────────┘  └─────────────┘  └────────────────┘  │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                 │
@@ -666,6 +720,8 @@ Client          Controller       Provisioning      Database      NPM
 ```
 
 ## Data Flow
+
+### Dedicated Tier Data Flow (Path 2)
 
 ```
 Request DTO
@@ -741,6 +797,7 @@ Result DTO
         ├─ tenantUrl: "https://acme-auto-a1b2c3.mechanicbuddy.app"
         ├─ apiUrl: "https://acme-auto-a1b2c3.mechanicbuddy.app/api"
         ├─ namespace: "tenant-acme-auto-a1b2c3"
+        ├─ deploymentMode: "dedicated"
         ├─ adminUsername: "admin"
         ├─ adminPassword: "ChangeMeOnFirstLogin!"
         ├─ helmRelease: "tenant-acme-auto-a1b2c3"
@@ -754,6 +811,84 @@ Result DTO
         │   ├─ mechanicLimit: 20
         │   └─ backupEnabled: true
         └─ provisioningLog: [13 entries with timestamps]
+```
+
+### Free Tier Data Flow (Path 1)
+
+```
+Request DTO
+    │
+    ├─> TenantProvisioningRequest
+    │   ├─ companyName: "Quick Fix Garage"
+    │   ├─ subscriptionTier: "free"
+    │   └─ ownerEmail: "owner@quickfix.com"
+    │
+    ▼
+Validation
+    │
+    ├─> ValidationResult
+    │   ├─ isValid: true
+    │   ├─ errors: []
+    │   └─ warnings: ["Limited to 5 users", "No custom domain"]
+    │
+    ▼
+ID Generation
+    │
+    ├─> tenantId: "quick-fix-x7y8z9"
+    │   namespace: "mechanicbuddy-free-tier" (shared)
+    │   helmRelease: null (no Helm deployment)
+    │
+    ▼
+Database Schema Creation
+    │
+    ├─> SQL Commands
+    │   ├─ CREATE SCHEMA "tenant_quick_fix_x7y8z9"
+    │   ├─ CREATE USER "tenant_quick_fix_x7y8z9_app"
+    │   ├─ GRANT USAGE ON SCHEMA TO app_user
+    │   └─ SET search_path = tenant_quick_fix_x7y8z9
+    │
+    ▼
+Database Migrations
+    │
+    ├─> DbUp Execution
+    │   ├─ Context: Schema "tenant_quick_fix_x7y8z9"
+    │   ├─ Scripts: [001_CreateTables.sql, 002_CreateIndexes.sql, ...]
+    │   └─ Seed: Default admin user, settings
+    │
+    ▼
+NPM Routing Configuration
+    │
+    ├─> NPM API Call
+    │   ├─ Host: "quick-fix-x7y8z9.mechanicbuddy.app"
+    │   ├─ Target: http://api.mechanicbuddy-free-tier.svc.cluster.local
+    │   ├─ SSL: true (Let's Encrypt)
+    │   ├─ Headers:
+    │   │   └─ X-Tenant-ID: "quick-fix-x7y8z9"
+    │   └─ Response: { proxyHostId: 123 }
+    │
+    ▼
+Result DTO
+    │
+    └─> TenantProvisioningResult
+        ├─ success: true
+        ├─ tenantId: "quick-fix-x7y8z9"
+        ├─ tenantUrl: "https://quick-fix-x7y8z9.mechanicbuddy.app"
+        ├─ apiUrl: "https://quick-fix-x7y8z9.mechanicbuddy.app/api"
+        ├─ namespace: "mechanicbuddy-free-tier"
+        ├─ deploymentMode: "shared"
+        ├─ adminUsername: "admin"
+        ├─ adminPassword: "ChangeMeOnFirstLogin!"
+        ├─ helmRelease: null
+        ├─ subscriptionTier: "free"
+        ├─ provisioningDuration: "00:00:28"
+        ├─ resources:
+        │   ├─ postgresInstances: "shared"
+        │   ├─ postgresStorage: "shared"
+        │   ├─ apiReplicas: "shared"
+        │   ├─ webReplicas: "shared"
+        │   ├─ mechanicLimit: 5
+        │   └─ backupEnabled: false
+        └─ provisioningLog: [5 entries with timestamps]
 ```
 
 ## Error Handling Flow
@@ -866,53 +1001,108 @@ Result DTO
 ## Deployment Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  Kubernetes Cluster                                          │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Namespace: mechanicbuddy-system                       │ │
-│  │                                                        │ │
-│  │  ┌──────────────────────────────────────────────────┐ │ │
-│  │  │  Management API Deployment                       │ │ │
-│  │  │  ┌────────────────────────────────────────────┐  │ │ │
-│  │  │  │  Pod: management-api                       │  │ │ │
-│  │  │  │  - .NET 9 Runtime                          │  │ │ │
-│  │  │  │  - Provisioning Services                   │  │ │ │
-│  │  │  │  - Helm CLI installed                      │  │ │ │
-│  │  │  │  - ServiceAccount: mechanicbuddy-mgmt      │  │ │ │
-│  │  │  └────────────────────────────────────────────┘  │ │ │
-│  │  └──────────────────────────────────────────────────┘ │ │
-│  │                                                        │ │
-│  │  ┌──────────────────────────────────────────────────┐ │ │
-│  │  │  RBAC (ClusterRole + ClusterRoleBinding)        │ │ │
-│  │  │  - namespaces: create, delete, get, list        │ │ │
-│  │  │  - pods: get, list, watch                       │ │ │
-│  │  │  - deployments: create, update, delete          │ │ │
-│  │  │  - ingresses: create, update, delete            │ │ │
-│  │  │  - postgresql.cnpg.io: all operations          │ │ │
-│  │  └──────────────────────────────────────────────────┘ │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Namespace: tenant-acme-auto-a1b2c3                    │ │
-│  │  (Created dynamically per tenant)                      │ │
-│  │                                                        │ │
-│  │  [PostgreSQL] [API x2] [Web x2] [Ingress] [Secrets]   │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Namespace: tenant-other-shop-x9y8z7                   │ │
-│  │  (Another tenant, completely isolated)                 │ │
-│  │                                                        │ │
-│  │  [PostgreSQL] [API x2] [Web x2] [Ingress] [Secrets]   │ │
-│  └────────────────────────────────────────────────────────┘ │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│  Kubernetes Cluster                                               │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  Namespace: mechanicbuddy-system                         │    │
+│  │                                                          │    │
+│  │  ┌────────────────────────────────────────────────────┐ │    │
+│  │  │  Management API Deployment                         │ │    │
+│  │  │  ┌──────────────────────────────────────────────┐  │ │    │
+│  │  │  │  Pod: management-api                         │  │ │    │
+│  │  │  │  - .NET 9 Runtime                            │  │ │    │
+│  │  │  │  - TenantProvisioningService (PATH ROUTING)  │  │ │    │
+│  │  │  │  - Helm CLI installed                        │  │ │    │
+│  │  │  │  - ServiceAccount: mechanicbuddy-mgmt        │  │ │    │
+│  │  │  └──────────────────────────────────────────────┘  │ │    │
+│  │  └────────────────────────────────────────────────────┘ │    │
+│  │                                                          │    │
+│  │  ┌────────────────────────────────────────────────────┐ │    │
+│  │  │  RBAC (ClusterRole + ClusterRoleBinding)          │ │    │
+│  │  │  - namespaces: create, delete, get, list          │ │    │
+│  │  │  - pods: get, list, watch                         │ │    │
+│  │  │  - deployments: create, update, delete            │ │    │
+│  │  │  - ingresses: create, update, delete              │ │    │
+│  │  │  - postgresql.cnpg.io: all operations            │ │    │
+│  │  └────────────────────────────────────────────────────┘ │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  Namespace: mechanicbuddy-free-tier (SHARED)             │    │
+│  │  Pre-deployed infrastructure for free/demo tenants      │    │
+│  │                                                          │    │
+│  │  ┌────────────────────────────────────────────────────┐ │    │
+│  │  │  Shared PostgreSQL Cluster                         │ │    │
+│  │  │  - Multiple schemas (one per tenant)               │ │    │
+│  │  │  - Schemas: tenant_xxx, tenant_yyy, tenant_zzz     │ │    │
+│  │  │  - Capacity: ~100 tenants                          │ │    │
+│  │  └────────────────────────────────────────────────────┘ │    │
+│  │                                                          │    │
+│  │  ┌────────────────────────────────────────────────────┐ │    │
+│  │  │  Shared API Deployment (3 replicas)                │ │    │
+│  │  │  - Multi-tenant aware                              │ │    │
+│  │  │  - Resolves tenant from X-Tenant-ID or hostname    │ │    │
+│  │  └────────────────────────────────────────────────────┘ │    │
+│  │                                                          │    │
+│  │  ┌────────────────────────────────────────────────────┐ │    │
+│  │  │  Shared Web Deployment (3 replicas)                │ │    │
+│  │  │  - Multi-tenant aware                              │ │    │
+│  │  └────────────────────────────────────────────────────┘ │    │
+│  │                                                          │    │
+│  │  ┌────────────────────────────────────────────────────┐ │    │
+│  │  │  NPM (Nginx Proxy Manager)                         │ │    │
+│  │  │  - Dynamic host routing per tenant                 │ │    │
+│  │  │  - X-Tenant-ID header injection                    │ │    │
+│  │  │  - Let's Encrypt SSL per hostname                  │ │    │
+│  │  └────────────────────────────────────────────────────┘ │    │
+│  │                                                          │    │
+│  │  Tenants: quick-fix-x7y8z9, joes-garage-a1b2c3, ...     │    │
+│  │  (No Helm deployments, added dynamically via NPM/DB)    │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  Namespace: tenant-acme-auto-a1b2c3 (DEDICATED)          │    │
+│  │  Professional tier - fully isolated infrastructure       │    │
+│  │                                                          │    │
+│  │  [PostgreSQL Cluster] [API x2] [Web x2] [Ingress] [...]  │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                   │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │  Namespace: tenant-enterprise-corp-x9y8z7 (DEDICATED)    │    │
+│  │  Enterprise tier - HA with multiple instances            │    │
+│  │                                                          │    │
+│  │  [PostgreSQL HA x3] [API x3] [Web x3] [Ingress] [...]    │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-This architecture ensures:
-- **Isolation**: Each tenant in separate namespace
-- **Scalability**: Management API can provision many tenants
-- **Security**: RBAC limits what can be created
-- **Observability**: Full logging and monitoring
-- **Reliability**: HA for enterprise tiers
+This architecture supports:
+
+**Free Tier (Shared Model):**
+- **Cost Efficiency**: Single set of resources serves many tenants
+- **Fast Provisioning**: No Kubernetes resources to create (~30s)
+- **Schema Isolation**: Each tenant has isolated database schema
+- **Easy Scaling**: Add more tenants to shared instance (up to capacity limit)
+- **Limited Resources**: Shared CPU/memory, suitable for small workloads
+
+**Dedicated Tier (Isolated Model):**
+- **Complete Isolation**: Each tenant in separate namespace with own resources
+- **Guaranteed Resources**: CPU, memory, storage dedicated per tier
+- **High Availability**: Multiple replicas, independent scaling
+- **Custom Configuration**: Per-tenant resource limits, backup policies
+- **Production Grade**: Suitable for mission-critical workloads
+
+**Management API:**
+- **Path Routing**: Automatically selects free or dedicated provisioning
+- **Configuration Driven**: `FreeTier.Enabled` toggle controls behavior
+- **Unified Interface**: Same API for both provisioning paths
+- **State Tracking**: `DeploymentMode` field tracks provisioning type
+- **Migration Support**: Can upgrade from shared to dedicated (and vice versa)
+
+**Security & RBAC:**
+- **Namespace Isolation**: Network policies enforce tenant separation
+- **RBAC Controls**: Management API has limited cluster permissions
+- **Secret Management**: Per-tenant credentials isolated
+- **Audit Logging**: All provisioning actions logged

@@ -73,6 +73,25 @@ namespace MechanicBuddy.Core.Repository.Postgres
 
                 if (user?.Identity?.IsAuthenticated == true)
                 {
+                    // For shared multi-tenant instances, extract tenant from JWT claims
+                    var tenantClaim = user.FindFirst(System.Security.Claims.ClaimTypes.Spn)?.Value;
+                    if (!string.IsNullOrEmpty(tenantClaim) && string.IsNullOrEmpty(options.MultiTenancy?.TenantId))
+                    {
+                        // Shared instance - build session for tenant's database from JWT
+                        var tenantConnectionBuilder = new Npgsql.NpgsqlConnectionStringBuilder();
+                        tenantConnectionBuilder.Host = options.Host;
+                        tenantConnectionBuilder.Port = options.Port;
+                        tenantConnectionBuilder.Username = options.UserId;
+                        tenantConnectionBuilder.Password = options.Password;
+                        tenantConnectionBuilder.Database = new MultiTenancyDbName(options, tenantClaim);
+
+                        var tenantFactory = NNhibernateFactory.BuildSessionFactory(
+                            new System.Collections.Generic.List<Assembly>() { typeof(WorkMapping).Assembly },
+                            tenantConnectionBuilder.ToString());
+                        return tenantFactory.OpenSession();
+                    }
+
+                    // Dedicated instance - use appFactory with configured TenantId
                     if (appFactory == null)
                     {
                         lock (lockObj)
