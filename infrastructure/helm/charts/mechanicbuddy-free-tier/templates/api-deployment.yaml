@@ -34,7 +34,7 @@ spec:
             - -c
             - |
               echo "Waiting for PostgreSQL to be ready..."
-              until nc -z {{ include "mechanicbuddy-free-tier.postgresName" . }}-rw 5432; do
+              until nc -z {{ .Values.postgresql.host }} {{ .Values.postgresql.port }}; do
                 echo "PostgreSQL is not ready yet..."
                 sleep 5
               done
@@ -48,11 +48,11 @@ spec:
               containerPort: {{ .Values.api.port }}
               protocol: TCP
           env:
-            # Database connection - shared PostgreSQL cluster
+            # Database connection - external shared PostgreSQL cluster
             - name: DbOptions__Host
-              value: {{ printf "%s-rw" (include "mechanicbuddy-free-tier.postgresName" .) | quote }}
+              value: {{ .Values.postgresql.host | quote }}
             - name: DbOptions__Port
-              value: "5432"
+              value: {{ .Values.postgresql.port | quote }}
             - name: DbOptions__Name
               value: {{ .Values.postgresql.database | quote }}
             - name: DbOptions__UserId
@@ -60,8 +60,8 @@ spec:
             - name: DbOptions__Password
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "mechanicbuddy-free-tier.dbSecretName" . }}
-                  key: password
+                  name: {{ include "mechanicbuddy-free-tier.appSecretName" . }}
+                  key: db-password
             # =================================================================
             # MULTI-TENANCY ENABLED - This is the key difference from tenant chart
             # =================================================================

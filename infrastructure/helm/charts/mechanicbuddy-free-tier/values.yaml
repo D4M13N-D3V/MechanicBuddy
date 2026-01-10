@@ -23,39 +23,18 @@ domains:
   clusterIssuer: "letsencrypt-prod"
 
 # -----------------------------------------------------------------------------
-# PostgreSQL (CloudNativePG) - Shared for all free-tier tenants
+# PostgreSQL - Use existing shared cluster (no new cluster deployed)
 # -----------------------------------------------------------------------------
 postgresql:
-  # Number of instances (2 for HA in shared mode)
-  instances: 2
+  # External PostgreSQL host (existing cluster)
+  host: "mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local"
+  port: 5432
   # Base database name (tenants get mechanicbuddy-{tenantId})
   database: "mechanicbuddy"
   # Database user
   username: "mechanicbuddy"
-  # Storage configuration - larger for shared use
-  storage:
-    size: "100Gi"
-    storageClass: "local-path"
-  # Resource limits - higher for shared workload
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-    limits:
-      memory: "4Gi"
-      cpu: "2000m"
-  # PostgreSQL parameters for multi-tenant workload
-  parameters:
-    shared_buffers: "512MB"
-    max_connections: "500"
-    work_mem: "16MB"
-    effective_cache_size: "2GB"
-  # Backup configuration
-  backup:
-    enabled: true
-    schedule: "0 2 * * *"
-    retentionDays: 7
-    s3Bucket: ""
+  # Database password (required - must match existing cluster)
+  password: ""
 
 # -----------------------------------------------------------------------------
 # API Service (.NET) - Multi-tenancy ENABLED
