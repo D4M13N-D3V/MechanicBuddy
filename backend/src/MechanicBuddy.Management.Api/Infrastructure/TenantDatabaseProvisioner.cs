@@ -99,7 +99,8 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         await UpdateTenantUserTableAsync(tenantId, tenantDbName, postgresHost, postgresPort);
 
         // Create admin user in tenancy database (always uses default host - shared tenancy DB)
-        await CreateDefaultAdminAsync(tenantId, ownerEmail, ownerName);
+        // But employee name update needs to use the target host where the tenant DB resides
+        await CreateDefaultAdminAsync(tenantId, postgresHost, postgresPort, ownerEmail, ownerName);
 
         _logger.LogInformation("Successfully provisioned database for tenant {TenantId} on host {Host}", tenantId, postgresHost);
 
@@ -245,7 +246,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             rowsAffected, tenantDbName, tenantId);
     }
 
-    private async Task CreateDefaultAdminAsync(string tenantId, string? ownerEmail = null, string? ownerName = null)
+    private async Task CreateDefaultAdminAsync(string tenantId, string postgresHost, int postgresPort, string? ownerEmail = null, string? ownerName = null)
     {
         // Create admin user in the tenancy database (where all users are stored)
         // The employee record already exists in the cloned tenant database from the template
@@ -290,16 +291,17 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         }
 
         // Also update the employee name in the tenant database if owner name is provided
+        // Note: Tenant database may be on a different host (e.g., free-tier shared cluster)
         if (!string.IsNullOrWhiteSpace(ownerName))
         {
-            await UpdateEmployeeNameAsync(tenantId, employeeId, ownerName);
+            await UpdateEmployeeNameAsync(tenantId, postgresHost, postgresPort, employeeId, ownerName);
         }
 
         _logger.LogInformation("Created default admin user for tenant {TenantId} with email {Email}. Default password: {Password}",
             tenantId, email, DefaultAdminPassword);
     }
 
-    private async Task UpdateEmployeeNameAsync(string tenantId, Guid employeeId, string fullName)
+    private async Task UpdateEmployeeNameAsync(string tenantId, string postgresHost, int postgresPort, Guid employeeId, string fullName)
     {
         try
         {
@@ -309,7 +311,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             var lastName = nameParts.Length > 1 ? nameParts[1] : "";
 
             var tenantDbName = GetTenantDbName(tenantId);
-            var tenantConnectionString = BuildConnectionString(tenantDbName);
+            var tenantConnectionString = BuildConnectionString(tenantDbName, postgresHost, postgresPort);
 
             await using var connection = new NpgsqlConnection(tenantConnectionString);
             await connection.OpenAsync();
