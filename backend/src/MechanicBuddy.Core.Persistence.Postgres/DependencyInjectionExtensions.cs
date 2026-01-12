@@ -135,7 +135,7 @@ namespace MechanicBuddy.Core.Repository.Postgres
                     if (!string.IsNullOrEmpty(host))
                     {
                         var parts = host.Split('.');
-                        if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                        if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api" && parts[0] != "app")
                         {
                             resolvedTenantId = parts[0];
                         }
@@ -147,7 +147,7 @@ namespace MechanicBuddy.Core.Repository.Postgres
                 {
                     var host = httpContext.Request.Host.Host;
                     var parts = host.Split('.');
-                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api" && parts[0] != "app")
                     {
                         resolvedTenantId = parts[0];
                     }
