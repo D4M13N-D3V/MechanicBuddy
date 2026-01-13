@@ -1,0 +1,43 @@
+---
+- name: Extend filesystems on VMs
+  hosts: k8s_cluster
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Rescan disk
+      ansible.builtin.shell: |
+        echo 1 > /sys/class/block/sda/device/rescan
+      failed_when: false
+      changed_when: true
+
+    - name: Install cloud-guest-utils for growpart
+      ansible.builtin.raw: |
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq && apt-get install -y -qq cloud-guest-utils
+      register: install_result
+      failed_when: false
+      changed_when: "'Setting up' in install_result.stdout"
+
+    - name: Grow partition
+      ansible.builtin.shell: |
+        growpart /dev/sda 1 || true
+      register: growpart_result
+      changed_when: "'CHANGED' in growpart_result.stdout"
+      failed_when: false
+
+    - name: Resize filesystem
+      ansible.builtin.shell: |
+        resize2fs /dev/sda1
+      register: resize_result
+      changed_when: resize_result.rc == 0
+      failed_when: false
+
+    - name: Check disk space
+      ansible.builtin.raw: df -h /
+      register: disk_space
+      changed_when: false
+
+    - name: Display disk space
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ disk_space.stdout_lines }}"

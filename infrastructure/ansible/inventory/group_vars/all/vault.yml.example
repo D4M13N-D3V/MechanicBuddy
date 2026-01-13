@@ -3,14 +3,74 @@
 # Ansible Vault Encrypted Variables
 # =============================================================================
 # Copy this file to vault.yml and encrypt with:
-#   ansible-vault encrypt inventory/group_vars/vault.yml
+#   ansible-vault encrypt inventory/group_vars/all/vault.yml
 #
 # To edit:
-#   ansible-vault edit inventory/group_vars/vault.yml
+#   ansible-vault edit inventory/group_vars/all/vault.yml
 # =============================================================================
 
-# Proxmox API Token Secret
+# -----------------------------------------------------------------------------
+# Proxmox API
+# -----------------------------------------------------------------------------
 vault_proxmox_api_token_secret: "your-proxmox-api-token-secret-here"
-
-# Default password for VM user (will be disabled after SSH key setup)
 vault_vm_default_password: "changeme123!"
+
+# -----------------------------------------------------------------------------
+# Bitwarden Integration (Self-hosted at bitwarden.d4m13n.dev)
+# -----------------------------------------------------------------------------
+# Get API keys from: https://bitwarden.d4m13n.dev/#/settings/security/security-keys
+# Click "View API Key" to get Client ID and Client Secret
+
+bitwarden_client_id: "user.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+bitwarden_client_secret: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+bitwarden_master_password: "your-bitwarden-master-password"
+
+# -----------------------------------------------------------------------------
+# GitHub Container Registry (GHCR)
+# -----------------------------------------------------------------------------
+# Create PAT at: https://github.com/settings/tokens
+# Scopes needed: read:packages
+
+ghcr_username: "d4m13n-d3v"
+ghcr_token: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# -----------------------------------------------------------------------------
+# Application Secrets (auto-generated if empty)
+# -----------------------------------------------------------------------------
+# Generate with: openssl rand -hex 32
+
+jwt_secret: ""
+consumer_secret: ""
+session_secret: ""
+
+# -----------------------------------------------------------------------------
+# Database Passwords
+# -----------------------------------------------------------------------------
+postgres_superuser_password: ""
+postgres_management_password: ""
+postgres_freetier_password: ""
+
+# -----------------------------------------------------------------------------
+# Email (Resend)
+# -----------------------------------------------------------------------------
+# Get from: https://resend.com/api-keys
+
+resend_api_key: "re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# -----------------------------------------------------------------------------
+# Stripe (optional)
+# -----------------------------------------------------------------------------
+stripe_publishable_key: ""
+stripe_secret_key: ""
+stripe_webhook_secret: ""
+
+# -----------------------------------------------------------------------------
+# Cloudflare DNS
+# -----------------------------------------------------------------------------
+vault_cloudflare_api_token: ""
+cloudflare_zone_id: ""
+
+# -----------------------------------------------------------------------------
+# App Version
+# -----------------------------------------------------------------------------
+app_image_tag: "latest"

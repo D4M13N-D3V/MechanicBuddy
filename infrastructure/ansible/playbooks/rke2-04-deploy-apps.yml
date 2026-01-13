@@ -1,0 +1,268 @@
+---
+# Deploy MechanicBuddy applications to RKE2 cluster
+# Uses shell commands instead of kubernetes.core module
+
+- name: Deploy MechanicBuddy applications
+  hosts: k8s_control_plane[0]
+  become: true
+  gather_facts: true
+
+  vars:
+    kubeconfig_path: /etc/rancher/rke2/rke2.yaml
+    kubectl_path: /var/lib/rancher/rke2/bin/kubectl
+    helm_charts_path: "{{ playbook_dir }}/../../helm/charts"
+
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+    PATH: "/var/lib/rancher/rke2/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+
+  tasks:
+    # =========================================================================
+    # Generate Secrets
+    # =========================================================================
+    - name: Generate random secrets if not provided
+      ansible.builtin.set_fact:
+        jwt_secret: "{{ jwt_secret | default(lookup('password', '/dev/null length=64 chars=ascii_letters,digits')) }}"
+        consumer_secret: "{{ consumer_secret | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits')) }}"
+        session_secret: "{{ session_secret | default(lookup('password', '/dev/null length=32 chars=ascii_letters,digits')) }}"
+        postgres_superuser_password: "{{ postgres_superuser_password | default(lookup('password', '/dev/null length=24 chars=ascii_letters,digits')) }}"
+        postgres_management_password: "{{ postgres_management_password | default(lookup('password', '/dev/null length=24 chars=ascii_letters,digits')) }}"
+        postgres_freetier_password: "{{ postgres_freetier_password | default(lookup('password', '/dev/null length=24 chars=ascii_letters,digits')) }}"
+
+    - name: Save generated secrets locally
+      ansible.builtin.copy:
+        content: |
+          # Generated Secrets - KEEP SECURE!
+          jwt_secret: {{ jwt_secret }}
+          consumer_secret: {{ consumer_secret }}
+          session_secret: {{ session_secret }}
+          postgres_superuser_password: {{ postgres_superuser_password }}
+          postgres_management_password: {{ postgres_management_password }}
+          postgres_freetier_password: {{ postgres_freetier_password }}
+        dest: "{{ playbook_dir }}/../generated-secrets.yml"
+        mode: '0600'
+      delegate_to: localhost
+      become: false
+
+    # =========================================================================
+    # Deploy PostgreSQL Cluster
+    # =========================================================================
+    - name: Create mechanicbuddy-system namespace
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create namespace mechanicbuddy-system --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+
+    - name: Create PostgreSQL superuser secret
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create secret generic postgres-superuser \
+          --namespace mechanicbuddy-system \
+          --from-literal=username=postgres \
+          --from-literal=password='{{ postgres_superuser_password }}' \
+          --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+
+    - name: Deploy management PostgreSQL cluster
+      ansible.builtin.shell: |
+        cat <<'EOF' | {{ kubectl_path }} apply -f -
+        apiVersion: postgresql.cnpg.io/v1
+        kind: Cluster
+        metadata:
+          name: mechanicbuddy-management-db
+          namespace: mechanicbuddy-system
+        spec:
+          instances: 1
+          primaryUpdateStrategy: unsupervised
+          storage:
+            size: 10Gi
+            storageClass: local-path
+          bootstrap:
+            initdb:
+              database: mechanicbuddy_management
+              owner: management
+              secret:
+                name: postgres-superuser
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+        EOF
+      changed_when: true
+
+    - name: Wait for PostgreSQL to be ready (up to 5 minutes)
+      ansible.builtin.shell: |
+        for i in $(seq 1 30); do
+          STATUS=$({{ kubectl_path }} get cluster mechanicbuddy-management-db -n mechanicbuddy-system -o jsonpath='{.status.phase}' 2>/dev/null || echo "NotFound")
+          if [ "$STATUS" = "Cluster in healthy state" ]; then
+            echo "PostgreSQL is ready"
+            exit 0
+          fi
+          echo "Waiting for PostgreSQL... ($STATUS)"
+          sleep 10
+        done
+        echo "Timeout waiting for PostgreSQL"
+        exit 1
+      changed_when: false
+      register: pg_wait
+      retries: 1
+      delay: 10
+
+    # =========================================================================
+    # Deploy Free-Tier Application
+    # =========================================================================
+    - name: Create mechanicbuddy-free-tier namespace
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create namespace mechanicbuddy-free-tier --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+
+    - name: Create GHCR pull secret
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create secret docker-registry ghcr-credentials \
+          --namespace mechanicbuddy-free-tier \
+          --docker-server=ghcr.io \
+          --docker-username='{{ ghcr_username }}' \
+          --docker-password='{{ ghcr_token }}' \
+          --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+      when: ghcr_token is defined
+
+    - name: Create API secrets
+      ansible.builtin.shell: |
+        cat <<'EOF' | {{ kubectl_path }} apply -f -
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: api-secrets
+          namespace: mechanicbuddy-free-tier
+        type: Opaque
+        stringData:
+          appsettings.Secrets.json: |
+            {
+              "PdfDirectory": "/var/mechanicbuddy/pdf",
+              "PuppeteerPath": "/opt/puppeteer",
+              "JwtOptions": {
+                "Secret": "{{ jwt_secret }}",
+                "ConsumerSecret": "{{ consumer_secret }}"
+              },
+              "DbOptions": {
+                "Host": "mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local",
+                "Port": 5432,
+                "UserId": "management",
+                "Password": "{{ postgres_management_password }}",
+                "Name": "mechanicbuddy_management",
+                "Schema": "public",
+                "MultiTenancy": {
+                  "Enabled": true
+                }
+              },
+              "SmtpOptions": {
+                "Host": "smtp.resend.com",
+                "Port": "587",
+                "User": "resend",
+                "Password": "{{ resend_api_key | default('') }}"
+              },
+              "Cors": {
+                "Mode": "open"
+              }
+            }
+        EOF
+      changed_when: true
+
+    - name: Create Web secrets
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create secret generic web-secrets \
+          --namespace mechanicbuddy-free-tier \
+          --from-literal=SERVER_SECRET='{{ consumer_secret }}' \
+          --from-literal=SESSION_SECRET='{{ session_secret }}' \
+          --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+
+    - name: Copy Helm chart to control plane
+      ansible.builtin.copy:
+        src: "{{ helm_charts_path }}/mechanicbuddy-free-tier/"
+        dest: /tmp/mechanicbuddy-free-tier/
+        mode: '0755'
+
+    - name: Install mechanicbuddy-free-tier via Helm
+      ansible.builtin.shell: |
+        helm upgrade --install mechanicbuddy-free-tier /tmp/mechanicbuddy-free-tier \
+          --namespace mechanicbuddy-free-tier \
+          --set instance.id=free-tier \
+          --set domains.baseDomain={{ base_domain }} \
+          --set domains.clusterIssuer=letsencrypt-prod \
+          --set postgresql.host=mechanicbuddy-management-db-rw.mechanicbuddy-system.svc.cluster.local \
+          --set postgresql.port=5432 \
+          --set postgresql.database=mechanicbuddy_management \
+          --set postgresql.username=management \
+          --set postgresql.password='{{ postgres_management_password }}' \
+          --set api.image.tag={{ app_image_tag | default('latest') }} \
+          --set web.image.tag={{ app_image_tag | default('latest') }} \
+          --set migrations.image.tag={{ app_image_tag | default('latest') }} \
+          --set secrets.jwtSecret='{{ jwt_secret }}' \
+          --set secrets.consumerSecret='{{ consumer_secret }}' \
+          --set secrets.sessionSecret='{{ session_secret }}' \
+          --set email.apiKey='{{ resend_api_key | default('') }}' \
+          --set imagePullSecrets[0].name=ghcr-credentials \
+          --set resourceQuota.enabled=false \
+          --wait --timeout 10m
+      changed_when: true
+      register: helm_install
+      ignore_errors: true
+
+    - name: Show Helm install output
+      ansible.builtin.debug:
+        var: helm_install.stdout_lines
+      when: helm_install is defined
+
+    # =========================================================================
+    # Verify Deployment
+    # =========================================================================
+    - name: Get pods in free-tier namespace
+      ansible.builtin.shell: |
+        {{ kubectl_path }} get pods -n mechanicbuddy-free-tier -o wide
+      register: freetier_pods
+      changed_when: false
+
+    - name: Get services
+      ansible.builtin.shell: |
+        {{ kubectl_path }} get svc -n mechanicbuddy-free-tier
+      register: freetier_services
+      changed_when: false
+
+    - name: Get ingress
+      ansible.builtin.shell: |
+        {{ kubectl_path }} get ingress -A
+      register: all_ingress
+      changed_when: false
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          MechanicBuddy Deployment Summary
+          ================================================
+
+          Namespaces Created:
+          - mechanicbuddy-system (PostgreSQL)
+          - mechanicbuddy-free-tier (Application)
+
+          Pods:
+          {{ freetier_pods.stdout }}
+
+          Services:
+          {{ freetier_services.stdout }}
+
+          Ingress:
+          {{ all_ingress.stdout }}
+
+          ================================================
+          Generated Secrets saved to:
+          {{ playbook_dir }}/../generated-secrets.yml
+
+          ================================================
+          Next Steps:
+          1. Configure nginx proxy to forward to NodePort 30080/30443
+          2. Wait for TLS certificates to be issued
+          3. Access: https://app.{{ base_domain }}

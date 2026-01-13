@@ -1,0 +1,126 @@
+---
+# Full MechanicBuddy Deployment
+#
+# This playbook runs all deployment steps in order:
+# 1. Install addons (ingress, cert-manager, cloudnative-pg, bitwarden-operator)
+# 2. Setup secrets (Bitwarden integration or manual)
+# 3. Deploy applications (system + free-tier)
+#
+# Usage:
+#   ansible-playbook playbooks/rke2-full-deploy.yml --vault-password-file .vault_pass
+#
+# Prerequisites:
+#   - RKE2 cluster running (rke2-01-install.yml completed)
+#   - Vault file configured with secrets (see vault.yml.example)
+#   - GHCR token for image pulls
+
+- name: Full MechanicBuddy Deployment
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Display deployment plan
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          MechanicBuddy Full Deployment
+          ================================================
+
+          This will run the following playbooks in order:
+
+          1. rke2-02-install-addons.yml
+             - NGINX Ingress Controller
+             - cert-manager + Let's Encrypt issuers
+             - CloudNativePG operator
+             - Bitwarden Secret Operator
+
+          2. rke2-03-setup-secrets.yml
+             - Configure Bitwarden credentials
+             - Create namespaces
+             - Setup secret sync (if Bitwarden configured)
+
+          3. rke2-04-deploy-apps.yml
+             - Deploy PostgreSQL clusters
+             - Deploy MechanicBuddy API + Web
+             - Configure ingress + TLS
+
+          Starting deployment...
+
+# -----------------------------------------------------------------------------
+# Step 1: Install Addons
+# -----------------------------------------------------------------------------
+- name: Install Kubernetes addons
+  ansible.builtin.import_playbook: rke2-02-install-addons.yml
+
+# -----------------------------------------------------------------------------
+# Step 2: Setup Secrets
+# -----------------------------------------------------------------------------
+- name: Setup secrets management
+  ansible.builtin.import_playbook: rke2-03-setup-secrets.yml
+
+# -----------------------------------------------------------------------------
+# Step 3: Deploy Applications
+# -----------------------------------------------------------------------------
+- name: Deploy applications
+  ansible.builtin.import_playbook: rke2-04-deploy-apps.yml
+
+# -----------------------------------------------------------------------------
+# Final Summary
+# -----------------------------------------------------------------------------
+- name: Deployment complete
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          DEPLOYMENT COMPLETE!
+          ================================================
+
+          MechanicBuddy has been deployed to your RKE2 cluster.
+
+          Useful commands:
+          ------------------------------------------------
+
+          # Set kubeconfig
+          export KUBECONFIG={{ playbook_dir }}/../kubeconfig
+
+          # Check all pods
+          kubectl get pods -A
+
+          # Check certificates
+          kubectl get certificates -A
+
+          # Check ingress
+          kubectl get ingress -A
+
+          # View API logs
+          kubectl logs -n mechanicbuddy-free-tier -l app=api -f
+
+          # View Web logs
+          kubectl logs -n mechanicbuddy-free-tier -l app=web -f
+
+          # Check PostgreSQL clusters
+          kubectl get clusters.postgresql.cnpg.io -A
+
+          ================================================
+          Access Points (after DNS configuration):
+          ================================================
+
+          - Application: https://app.mechanicbuddy.app
+          - API Swagger: https://api.mechanicbuddy.app/swagger
+          - Tenant URLs: https://{tenant-id}.mechanicbuddy.app
+
+          ================================================
+          External Proxy Configuration:
+          ================================================
+
+          Your nginx proxy (136.56.217.220) should forward:
+            - Port 80  -> 192.168.1.101:30080 (or any worker)
+            - Port 443 -> 192.168.1.101:30443 (or any worker)
+
+          For HA, use all worker node IPs with round-robin.
+
+          ================================================

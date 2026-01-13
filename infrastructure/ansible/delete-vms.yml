@@ -1,0 +1,97 @@
+---
+- name: Delete specific VMs from Proxmox
+  hosts: localhost
+  gather_facts: false
+  become: false
+  vars:
+    vms_to_delete:
+      # Delete conflicting VMs on medusa (these should be on iris instead)
+      - vmid: 201
+        name: "k8s-worker-1"
+        node: "medusa"
+      - vmid: 203
+        name: "k8s-worker-3"
+        node: "medusa"
+      - vmid: 205
+        name: "k8s-worker-5"
+        node: "medusa"
+      - vmid: 207
+        name: "k8s-worker-7"
+        node: "medusa"
+      - vmid: 209
+        name: "k8s-worker-9"
+        node: "medusa"
+      - vmid: 210
+        name: "k8s-control-2"
+        node: "medusa"
+      - vmid: 212
+        name: "k8s-control-4"
+        node: "medusa"
+      # Also delete control planes 3,5 and workers 10-15 that we don't want
+      - vmid: 211
+        name: "k8s-control-3"
+        node: "medusa"
+      - vmid: 213
+        name: "k8s-control-5"
+        node: "medusa"
+      - vmid: 214
+        name: "k8s-worker-10"
+        node: "medusa"
+      - vmid: 216
+        name: "k8s-worker-12"
+        node: "medusa"
+      - vmid: 218
+        name: "k8s-worker-13"
+        node: "medusa"
+      - vmid: 219
+        name: "k8s-worker-14"
+        node: "medusa"
+      # Delete extra VMs on iris too
+      - vmid: 215
+        name: "k8s-worker-11"
+        node: "iris"
+      - vmid: 218
+        name: "k8s-worker-13"
+        node: "iris"
+      - vmid: 220
+        name: "k8s-worker-15"
+        node: "iris"
+
+  tasks:
+    - name: Stop VMs before deletion
+      ansible.builtin.uri:
+        url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port | default(8006) }}/api2/json/nodes/{{ item.node }}/qemu/{{ item.vmid }}/status/stop"
+        method: POST
+        headers:
+          Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+        validate_certs: false
+        status_code: [200, 500]
+      loop: "{{ vms_to_delete }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: vm_stop_result
+      failed_when: false
+
+    - name: Wait a moment for VMs to stop
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Delete VMs via API
+      ansible.builtin.uri:
+        url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port | default(8006) }}/api2/json/nodes/{{ item.node }}/qemu/{{ item.vmid }}"
+        method: DELETE
+        headers:
+          Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+        validate_certs: false
+        status_code: [200, 500]
+      loop: "{{ vms_to_delete }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: vm_delete_result
+
+    - name: Display deletion results
+      ansible.builtin.debug:
+        msg: "{{ item.item.name }} (VMID {{ item.item.vmid }}): {{ 'DELETED' if item.status == 200 else 'FAILED - ' + (item.json.message | default('Unknown error')) }}"
+      loop: "{{ vm_delete_result.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"

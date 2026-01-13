@@ -72,6 +72,7 @@
     name: "containerd.io={{ containerd_version }}"
     state: present
     update_cache: true
+    allow_downgrade: "{{ containerd_allow_downgrade | default(false) }}"
 
 - name: Create containerd config directory
   ansible.builtin.file:
@@ -91,6 +92,13 @@
     replace: 'SystemdCgroup = true'
   notify: Restart containerd
 
+- name: Remove CRI from disabled plugins
+  ansible.builtin.replace:
+    path: /etc/containerd/config.toml
+    regexp: '^disabled_plugins = \["cri"\]'
+    replace: 'disabled_plugins = []'
+  notify: Restart containerd
+
 - name: Enable and start containerd
   ansible.builtin.systemd:
     name: containerd
@@ -101,13 +109,13 @@
 # Kubernetes packages installation
 - name: Add Kubernetes GPG key
   ansible.builtin.get_url:
-    url: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/Release.key"
+    url: "https://pkgs.k8s.io/core:/stable:/{{ k8s_repo_version }}/deb/Release.key"
     dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
     mode: '0644'
 
 - name: Add Kubernetes repository
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ k8s_version }}/deb/ /"
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/{{ k8s_repo_version }}/deb/ /"
     filename: kubernetes
     state: present
 

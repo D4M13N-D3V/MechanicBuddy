@@ -22,6 +22,16 @@ proxmox_node: "medusa"
 # VM Template (Ubuntu 22.04 cloud image)
 vm_template_name: "ubuntu-22.04-cloud"
 vm_template_id: 9000
+vm_template_node: "medusa"  # Node where template exists
+
+# Per-node template configuration (if different template IDs per node)
+vm_templates_by_node:
+  medusa:
+    id: 9000
+    name: "ubuntu-22.04-cloud"
+  iris:
+    id: 9001
+    name: "ubuntu-22.04-cloud"
 
 # Storage
 proxmox_storage: "local-lvm"
@@ -43,6 +53,7 @@ dns_search_domain: "mechanicbuddy.local"
 # -----------------------------------------------------------------------------
 k8s_version: "v1.29.15"
 k8s_apt_version: "1.29.*"
+k8s_repo_version: "v1.29"  # Version for the apt repository (major.minor only)
 k8s_cluster_name: "mechanicbuddy-cluster"
 k8s_pod_network_cidr: "10.244.0.0/16"
 k8s_service_cidr: "10.96.0.0/12"
@@ -50,6 +61,7 @@ k8s_control_plane_endpoint: "k8s-api.mechanicbuddy.local"
 
 # Container runtime
 containerd_version: "1.7.*"
+containerd_allow_downgrade: true
 
 # CNI Plugin
 cni_plugin: "calico"
@@ -65,7 +77,40 @@ control_plane_nodes:
     cores: 4
     memory: 8192
     disk_size: "50G"
-    description: "Kubernetes Control Plane"
+    description: "Kubernetes Control Plane 1"
+    proxmox_node: "medusa"
+  - name: k8s-control-2
+    vmid: 210
+    ip: 192.168.1.110
+    cores: 4
+    memory: 8192
+    disk_size: "50G"
+    description: "Kubernetes Control Plane 2"
+    proxmox_node: "iris"
+  - name: k8s-control-3
+    vmid: 211
+    ip: 192.168.1.111
+    cores: 4
+    memory: 8192
+    disk_size: "50G"
+    description: "Kubernetes Control Plane 3"
+    proxmox_node: "medusa"
+  - name: k8s-control-4
+    vmid: 212
+    ip: 192.168.1.112
+    cores: 4
+    memory: 8192
+    disk_size: "50G"
+    description: "Kubernetes Control Plane 4"
+    proxmox_node: "iris"
+  - name: k8s-control-5
+    vmid: 213
+    ip: 192.168.1.113
+    cores: 4
+    memory: 8192
+    disk_size: "50G"
+    description: "Kubernetes Control Plane 5"
+    proxmox_node: "medusa"
 
 worker_nodes:
   - name: k8s-worker-1
@@ -75,6 +120,7 @@ worker_nodes:
     memory: 16384
     disk_size: "100G"
     description: "Kubernetes Worker Node 1"
+    proxmox_node: "iris"
   - name: k8s-worker-2
     vmid: 202
     ip: 192.168.1.102
@@ -82,6 +128,111 @@ worker_nodes:
     memory: 16384
     disk_size: "100G"
     description: "Kubernetes Worker Node 2"
+    proxmox_node: "medusa"
+  - name: k8s-worker-3
+    vmid: 203
+    ip: 192.168.1.103
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 3"
+    proxmox_node: "iris"
+  - name: k8s-worker-4
+    vmid: 204
+    ip: 192.168.1.104
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 4"
+    proxmox_node: "medusa"
+  - name: k8s-worker-5
+    vmid: 205
+    ip: 192.168.1.105
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 5"
+    proxmox_node: "iris"
+  - name: k8s-worker-6
+    vmid: 206
+    ip: 192.168.1.106
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 6"
+    proxmox_node: "medusa"
+  - name: k8s-worker-7
+    vmid: 207
+    ip: 192.168.1.107
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 7"
+    proxmox_node: "iris"
+  - name: k8s-worker-8
+    vmid: 208
+    ip: 192.168.1.108
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 8"
+    proxmox_node: "medusa"
+  - name: k8s-worker-9
+    vmid: 209
+    ip: 192.168.1.109
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 9"
+    proxmox_node: "iris"
+  - name: k8s-worker-10
+    vmid: 214
+    ip: 192.168.1.114
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 10"
+    proxmox_node: "medusa"
+  - name: k8s-worker-11
+    vmid: 215
+    ip: 192.168.1.115
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 11"
+    proxmox_node: "iris"
+  - name: k8s-worker-12
+    vmid: 216
+    ip: 192.168.1.116
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 12"
+    proxmox_node: "medusa"
+  - name: k8s-worker-13
+    vmid: 218
+    ip: 192.168.1.118
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 13"
+    proxmox_node: "iris"
+  - name: k8s-worker-14
+    vmid: 219
+    ip: 192.168.1.119
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 14"
+    proxmox_node: "medusa"
+  - name: k8s-worker-15
+    vmid: 220
+    ip: 192.168.1.120
+    cores: 4
+    memory: 16384
+    disk_size: "100G"
+    description: "Kubernetes Worker Node 15"
+    proxmox_node: "iris"
 
 # -----------------------------------------------------------------------------
 # Kubernetes Addons

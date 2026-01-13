@@ -121,18 +121,49 @@ ansible-playbook playbooks/99-destroy-cluster.yml --ask-vault-pass
 ┌─────────────────────────────────────────────────────────────┐
 │                      PROXMOX CLUSTER                        │
 ├─────────────────────────────────────────────────────────────┤
-│  VM: k8s-control-1          VM: k8s-worker-1               │
-│  ├─ Ubuntu 22.04 LTS        ├─ Ubuntu 22.04 LTS            │
-│  ├─ 4 vCPU, 8GB RAM         ├─ 4 vCPU, 16GB RAM            │
-│  ├─ 50GB disk               ├─ 100GB disk                  │
-│  └─ Control plane           └─ Worker node                 │
+│  VM: k8s-control-1                                         │
+│  ├─ Ubuntu 22.04 LTS        IP: 192.168.1.100             │
+│  ├─ 4 vCPU, 8GB RAM                                        │
+│  ├─ 50GB disk                                              │
+│  └─ Control plane                                          │
 │                                                             │
-│  VM: k8s-worker-2                                          │
+│  VM: k8s-worker-1           VM: k8s-worker-2               │
+│  ├─ Ubuntu 22.04 LTS        ├─ Ubuntu 22.04 LTS            │
+│  ├─ IP: 192.168.1.101       ├─ IP: 192.168.1.102           │
+│  ├─ 4 vCPU, 16GB RAM        ├─ 4 vCPU, 16GB RAM            │
+│  ├─ 100GB disk              ├─ 100GB disk                  │
+│  └─ Worker node             └─ Worker node                 │
+│                                                             │
+│  VM: k8s-worker-3           VM: k8s-worker-4               │
+│  ├─ Ubuntu 22.04 LTS        ├─ Ubuntu 22.04 LTS            │
+│  ├─ IP: 192.168.1.103       ├─ IP: 192.168.1.104           │
+│  ├─ 4 vCPU, 16GB RAM        ├─ 4 vCPU, 16GB RAM            │
+│  ├─ 100GB disk              ├─ 100GB disk                  │
+│  └─ Worker node             └─ Worker node                 │
+│                                                             │
+│  VM: k8s-worker-5           VM: k8s-worker-6               │
+│  ├─ Ubuntu 22.04 LTS        ├─ Ubuntu 22.04 LTS            │
+│  ├─ IP: 192.168.1.105       ├─ IP: 192.168.1.106           │
+│  ├─ 4 vCPU, 16GB RAM        ├─ 4 vCPU, 16GB RAM            │
+│  ├─ 100GB disk              ├─ 100GB disk                  │
+│  └─ Worker node             └─ Worker node                 │
+│                                                             │
+│  VM: k8s-worker-7           VM: k8s-worker-8               │
+│  ├─ Ubuntu 22.04 LTS        ├─ Ubuntu 22.04 LTS            │
+│  ├─ IP: 192.168.1.107       ├─ IP: 192.168.1.108           │
+│  ├─ 4 vCPU, 16GB RAM        ├─ 4 vCPU, 16GB RAM            │
+│  ├─ 100GB disk              ├─ 100GB disk                  │
+│  └─ Worker node             └─ Worker node                 │
+│                                                             │
+│  VM: k8s-worker-9                                          │
 │  ├─ Ubuntu 22.04 LTS                                       │
+│  ├─ IP: 192.168.1.109                                      │
 │  ├─ 4 vCPU, 16GB RAM                                       │
 │  ├─ 100GB disk                                             │
 │  └─ Worker node                                            │
 └─────────────────────────────────────────────────────────────┘
+
+Total: 1 control plane + 9 worker nodes = 10 nodes
 ```
 
 ## Installed Components
@@ -158,16 +189,21 @@ kubectl get nodes
 
 ### Configure DNS
 
-Point your domain to the worker node IPs:
-```
-*.mechanicbuddy.app -> 192.168.1.101
-```
+Point your domain to the worker node IPs. With 9 worker nodes, you can configure round-robin DNS for load distribution:
 
-Or configure round-robin DNS:
 ```
 *.mechanicbuddy.app -> 192.168.1.101
 *.mechanicbuddy.app -> 192.168.1.102
+*.mechanicbuddy.app -> 192.168.1.103
+*.mechanicbuddy.app -> 192.168.1.104
+*.mechanicbuddy.app -> 192.168.1.105
+*.mechanicbuddy.app -> 192.168.1.106
+*.mechanicbuddy.app -> 192.168.1.107
+*.mechanicbuddy.app -> 192.168.1.108
+*.mechanicbuddy.app -> 192.168.1.109
 ```
+
+Note: ingress-nginx runs as a DaemonSet on all worker nodes, so traffic can be directed to any worker IP.
 
 ### Test ingress and TLS
 

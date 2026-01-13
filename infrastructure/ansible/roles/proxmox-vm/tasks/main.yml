@@ -21,25 +21,43 @@
   loop_control:
     label: "{{ item.name }}"
 
-- name: Clone VM from template
-  community.general.proxmox_kvm:
-    api_host: "{{ proxmox_api_host }}"
-    api_port: "{{ proxmox_api_port | default(8006) }}"
-    api_user: "{{ proxmox_api_user }}"
-    api_token_id: "{{ proxmox_api_token_id }}"
-    api_token_secret: "{{ proxmox_api_token_secret }}"
-    node: "{{ proxmox_node }}"
-    name: "{{ item.name }}"
-    newid: "{{ item.vmid }}"
-    clone: "{{ vm_template_name }}"
-    full: true
-    storage: "{{ vm_default_storage }}"
-    timeout: "{{ vm_clone_timeout }}"
-    state: present
+- name: Check if VMs already exist
+  ansible.builtin.uri:
+    url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port | default(8006) }}/api2/json/nodes/{{ item.proxmox_node | default(proxmox_node) }}/qemu/{{ item.vmid }}/status/current"
+    method: GET
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+    validate_certs: false
+    status_code: [200, 500]
   loop: "{{ control_plane_nodes + worker_nodes }}"
   loop_control:
     label: "{{ item.name }}"
+  register: vm_exists_check
+  failed_when: false
+
+- name: Clone VM from template via API
+  ansible.builtin.uri:
+    url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port | default(8006) }}/api2/json/nodes/{{ item.item.proxmox_node | default(proxmox_node) }}/qemu/{{ vm_templates_by_node[item.item.proxmox_node | default(proxmox_node)].id | default(vm_template_id) }}/clone"
+    method: POST
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+    body_format: form-urlencoded
+    body:
+      newid: "{{ item.item.vmid }}"
+      name: "{{ item.item.name }}"
+      full: 1
+      storage: "{{ vm_default_storage }}"
+    validate_certs: false
+  loop: "{{ vm_exists_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.status != 200
   register: vm_clone_result
+
+- name: Wait for clone operations to complete
+  ansible.builtin.pause:
+    seconds: 45
+  when: vm_clone_result.results | selectattr('changed', 'defined') | selectattr('changed') | list | length > 0
 
 - name: Configure VM hardware
   community.general.proxmox_kvm:
@@ -48,7 +66,7 @@
     api_user: "{{ proxmox_api_user }}"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
-    node: "{{ proxmox_node }}"
+    node: "{{ item.proxmox_node | default(proxmox_node) }}"
     vmid: "{{ item.vmid }}"
     cores: "{{ item.cores | default(vm_default_cores) }}"
     memory: "{{ item.memory | default(vm_default_memory) }}"
@@ -60,15 +78,24 @@
   loop_control:
     label: "{{ item.name }}"
 
-- name: Resize VM disk
-  ansible.builtin.command: >
-    qm resize {{ item.vmid }} scsi0 {{ item.disk_size | default(vm_default_disk_size) }}
-  delegate_to: "{{ proxmox_api_host }}"
+- name: Resize VM disk via API
+  ansible.builtin.uri:
+    url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port | default(8006) }}/api2/json/nodes/{{ item.proxmox_node | default(proxmox_node) }}/qemu/{{ item.vmid }}/resize"
+    method: PUT
+    headers:
+      Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
+    body_format: form-urlencoded
+    body:
+      disk: scsi0
+      size: "{{ item.disk_size | default(vm_default_disk_size) }}"
+    validate_certs: false
+    status_code: [200, 500]
   loop: "{{ control_plane_nodes + worker_nodes }}"
   loop_control:
     label: "{{ item.name }}"
-  changed_when: true
-  ignore_errors: true
+  register: resize_result
+  failed_when: false
+  changed_when: resize_result.status == 200
 
 - name: Configure cloud-init network
   community.general.proxmox_kvm:
@@ -77,7 +104,7 @@
     api_user: "{{ proxmox_api_user }}"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
-    node: "{{ proxmox_node }}"
+    node: "{{ item.proxmox_node | default(proxmox_node) }}"
     vmid: "{{ item.vmid }}"
     ipconfig:
       ipconfig0: "ip={{ item.ip }}/24,gw={{ network_gateway }}"
@@ -97,7 +124,7 @@
     api_user: "{{ proxmox_api_user }}"
     api_token_id: "{{ proxmox_api_token_id }}"
     api_token_secret: "{{ proxmox_api_token_secret }}"
-    node: "{{ proxmox_node }}"
+    node: "{{ item.proxmox_node | default(proxmox_node) }}"
     vmid: "{{ item.vmid }}"
     state: started
     timeout: "{{ vm_start_timeout }}"
@@ -110,23 +137,31 @@
   ansible.builtin.wait_for:
     host: "{{ item.ip }}"
     port: 22
-    delay: 30
-    timeout: 300
+    delay: 10
+    timeout: 180
     state: started
+    connect_timeout: 5
   loop: "{{ control_plane_nodes + worker_nodes }}"
   loop_control:
     label: "{{ item.name }}"
   delegate_to: localhost
   become: false
 
-- name: Wait for cloud-init to complete
-  ansible.builtin.command: cloud-init status --wait
+- name: Wait for cloud-init to complete (with timeout)
+  ansible.builtin.shell: |
+    if command -v cloud-init >/dev/null 2>&1; then
+      # Set a 60 second timeout for cloud-init
+      timeout 60 cloud-init status --wait 2>/dev/null || true
+      echo "Cloud-init check completed"
+    else
+      echo "Cloud-init not installed, skipping"
+    fi
   delegate_to: "{{ item.ip }}"
   remote_user: ubuntu
   loop: "{{ control_plane_nodes + worker_nodes }}"
   loop_control:
     label: "{{ item.name }}"
   changed_when: false
-  retries: 5
-  delay: 30
-  ignore_errors: true
+  failed_when: false
+  async: 90
+  poll: 5

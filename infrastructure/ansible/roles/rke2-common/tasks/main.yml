@@ -1,0 +1,48 @@
+---
+# Common prerequisites for all RKE2 nodes
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: true
+
+- name: Remove swap from fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '^.*\sswap\s'
+    state: absent
+
+- name: Load required kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+
+- name: Ensure kernel modules load on boot
+  ansible.builtin.copy:
+    content: |
+      overlay
+      br_netfilter
+    dest: /etc/modules-load.d/rke2.conf
+    mode: '0644'
+
+- name: Set sysctl parameters for Kubernetes
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+    sysctl_file: /etc/sysctl.d/99-rke2.conf
+  loop:
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: 1 }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: 1 }
+    - { name: 'net.ipv4.ip_forward', value: 1 }
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - tar
+      - iptables
+    state: present
+    update_cache: true

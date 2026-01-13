@@ -3,7 +3,7 @@ apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 kubernetesVersion: "{{ k8s_version }}"
 clusterName: "{{ k8s_cluster_name }}"
-controlPlaneEndpoint: "{{ node_ip }}:6443"
+controlPlaneEndpoint: "192.168.1.100:6443"
 networking:
   podSubnet: "{{ k8s_pod_network_cidr }}"
   serviceSubnet: "{{ k8s_service_cidr }}"
@@ -15,6 +15,11 @@ apiServer:
     - "{{ node_ip }}"
     - "{{ ansible_hostname }}"
     - "{{ k8s_control_plane_endpoint }}"
+    - "192.168.1.100"
+    - "192.168.1.110"
+    - "192.168.1.111"
+    - "192.168.1.112"
+    - "192.168.1.113"
     - "127.0.0.1"
     - "localhost"
 controllerManager:

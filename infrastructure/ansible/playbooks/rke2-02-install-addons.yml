@@ -1,0 +1,210 @@
+---
+# Install Kubernetes addons on RKE2 cluster
+# - NGINX Ingress Controller
+# - cert-manager
+# - CloudNativePG
+# - Bitwarden Secret Operator
+
+- name: Install Kubernetes addons
+  hosts: k8s_control_plane[0]
+  become: true
+  gather_facts: true
+
+  vars:
+    kubeconfig_path: /etc/rancher/rke2/rke2.yaml
+    kubectl_path: /var/lib/rancher/rke2/bin/kubectl
+    helm_version: "3.14.0"
+
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+    PATH: "/var/lib/rancher/rke2/bin:{{ ansible_env.PATH }}"
+
+  tasks:
+    # =========================================================================
+    # Prerequisites
+    # =========================================================================
+    - name: Check cluster is ready
+      ansible.builtin.command: "{{ kubectl_path }} get nodes"
+      register: nodes_check
+      changed_when: false
+
+    - name: Display cluster status
+      ansible.builtin.debug:
+        msg: "{{ nodes_check.stdout_lines }}"
+
+    - name: Install Helm
+      block:
+        - name: Download Helm installer
+          ansible.builtin.get_url:
+            url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            dest: /tmp/get_helm.sh
+            mode: '0755'
+
+        - name: Install Helm
+          ansible.builtin.shell: /tmp/get_helm.sh
+          args:
+            creates: /usr/local/bin/helm
+          environment:
+            DESIRED_VERSION: "v{{ helm_version }}"
+
+    # =========================================================================
+    # NGINX Ingress Controller
+    # =========================================================================
+    - name: Add ingress-nginx Helm repository
+      ansible.builtin.shell: |
+        helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+        helm repo update
+      changed_when: true
+
+    - name: Create ingress-nginx namespace
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create namespace ingress-nginx --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+
+    - name: Install NGINX Ingress Controller
+      ansible.builtin.shell: |
+        helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+          --namespace ingress-nginx \
+          --set controller.kind=DaemonSet \
+          --set controller.service.type=NodePort \
+          --set controller.service.nodePorts.http=30080 \
+          --set controller.service.nodePorts.https=30443 \
+          --set controller.ingressClassResource.default=true \
+          --set controller.config.use-forwarded-headers=true \
+          --set controller.config.compute-full-forwarded-for=true \
+          --set controller.config.use-proxy-protocol=false \
+          --set controller.metrics.enabled=true \
+          --wait --timeout 5m
+      changed_when: true
+
+    - name: Wait for ingress-nginx to be ready
+      ansible.builtin.shell: |
+        {{ kubectl_path }} wait --for=condition=ready pod -l app.kubernetes.io/component=controller -n ingress-nginx --timeout=300s
+      changed_when: false
+
+    # =========================================================================
+    # cert-manager
+    # =========================================================================
+    - name: Add Jetstack Helm repository
+      ansible.builtin.shell: |
+        helm repo add jetstack https://charts.jetstack.io
+        helm repo update
+      changed_when: true
+
+    - name: Install cert-manager
+      ansible.builtin.shell: |
+        helm upgrade --install cert-manager jetstack/cert-manager \
+          --namespace cert-manager \
+          --create-namespace \
+          --set installCRDs=true \
+          --set prometheus.enabled=true \
+          --wait --timeout 5m
+      changed_when: true
+
+    - name: Wait for cert-manager to be ready
+      ansible.builtin.shell: |
+        {{ kubectl_path }} wait --for=condition=available deployment/cert-manager -n cert-manager --timeout=300s
+        {{ kubectl_path }} wait --for=condition=available deployment/cert-manager-webhook -n cert-manager --timeout=300s
+      changed_when: false
+
+    - name: Create Let's Encrypt ClusterIssuers
+      ansible.builtin.shell: |
+        cat <<EOF | {{ kubectl_path }} apply -f -
+        apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt-staging
+        spec:
+          acme:
+            server: https://acme-staging-v02.api.letsencrypt.org/directory
+            email: {{ letsencrypt_email | default('admin@mechanicbuddy.app') }}
+            privateKeySecretRef:
+              name: letsencrypt-staging-key
+            solvers:
+              - http01:
+                  ingress:
+                    class: nginx
+        ---
+        apiVersion: cert-manager.io/v1
+        kind: ClusterIssuer
+        metadata:
+          name: letsencrypt-prod
+        spec:
+          acme:
+            server: https://acme-v02.api.letsencrypt.org/directory
+            email: {{ letsencrypt_email | default('admin@mechanicbuddy.app') }}
+            privateKeySecretRef:
+              name: letsencrypt-prod-key
+            solvers:
+              - http01:
+                  ingress:
+                    class: nginx
+        EOF
+      changed_when: true
+
+    # =========================================================================
+    # CloudNativePG Operator
+    # =========================================================================
+    - name: Add CloudNativePG Helm repository
+      ansible.builtin.shell: |
+        helm repo add cnpg https://cloudnative-pg.github.io/charts
+        helm repo update
+      changed_when: true
+
+    - name: Install CloudNativePG operator
+      ansible.builtin.shell: |
+        helm upgrade --install cloudnative-pg cnpg/cloudnative-pg \
+          --namespace cnpg-system \
+          --create-namespace \
+          --set monitoring.podMonitorEnabled=false \
+          --wait --timeout 5m
+      changed_when: true
+
+    - name: Wait for CloudNativePG operator to be ready
+      ansible.builtin.shell: |
+        {{ kubectl_path }} wait --for=condition=available deployment/cloudnative-pg -n cnpg-system --timeout=300s
+      changed_when: false
+
+    # =========================================================================
+    # Bitwarden Secret Operator (Optional)
+    # =========================================================================
+    - name: Add Bitwarden Operator Helm repository
+      ansible.builtin.shell: |
+        helm repo add bitwarden-operator https://olympusgg.github.io/bitwarden-secret-operator || true
+        helm repo update
+      changed_when: true
+      ignore_errors: true
+
+    - name: Create Bitwarden operator namespace
+      ansible.builtin.shell: |
+        {{ kubectl_path }} create namespace bw-operator --dry-run=client -o yaml | {{ kubectl_path }} apply -f -
+      changed_when: true
+
+    # Note: Bitwarden credentials will be configured in rke2-03-setup-secrets.yml
+
+    # =========================================================================
+    # Summary
+    # =========================================================================
+    - name: Get all pods
+      ansible.builtin.command: "{{ kubectl_path }} get pods -A"
+      register: all_pods
+      changed_when: false
+
+    - name: Display summary
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          Kubernetes Addons Installed Successfully!
+          ================================================
+
+          Installed:
+          - NGINX Ingress Controller (DaemonSet, NodePort 30080/30443)
+          - cert-manager with Let's Encrypt issuers
+          - CloudNativePG operator
+          - Bitwarden Operator Helm repo added
+
+          All Pods:
+          {{ all_pods.stdout }}
+
+          Next step:
+          Run rke2-03-setup-secrets.yml to configure Bitwarden integration

@@ -1,0 +1,101 @@
+---
+# Install RKE2 server (control plane)
+- name: Create RKE2 config directory
+  ansible.builtin.file:
+    path: /etc/rancher/rke2
+    state: directory
+    mode: '0755'
+
+- name: Generate RKE2 server config
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/rancher/rke2/config.yaml
+    mode: '0600'
+
+- name: Download RKE2 installation script
+  ansible.builtin.get_url:
+    url: https://get.rke2.io
+    dest: /tmp/rke2-install.sh
+    mode: '0755'
+
+- name: Install RKE2 server
+  ansible.builtin.shell: |
+    INSTALL_RKE2_TYPE=server /tmp/rke2-install.sh
+  args:
+    creates: /usr/local/bin/rke2
+  environment:
+    INSTALL_RKE2_CHANNEL: stable
+
+- name: Enable and start rke2-server service
+  ansible.builtin.systemd:
+    name: rke2-server
+    enabled: true
+    state: started
+
+- name: Wait for RKE2 to be ready
+  ansible.builtin.wait_for:
+    path: /var/lib/rancher/rke2/server/node-token
+    timeout: 300
+
+- name: Create kubectl symlink
+  ansible.builtin.file:
+    src: /var/lib/rancher/rke2/bin/kubectl
+    dest: /usr/local/bin/kubectl
+    state: link
+
+- name: Create kubeconfig directory for ubuntu user
+  ansible.builtin.file:
+    path: /home/ubuntu/.kube
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy kubeconfig for ubuntu user
+  ansible.builtin.copy:
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: /home/ubuntu/.kube/config
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+    remote_src: true
+
+- name: Create kubeconfig directory for root
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: '0755'
+
+- name: Copy kubeconfig for root
+  ansible.builtin.copy:
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: /root/.kube/config
+    mode: '0600'
+    remote_src: true
+
+- name: Read node token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/rke2/server/node-token
+  register: node_token_raw
+  when: inventory_hostname == groups['k8s_control_plane'][0]
+
+- name: Set node token fact
+  ansible.builtin.set_fact:
+    rke2_token: "{{ node_token_raw.content | b64decode | trim }}"
+  when: inventory_hostname == groups['k8s_control_plane'][0]
+
+- name: Fetch kubeconfig to local machine
+  ansible.builtin.fetch:
+    src: /etc/rancher/rke2/rke2.yaml
+    dest: "{{ playbook_dir }}/../rke2-kubeconfig.yaml"
+    flat: true
+  when: inventory_hostname == groups['k8s_control_plane'][0]
+
+- name: Update kubeconfig server address
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/../rke2-kubeconfig.yaml"
+    regexp: 'https://127\.0\.0\.1:6443'
+    replace: "https://192.168.1.100:6443"
+  delegate_to: localhost
+  become: false
+  when: inventory_hostname == groups['k8s_control_plane'][0]

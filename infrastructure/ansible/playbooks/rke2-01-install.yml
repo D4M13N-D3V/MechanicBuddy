@@ -1,0 +1,169 @@
+---
+# Main playbook to install RKE2 Kubernetes cluster
+# This replaces the kubeadm-based setup with RKE2
+
+- name: Install RKE2 on first control plane (bootstrap)
+  hosts: k8s_control_plane[0]
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: rke2-common
+    - role: rke2-server
+
+  tasks:
+    - name: Wait for RKE2 server to be ready
+      ansible.builtin.wait_for:
+        path: /etc/rancher/rke2/rke2.yaml
+        timeout: 300
+
+    - name: Get node token for additional servers
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/rke2/server/node-token
+      register: node_token
+
+    - name: Set token fact for other nodes
+      ansible.builtin.set_fact:
+        rke2_token: "{{ node_token.content | b64decode | trim }}"
+
+    - name: Save token to localhost
+      ansible.builtin.copy:
+        content: "{{ rke2_token }}"
+        dest: "{{ playbook_dir }}/../rke2-token.txt"
+        mode: '0600'
+      delegate_to: localhost
+      become: false
+
+- name: Install RKE2 on additional control planes
+  hosts: k8s_control_plane[1:]
+  become: true
+  gather_facts: true
+  serial: 1  # Join one at a time
+
+  vars:
+    rke2_token: "{{ lookup('file', playbook_dir + '/../rke2-token.txt') }}"
+
+  roles:
+    - role: rke2-common
+    - role: rke2-server
+
+  tasks:
+    - name: Wait for RKE2 server to be ready
+      ansible.builtin.wait_for:
+        path: /etc/rancher/rke2/rke2.yaml
+        timeout: 300
+
+    - name: Wait 30 seconds for cluster to stabilize
+      ansible.builtin.pause:
+        seconds: 30
+
+- name: Install RKE2 agents on worker nodes
+  hosts: k8s_workers
+  become: true
+  gather_facts: true
+  serial: 2  # Join two workers at a time
+
+  vars:
+    rke2_token: "{{ lookup('file', playbook_dir + '/../rke2-token.txt') }}"
+
+  roles:
+    - role: rke2-common
+    - role: rke2-agent
+
+  tasks:
+    - name: Wait for RKE2 agent to be ready
+      ansible.builtin.systemd:
+        name: rke2-agent
+        state: started
+        enabled: true
+
+- name: Configure kubectl access
+  hosts: k8s_control_plane[0]
+  become: true
+  gather_facts: false
+
+  vars:
+    kubeconfig_local_path: "{{ playbook_dir }}/../kubeconfig"
+
+  tasks:
+    - name: Create .kube directory
+      ansible.builtin.file:
+        path: ~/.kube
+        state: directory
+        mode: '0755'
+
+    - name: Copy kubeconfig for root user
+      ansible.builtin.copy:
+        src: /etc/rancher/rke2/rke2.yaml
+        dest: ~/.kube/config
+        remote_src: true
+        mode: '0600'
+
+    - name: Fetch kubeconfig to local machine
+      ansible.builtin.fetch:
+        src: /etc/rancher/rke2/rke2.yaml
+        dest: "{{ kubeconfig_local_path }}"
+        flat: true
+
+    - name: Replace localhost with control plane IP in local kubeconfig
+      ansible.builtin.replace:
+        path: "{{ kubeconfig_local_path }}"
+        regexp: '127\.0\.0\.1'
+        replace: '{{ ansible_host }}'
+      delegate_to: localhost
+      become: false
+
+    - name: Wait for all nodes to be ready
+      ansible.builtin.shell: |
+        export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+        export PATH=/var/lib/rancher/rke2/bin:$PATH
+        kubectl wait --for=condition=ready node --all --timeout=600s
+      changed_when: false
+      register: wait_result
+      retries: 3
+      delay: 30
+      until: wait_result.rc == 0
+
+    - name: Get cluster nodes
+      ansible.builtin.shell: |
+        export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+        export PATH=/var/lib/rancher/rke2/bin:$PATH
+        kubectl get nodes -o wide
+      register: nodes_output
+      changed_when: false
+
+    - name: Get cluster info
+      ansible.builtin.shell: |
+        export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+        export PATH=/var/lib/rancher/rke2/bin:$PATH
+        kubectl cluster-info
+      register: cluster_info
+      changed_when: false
+
+    - name: Display cluster status
+      ansible.builtin.debug:
+        msg: |
+          ================================================
+          RKE2 Kubernetes Cluster Installed Successfully!
+          ================================================
+
+          {{ cluster_info.stdout }}
+
+          Nodes:
+          {{ nodes_output.stdout }}
+
+          Kubeconfig saved to: {{ kubeconfig_local_path }}
+
+          To use kubectl locally:
+            export KUBECONFIG={{ kubeconfig_local_path }}
+            kubectl get nodes
+
+          RKE2 includes the following by default:
+          - CoreDNS for DNS
+          - Metrics Server for resource metrics
+          - Traefik as Ingress Controller (disabled in this setup)
+          - Local Path Provisioner for storage
+
+          Next steps:
+          - Install additional addons if needed
+          - Deploy your applications

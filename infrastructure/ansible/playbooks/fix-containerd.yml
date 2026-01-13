@@ -1,0 +1,67 @@
+---
+- name: Fix containerd version on all nodes
+  hosts: k8s_cluster
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Stop containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: stopped
+
+    - name: Remove containerd
+      ansible.builtin.apt:
+        name: containerd.io
+        state: absent
+        purge: yes
+
+    - name: Install correct containerd version
+      ansible.builtin.apt:
+        name: "containerd.io=1.7.29-1~ubuntu.22.04~jammy"
+        state: present
+        update_cache: yes
+        allow_downgrade: yes
+
+    - name: Ensure containerd config directory exists
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+    - name: Generate default containerd configuration
+      ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Remove CRI from disabled plugins
+      ansible.builtin.replace:
+        path: /etc/containerd/config.toml
+        regexp: '^disabled_plugins = \["cri"\]'
+        replace: 'disabled_plugins = []'
+
+    - name: Configure containerd to use systemd cgroup driver
+      ansible.builtin.replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Wait for containerd to be ready
+      ansible.builtin.wait_for:
+        timeout: 10
+
+    - name: Check containerd version
+      ansible.builtin.command: containerd --version
+      register: containerd_version
+      changed_when: false
+
+    - name: Display containerd version
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ containerd_version.stdout }}"

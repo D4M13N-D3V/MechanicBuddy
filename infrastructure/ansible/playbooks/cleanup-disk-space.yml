@@ -1,0 +1,31 @@
+---
+- name: Clean up disk space on VMs
+  hosts: k8s_cluster
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Clean apt cache
+      ansible.builtin.shell: |
+        apt-get clean
+        rm -rf /var/cache/apt/archives/*
+        rm -rf /var/lib/apt/lists/*
+      changed_when: true
+      failed_when: false
+
+    - name: Remove old logs
+      ansible.builtin.shell: |
+        journalctl --vacuum-time=1d
+        find /var/log -type f -name "*.log" -mtime +7 -delete
+        find /var/log -type f -name "*.gz" -delete
+      changed_when: true
+      failed_when: false
+
+    - name: Check disk space after cleanup
+      ansible.builtin.command: df -h /
+      register: disk_space
+      changed_when: false
+
+    - name: Display disk space
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ disk_space.stdout_lines }}"

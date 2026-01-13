@@ -1,0 +1,77 @@
+---
+# Complete reset - wipe all Kubernetes installations
+- name: Reset all nodes
+  hosts: k8s_cluster
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Stop RKE2 services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - rke2-server
+        - rke2-agent
+      ignore_errors: true
+
+    - name: Stop kubeadm services
+      ansible.builtin.systemd:
+        name: kubelet
+        state: stopped
+      ignore_errors: true
+
+    - name: Run kubeadm reset
+      ansible.builtin.command: kubeadm reset -f
+      ignore_errors: true
+
+    - name: Run RKE2 uninstall scripts
+      ansible.builtin.shell: |
+        /usr/local/bin/rke2-uninstall.sh || true
+        /usr/bin/rke2-uninstall.sh || true
+      ignore_errors: true
+
+    - name: Remove Kubernetes directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/rancher
+        - /var/lib/rancher
+        - /var/lib/kubelet
+        - /etc/kubernetes
+        - /var/lib/etcd
+        - /etc/cni
+        - /var/lib/cni
+        - /opt/cni
+        - /run/k3s
+        - ~/.kube
+        - /home/ubuntu/.kube
+
+    - name: Remove RKE2 binaries
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/local/bin/rke2
+        - /usr/local/bin/kubectl
+        - /usr/local/bin/crictl
+        - /usr/local/bin/ctr
+
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+      ignore_errors: true
+
+    - name: Clean up iptables rules
+      ansible.builtin.shell: |
+        iptables -F
+        iptables -t nat -F
+        iptables -t mangle -F
+        iptables -X
+      ignore_errors: true
+
+    - name: Display reset status
+      ansible.builtin.debug:
+        msg: "Node {{ inventory_hostname }} has been reset and is ready for fresh RKE2 installation"

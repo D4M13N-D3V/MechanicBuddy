@@ -1,0 +1,126 @@
+---
+# Reset and reinitialize the Kubernetes cluster with proper HA configuration
+- name: Reset all control plane nodes
+  hosts: k8s_control_plane
+  become: true
+  serial: 1
+  tasks:
+    - name: Reset kubeadm
+      ansible.builtin.command: kubeadm reset -f
+      register: reset_result
+      changed_when: true
+
+    - name: Remove old kubernetes directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/kubernetes
+        - /var/lib/etcd
+        - /var/lib/kubelet
+        - /etc/cni/net.d
+        - ~/.kube
+
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+
+- name: Reset all worker nodes
+  hosts: k8s_workers
+  become: true
+  tasks:
+    - name: Check if kubelet is installed
+      ansible.builtin.stat:
+        path: /usr/bin/kubeadm
+      register: kubeadm_exists
+
+    - name: Reset kubeadm if installed
+      ansible.builtin.command: kubeadm reset -f
+      when: kubeadm_exists.stat.exists
+      register: reset_result
+      changed_when: true
+
+    - name: Remove old kubernetes directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/kubernetes
+        - /var/lib/kubelet
+        - /etc/cni/net.d
+        - ~/.kube
+
+    - name: Restart containerd if present
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+      when: kubeadm_exists.stat.exists
+      ignore_errors: true
+
+- name: Initialize first control plane
+  hosts: k8s-control-1
+  become: true
+  roles:
+    - role: k8s-control-plane
+      vars:
+        k8s_control_plane_init: true
+
+- name: Join additional control planes
+  hosts: k8s_control_plane:!k8s-control-1
+  become: true
+  serial: 1
+  tasks:
+    - name: Get join command from first control plane
+      ansible.builtin.command: kubeadm token create --print-join-command
+      register: join_command
+      delegate_to: k8s-control-1
+      run_once: true
+      changed_when: false
+
+    - name: Get certificate key for control plane join
+      ansible.builtin.shell: |
+        kubeadm init phase upload-certs --upload-certs 2>/dev/null | tail -1
+      register: cert_key
+      delegate_to: k8s-control-1
+      run_once: true
+      changed_when: false
+
+    - name: Join control plane node
+      ansible.builtin.shell: |
+        {{ join_command.stdout }} --control-plane --certificate-key {{ cert_key.stdout }}
+      register: join_result
+      changed_when: true
+      retries: 3
+      delay: 10
+      until: join_result.rc == 0
+
+    - name: Create .kube directory for ubuntu user
+      ansible.builtin.file:
+        path: /home/ubuntu/.kube
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Copy admin.conf to ubuntu user's kube config
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+        remote_src: true
+
+    - name: Wait for node to be ready
+      ansible.builtin.shell: kubectl get nodes {{ ansible_hostname }} --no-headers | awk '{print $2}'
+      register: node_status
+      until: node_status.stdout == "Ready"
+      retries: 30
+      delay: 10
+      delegate_to: k8s-control-1
+      changed_when: false
+
+    - name: Display join status
+      ansible.builtin.debug:
+        msg: "Control plane node {{ ansible_hostname }} successfully joined the cluster"

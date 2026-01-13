@@ -1,0 +1,32 @@
+{% if inventory_hostname == groups['k8s_control_plane'][0] %}
+# First server - initialize the cluster
+tls-san:
+  - 192.168.1.100
+  - {{ ansible_default_ipv4.address }}
+  - {{ inventory_hostname }}
+{% for host in groups['k8s_control_plane'] %}
+  - {{ hostvars[host]['ansible_host'] }}
+{% endfor %}
+write-kubeconfig-mode: "0644"
+cluster-cidr: "10.42.0.0/16"
+service-cidr: "10.43.0.0/16"
+node-taint:
+  - "node-role.kubernetes.io/control-plane=:NoSchedule"
+disable:
+  - rke2-ingress-nginx
+{% else %}
+# Additional servers - join the cluster
+server: https://192.168.1.100:9345
+token: {{ rke2_token }}
+tls-san:
+  - 192.168.1.100
+  - {{ ansible_default_ipv4.address }}
+  - {{ inventory_hostname }}
+write-kubeconfig-mode: "0644"
+cluster-cidr: "10.42.0.0/16"
+service-cidr: "10.43.0.0/16"
+node-taint:
+  - "node-role.kubernetes.io/control-plane=:NoSchedule"
+disable:
+  - rke2-ingress-nginx
+{% endif %}

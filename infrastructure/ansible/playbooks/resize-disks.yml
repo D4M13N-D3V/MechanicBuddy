@@ -11,7 +11,7 @@
   tasks:
     - name: Resize control plane disks via API
       ansible.builtin.uri:
-        url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port }}/api2/json/nodes/{{ proxmox_node }}/qemu/{{ item.vmid }}/resize"
+        url: "https://{{ proxmox_api_host }}:{{ proxmox_api_port | default(8006) }}/api2/json/nodes/{{ item.proxmox_node | default(proxmox_node) }}/qemu/{{ item.vmid }}/resize"
         method: PUT
         headers:
           Authorization: "PVEAPIToken={{ proxmox_api_user }}!{{ proxmox_api_token_id }}={{ proxmox_api_token_secret }}"
