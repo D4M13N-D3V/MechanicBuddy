@@ -9,10 +9,10 @@ namespace MechanicBuddy.Core.Application.Authorization
         private static ClaimsPrincipal Build(string name, string fullName, string tenantName, string employeeId, bool publicUse)
         {
             var claims = new List<Claim> {
-            new Claim(ClaimTypes.Name, name),
-            new Claim("FullName", fullName),
-            new Claim(ClaimTypes.Spn, tenantName),
-            new Claim(ClaimTypes.UserData, employeeId),
+            new Claim(ClaimTypes.Name, name ?? ""),
+            new Claim("FullName", fullName ?? name ?? ""),
+            new Claim(ClaimTypes.Spn, tenantName ?? ""),
+            new Claim(ClaimTypes.UserData, employeeId ?? ""),
         };
 
             if (!publicUse)
