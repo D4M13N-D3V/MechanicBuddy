@@ -49,9 +49,9 @@ export function Navigation({ data }: NavigationProps) {
                                     <ClockIcon className="h-4 w-4" />
                                     <span>
                                         {content.contact.businessHours
-                                            .filter(h => h.open !== 'Closed')
+                                            .filter(h => h.day && h.open && h.open !== 'Closed')
                                             .slice(0, 2)
-                                            .map(h => `${h.day.slice(0, 3)}: ${h.open} - ${h.close}`)
+                                            .map(h => `${h.day!.slice(0, 3)}: ${h.open} - ${h.close}`)
                                             .join(' | ')}
                                     </span>
                                 </span>
