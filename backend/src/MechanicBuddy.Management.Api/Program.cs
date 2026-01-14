@@ -142,6 +142,7 @@ builder.Services.AddHostedService<InactivityCheckService>();
 
 // Register Provisioning Services
 builder.Services.AddScoped<ITenantProvisioningService, TenantProvisioningService>();
+builder.Services.AddScoped<ITenantMigrationService, TenantMigrationService>();
 builder.Services.AddScoped<IHelmService, HelmService>();
 builder.Services.AddScoped<IKubernetesClientService, KubernetesClientService>();
 
