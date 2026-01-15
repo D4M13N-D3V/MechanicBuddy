@@ -8,7 +8,7 @@ public class ProvisioningOptions
     /// <summary>
     /// Path to the Helm chart directory.
     /// </summary>
-    public string HelmChartPath { get; set; } = "/app/infrastructure/helm/charts/mechanicbuddy-tenant";
+    public string HelmChartPath { get; set; } = "/app/charts/mechanicbuddy-tenant";
 
     /// <summary>
     /// Base domain for tenant subdomains (e.g., mechanicbuddy.app).
