@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { verifySession } from "@/_lib/session-crypto";
 
 const SESSION_COOKIE_NAME = "admin_session";
 
 // Routes that don't require authentication
 const publicRoutes = ["/login", "/register", "/forgot-password", "/demo", "/pricing", "/"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
@@ -33,25 +34,17 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  try {
-    const session = JSON.parse(sessionCookie.value);
-
-    // Check if session has expired locally
-    if (new Date(session.expiresAt) < new Date()) {
-      // Session expired - clear cookie and redirect
-      const response = NextResponse.redirect(new URL("/login", request.url));
-      response.cookies.delete(SESSION_COOKIE_NAME);
-      return response;
-    }
-
-    // Session exists and not expired - allow request
-    return NextResponse.next();
-  } catch {
-    // Invalid session cookie - clear it and redirect
+  // Verify the signature before trusting the session contents.
+  const session = await verifySession(sessionCookie.value);
+  if (!session || new Date(session.expiresAt) < new Date()) {
+    // Missing/forged/expired session - clear cookie and redirect
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete(SESSION_COOKIE_NAME);
     return response;
   }
+
+  // Valid, unexpired session - allow request
+  return NextResponse.next();
 }
 
 export const config = {

@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import type { AdminUser, LoginCredentials, AuthSession } from "@/types";
+import { signSession, verifySession } from "@/_lib/session-crypto";
 
 const API_URL = process.env.MANAGEMENT_API_URL || "http://localhost:15568";
 const SESSION_COOKIE_NAME = "admin_session";
@@ -42,9 +43,9 @@ export async function login(credentials: LoginCredentials): Promise<{ success: b
       expiresAt: new Date(Date.now() + SESSION_DURATION).toISOString(),
     };
 
-    // Set session cookie
+    // Set signed session cookie (tamper-evident)
     const cookieStore = await cookies();
-    cookieStore.set(SESSION_COOKIE_NAME, JSON.stringify(session), {
+    cookieStore.set(SESSION_COOKIE_NAME, await signSession(session), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -79,7 +80,12 @@ export async function getSession(): Promise<AuthSession | null> {
       return null;
     }
 
-    const session: AuthSession = JSON.parse(sessionCookie.value);
+    // Verify the signature before trusting any field (role/expiry/token).
+    const session = await verifySession(sessionCookie.value);
+    if (!session) {
+      await logout();
+      return null;
+    }
 
     // Check if session is expired
     if (new Date(session.expiresAt) < new Date()) {
