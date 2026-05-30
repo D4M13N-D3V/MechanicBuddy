@@ -31,6 +31,14 @@ namespace MechanicBuddy.Http.Api.Controllers
         private readonly ISession session;
         private readonly DbOptions dbOptions;
 
+        // Security: allow-list of sortable employee columns. `orderby` is
+        // interpolated into the ORDER BY clause, so only these values may be used.
+        private static readonly HashSet<string> AllowedOrderByColumns =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                "introducedat", "firstname", "lastname", "email", "phone", "proffession"
+            };
+
         public UserManagementController(
             IUserRepository userRepository,
             IRepository repository,
@@ -115,8 +123,13 @@ namespace MechanicBuddy.Http.Api.Controllers
 
             using (var connection = CreateConnection())
             {
-                // Build the query
-                var orderByClause = string.IsNullOrEmpty(orderby) ? "e.introducedat" : $"e.{orderby}";
+                // Build the query.
+                // Security: `orderby` is interpolated into SQL, so restrict it to
+                // an allow-listed column; anything else falls back to the default.
+                var orderColumn = AllowedOrderByColumns.Contains(orderby ?? string.Empty)
+                    ? orderby
+                    : "introducedat";
+                var orderByClause = $"e.{orderColumn}";
                 var orderDirection = desc ? "DESC" : "ASC";
 
                 var whereClause = string.IsNullOrEmpty(searchText)
