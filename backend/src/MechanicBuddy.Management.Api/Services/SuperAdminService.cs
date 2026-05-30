@@ -301,19 +301,29 @@ public class SuperAdminService
 
     private string GenerateRequestSignature(object requestBody)
     {
-        // In production, use HMAC-SHA256 with a shared secret
+        // HMAC-SHA256 over the request body. The shared secret MUST be configured
+        // out-of-band; never fall back to a hard-coded default — a known signing
+        // key lets an attacker forge X-SuperAdmin-Signature and log into any tenant.
+        var sharedSecret = Environment.GetEnvironmentVariable("SUPER_ADMIN_SHARED_SECRET");
+        if (string.IsNullOrWhiteSpace(sharedSecret))
+        {
+            throw new InvalidOperationException(
+                "SUPER_ADMIN_SHARED_SECRET is not configured; refusing to sign cross-tenant access requests.");
+        }
+
         var json = JsonSerializer.Serialize(requestBody);
-        using var hmac = new System.Security.Cryptography.HMACSHA256(
-            Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("SUPER_ADMIN_SHARED_SECRET") ?? "dev-secret"));
+        using var hmac = new System.Security.Cryptography.HMACSHA256(Encoding.UTF8.GetBytes(sharedSecret));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(json));
         return Convert.ToBase64String(hash);
     }
 
     private string GenerateOneTimeAccessToken(int adminId, string tenantId)
     {
-        var tokenData = $"{adminId}:{tenantId}:{DateTime.UtcNow.Ticks}:{Guid.NewGuid()}";
-        var bytes = Encoding.UTF8.GetBytes(tokenData);
-        return Convert.ToBase64String(bytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        // Cryptographically random, opaque token. It is validated by DB lookup
+        // (StoreOneTimeTokenAsync), so it must NOT encode adminId/tenantId/timestamp:
+        // doing so leaked identifiers and made the value structurally predictable.
+        var randomBytes = System.Security.Cryptography.RandomNumberGenerator.GetBytes(32);
+        return Convert.ToBase64String(randomBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
     }
 
     private async Task StoreOneTimeTokenAsync(string token, int adminId, string tenantId, TimeSpan expiry)
