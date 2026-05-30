@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
+import { isSameOrigin, isSafeMethod } from '@/_lib/server/csrf';
 
 const API_URL = process.env.API_URL || 'http://localhost:15567';
 const encodedKey = new TextEncoder().encode(process.env.SESSION_SECRET);
@@ -61,6 +62,11 @@ async function proxyRequest(
   const path = params.path.join('/');
   const searchParams = request.nextUrl.searchParams.toString();
   const url = `${API_URL}/api/${path}${searchParams ? `?${searchParams}` : ''}`;
+
+  // CSRF: state-changing requests must come from the same origin.
+  if (!isSafeMethod(request.method) && !isSameOrigin(request)) {
+    return NextResponse.json({ error: 'Cross-origin request blocked' }, { status: 403 });
+  }
 
   const headers = new Headers();
 
