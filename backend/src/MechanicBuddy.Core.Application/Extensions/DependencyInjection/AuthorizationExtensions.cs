@@ -27,10 +27,15 @@ namespace MechanicBuddy.Core.Application.Extensions.DependencyInjection
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    // set clockskew to zero so tokens expire exactly at token expiration time (instead of 5 minutes later)
-                    ClockSkew = TimeSpan.Zero
+                    // Security: validate issuer/audience (must match AppJwtToken.Generate)
+                    // and pin the signing algorithm to HS256 to avoid algorithm confusion.
+                    ValidateIssuer = true,
+                    ValidIssuer = "MechanicBuddy",
+                    ValidateAudience = true,
+                    ValidAudience = "MechanicBuddy",
+                    ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
+                    // small skew tolerance for distributed clocks
+                    ClockSkew = TimeSpan.FromSeconds(30)
                 };
 				options.Events = new JwtBearerEvents
 				{
