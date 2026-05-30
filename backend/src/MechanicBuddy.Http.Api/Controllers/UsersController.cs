@@ -107,7 +107,8 @@ All authenticated user operations; decorate the whole class with [TenantRateLimi
 
             if (!PasswordHasher.verifyHash(model.Password, user.Password))
             {
-                logger.LogInformation("Authentication failure: {user} - Password verification failed (hash: {hash})", model.Username, user.Password?.Substring(0, 20) + "...");
+                // Never log password hash material.
+                logger.LogInformation("Authentication failure: {user} - invalid password", model.Username);
                 await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt));
                 return Unauthorized();
             }
