@@ -72,7 +72,7 @@ jobs:
              src/MechanicBuddy.Http.Api/appsettings.Secrets.json
 
       - name: Populate Secrets
-        uses: microsoft/variable-substitution@v1
+        uses: microsoft/variable-substitution@6287962da9e5b6e68778dc51e840caa03ca84495 # v1
         with:
           files: "backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json"
         env:
@@ -107,7 +107,7 @@ jobs:
       # ---------------------------------------------------------------------
       #  Deploy ------------------------------------------------------------------
       - name: Deploy DbUp with rsync
-        uses: burnett01/rsync-deployments@7.0.2
+        uses: burnett01/rsync-deployments@fcf16a05b8650e3704a3871139dce6dde00aa472 # 7.0.2
         with:
           switches: -avzr --delete
           path: backend/dist/dbup
@@ -117,7 +117,7 @@ jobs:
           remote_key: ${{ inputs.ssh-key }}
 
       - name: Deploy API with rsync
-        uses: burnett01/rsync-deployments@7.0.2
+        uses: burnett01/rsync-deployments@fcf16a05b8650e3704a3871139dce6dde00aa472 # 7.0.2
         with:
           switches: -avzr --delete --exclude="MechanicBuddy.Http.Api.staticwebassets.runtime.json"
           path: backend/dist/mechanicbuddy
@@ -127,7 +127,7 @@ jobs:
           remote_key: ${{ inputs.ssh-key }}
 
       - name: Run DbUp migrations and reload API
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@8faa84277b88b6cd1455986f459aa66cf72bc8a3 # v1.2.1
         with:
           host: ${{ inputs.application-host }}
           username: ${{ inputs.application-host-user }}
