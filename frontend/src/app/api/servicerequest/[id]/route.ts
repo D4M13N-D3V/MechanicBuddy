@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
 import { NextRequest, NextResponse } from "next/server"
+import { isSameOrigin } from "@/_lib/server/csrf"
 
 const secretKey = process.env.SESSION_SECRET
 const encodedKey = new TextEncoder().encode(secretKey)
@@ -21,6 +22,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked" }, { status: 403 })
+  }
   try {
     const jwt = await getJwtFromCookies()
     if (!jwt) {
