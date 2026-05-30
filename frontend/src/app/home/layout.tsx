@@ -57,8 +57,10 @@ export default async function Layout({ children }: { children: React.ReactNode }
     // Fetch branding data
     const branding = await getBranding();
 
-    // Use proxy path for profile picture to avoid NEXT_PUBLIC_API_URL build-time issues
-    const imageUrl = `/backend-api/users/profilepicture/${jwt}`
+    // Security: use the server-side profile-image route, which reads the JWT
+    // from the httpOnly cookie. Never put the JWT in a URL (it leaks via access
+    // logs, browser history and the Referer header).
+    const imageUrl = `/api/profile-image`
 
     // Generate inline CSS for immediate color application (prevents flash)
     // Security: Validate and escape all color values to prevent CSS injection
