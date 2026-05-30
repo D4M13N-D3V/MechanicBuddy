@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "mechanicbuddy-free-tier.fullname" . }}-default
+  namespace: {{ include "mechanicbuddy-free-tier.namespace" . }}
+  labels:
+    {{- include "mechanicbuddy-free-tier.labels" . | nindent 4 }}
+spec:
+  # Applies to every pod in the shared free-tier namespace (default-deny posture:
+  # only the traffic explicitly allowed below is permitted).
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Ingress controller -> web/api
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+    # Communication between pods in this namespace (api <-> web)
+    - from:
+        - podSelector: {}
+  egress:
+    # DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Communication between pods in this namespace
+    - to:
+        - podSelector: {}
+    # PostgreSQL (shared cluster — may be in- or out-of-cluster)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 5432
+    # External HTTPS / SMTP (external APIs, Stripe, Resend, etc.)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 587
+        - protocol: TCP
+          port: 465
