@@ -41,9 +41,11 @@ export async function createSession(rootJwt: string,publicJwt: string,mustChange
   expiresAt.setSeconds(expiresAt.getSeconds() + parseInt(sessionTimeoutInSecondsString));
   const session = await encrypt({ apiRootJwt:rootJwt, expiresAt, mustChangePassword })
   const cookieStore = await cookies()
+  // Secure in production so cookies are only sent over HTTPS; allow HTTP in dev.
+  const secureCookie = process.env.NODE_ENV === 'production'
   cookieStore.set('session', session, {
     httpOnly: true, //jwt not accessible by browser
-    secure: false,
+    secure: secureCookie,
     expires: expiresAt,
     sameSite: 'lax',
     path: '/',
@@ -51,7 +53,7 @@ export async function createSession(rootJwt: string,publicJwt: string,mustChange
   //jwt for public side resources
   cookieStore.set('jwt',  publicJwt, {
     httpOnly: false,
-    secure: false,
+    secure: secureCookie,
     expires: expiresAt,
     sameSite: 'lax',
     path: '/',
@@ -59,7 +61,7 @@ export async function createSession(rootJwt: string,publicJwt: string,mustChange
    //browser app has to know when session started so it can call extend session before api jwt times out
   cookieStore.set('session_timestamp',  Date.now().toString(), {
     httpOnly: false,
-    secure: false,
+    secure: secureCookie,
     expires: expiresAt,
     sameSite: 'lax',
     path: '/',
