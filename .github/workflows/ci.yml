@@ -10,32 +10,45 @@ on:
 
 jobs:
   backend:
-    if: contains(github.event.head_commit.message, '[skip-backend]') == false
+    # Skip on request, and never run for pull requests opened from forks
+    # (a fork PR must not be able to reach deploy secrets or production).
+    if: >-
+      contains(github.event.head_commit.message, '[skip-backend]') == false &&
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
     uses: ./.github/workflows/backend-build.yml
     with:
       db-host: localhost
-      db-password: ${{ secrets.DB_PASSWORD }}
       application-host: ${{ vars.APPLICATION_HOST }}
       application-path: /opt/apps/
-      ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      jwt-secret: ${{ secrets.JWT_SECRET }}
-      consumer-secret: ${{ secrets.CONSUMER_SECRET }}
       application-host-user: debian
       smtp-host: ${{ secrets.SMTP_HOST }}
       smtp-port: 587
-      smtp-password: ${{ secrets.SMTP_PASSWORD }}
-      smtp-user: ${{ secrets.SMTP_USER }}
       cors-apphost: ${{ vars.APPLICATION_HOST }}
+      # Deploy ONLY on push to main — pull_request builds validate but never ship.
+      deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    secrets:
+      db-password: ${{ secrets.DB_PASSWORD }}
+      ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      jwt-secret: ${{ secrets.JWT_SECRET }}
+      consumer-secret: ${{ secrets.CONSUMER_SECRET }}
+      smtp-user: ${{ secrets.SMTP_USER }}
+      smtp-password: ${{ secrets.SMTP_PASSWORD }}
 
   frontend:
-    if: contains(github.event.head_commit.message, '[skip-frontend]') == false
+    if: >-
+      contains(github.event.head_commit.message, '[skip-frontend]') == false &&
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
     uses: ./.github/workflows/frontend-build.yml
     with:
       api-url: http://localhost:15567
       public-api-url: ${{ vars.PUBLIC_API_URL }}
       application-host: ${{ vars.APPLICATION_HOST }}
       application-path: /opt/apps/
+      application-host-user: debian
+      deploy: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    secrets:
       ssh-key: ${{ secrets.SSH_PRIVATE_KEY }}
       consumer-secret: ${{ secrets.CONSUMER_SECRET }}
       session-secret: ${{ secrets.SESSION_SECRET }}
-      application-host-user: debian

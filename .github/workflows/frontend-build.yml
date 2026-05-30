@@ -18,15 +18,19 @@ on:
       public-api-url:
         required: true
         type: string
+      # When false (the default) the workflow builds and validates only.
+      # Deploy steps run ONLY when the caller opts in (push to main).
+      deploy:
+        required: false
+        type: boolean
+        default: false
+    secrets:
       ssh-key:
         required: true
-        type: string
       consumer-secret:
         required: true
-        type: string
       session-secret:
         required: true
-        type: string
 
 jobs:
   Run-Build:
@@ -59,14 +63,13 @@ jobs:
     - name: 'Create env file'
       run: |
        touch .env
-       echo SERVER_SECRET=${{ inputs.consumer-secret }} >> .env
-       echo "SESSION_SECRET=${{ inputs.session-secret }}" >> .env
+       echo SERVER_SECRET=${{ secrets.consumer-secret }} >> .env
+       echo "SESSION_SECRET=${{ secrets.session-secret }}" >> .env
        echo API_URL=${{ inputs.api-url }} >> .env
        echo NEXT_PUBLIC_API_URL=${{ inputs.public-api-url }} >> .env
        echo NEXT_PUBLIC_SESSION_TIMEOUT=604800 >> .env
        echo NEXT_PUBLIC_SESSION_DIALOG_TIMEOUT=120 >> .env
        echo NEXT_TELEMETRY_DISABLED=1 >> .env
-       cat .env
 
     - name: Running build
       run: npm run build
@@ -75,6 +78,7 @@ jobs:
       run: rm -rf src
 
     - name: Deploy with rsync
+      if: ${{ inputs.deploy }}
       uses: burnett01/rsync-deployments@7.0.2
       with:
         switches: -avzr --delete  --exclude=".git" --exclude=".github" --exclude=".vscode" --exclude="node_modules"
@@ -82,12 +86,13 @@ jobs:
         remote_path: ${{ inputs.application-path }}mechanicbuddy-app/
         remote_host: ${{ inputs.application-host }}
         remote_user: ${{ inputs.application-host-user }}
-        remote_key: ${{ inputs.ssh-key }}
+        remote_key: ${{ secrets.ssh-key }}
 
     - name: Reloading mechanicbuddy-app pm2 process
+      if: ${{ inputs.deploy }}
       uses: appleboy/ssh-action@v1.2.1
       with:
         host: ${{ inputs.application-host }}
         username: ${{ inputs.application-host-user }}
-        key: ${{ inputs.ssh-key }}
+        key: ${{ secrets.ssh-key }}
         script: "cd ${{ inputs.application-path }}mechanicbuddy-app; pwd; npm install; pm2 reload mechanicbuddy-app"

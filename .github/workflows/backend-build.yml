@@ -6,9 +6,6 @@ on:
       db-host:
         required: true
         type: string
-      db-password:
-        required: true
-        type: string
       application-host:
         required: true
         type: string
@@ -18,30 +15,35 @@ on:
       application-path:
         required: true
         type: string
-      ssh-key:
-        required: true
-        type: string
-      consumer-secret:
-        required: true
-        type: string
-      jwt-secret:
-        required: true
-        type: string
       smtp-host:
         required: true
         type: string
       smtp-port:
         required: true
         type: string
-      smtp-user:
-        required: true
-        type: string
-      smtp-password:
-        required: true
-        type: string
       cors-apphost:
         required: true
         type: string
+      # When false (the default) the workflow builds and validates only.
+      # Deploy steps (rsync + remote migrations/restart) run ONLY when the
+      # caller explicitly opts in — i.e. on push to main, never on pull_request.
+      deploy:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      db-password:
+        required: true
+      ssh-key:
+        required: true
+      consumer-secret:
+        required: true
+      jwt-secret:
+        required: true
+      smtp-user:
+        required: true
+      smtp-password:
+        required: true
 
 jobs:
   build:
@@ -76,16 +78,16 @@ jobs:
         with:
           files: "backend/src/MechanicBuddy.Http.Api/appsettings.Secrets.json"
         env:
-          JwtOptions.Secret: "${{ inputs.jwt-secret }}"
-          JwtOptions.ConsumerSecret: "${{ inputs.consumer-secret }}"
+          JwtOptions.Secret: "${{ secrets.jwt-secret }}"
+          JwtOptions.ConsumerSecret: "${{ secrets.consumer-secret }}"
           DbOptions.Host: "${{ inputs.db-host }}"
           DbOptions.UserId: "postgres"
-          DbOptions.Password: "${{ inputs.db-password }}"
+          DbOptions.Password: "${{ secrets.db-password }}"
           DbOptions.MultiTenancy.Enabled: true
           SmtpOptions.Host: "${{ inputs.smtp-host }}"
           SmtpOptions.Port: "${{ inputs.smtp-port }}"
-          SmtpOptions.User: "${{ inputs.smtp-user }}"
-          SmtpOptions.Password: "${{ inputs.smtp-password }}"
+          SmtpOptions.User: "${{ secrets.smtp-user }}"
+          SmtpOptions.Password: "${{ secrets.smtp-password }}"
           GoogleRecaptchaV3:Secret: "secretapikey"
           Cors.AppHost: "${{ inputs.cors-apphost }}"
 
@@ -105,8 +107,9 @@ jobs:
         working-directory: backend/src/DbUp
 
       # ---------------------------------------------------------------------
-      #  Deploy ------------------------------------------------------------------
+      #  Deploy (push to main only — gated by the `deploy` input) ----------------
       - name: Deploy DbUp with rsync
+        if: ${{ inputs.deploy }}
         uses: burnett01/rsync-deployments@7.0.2
         with:
           switches: -avzr --delete
@@ -114,9 +117,10 @@ jobs:
           remote_path: ${{ inputs.application-path }}
           remote_host: ${{ inputs.application-host }}
           remote_user: ${{ inputs.application-host-user }}
-          remote_key: ${{ inputs.ssh-key }}
+          remote_key: ${{ secrets.ssh-key }}
 
       - name: Deploy API with rsync
+        if: ${{ inputs.deploy }}
         uses: burnett01/rsync-deployments@7.0.2
         with:
           switches: -avzr --delete --exclude="MechanicBuddy.Http.Api.staticwebassets.runtime.json"
@@ -124,14 +128,15 @@ jobs:
           remote_path: ${{ inputs.application-path }}
           remote_host: ${{ inputs.application-host }}
           remote_user: ${{ inputs.application-host-user }}
-          remote_key: ${{ inputs.ssh-key }}
+          remote_key: ${{ secrets.ssh-key }}
 
       - name: Run DbUp migrations and reload API
+        if: ${{ inputs.deploy }}
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ inputs.application-host }}
           username: ${{ inputs.application-host-user }}
-          key: ${{ inputs.ssh-key }}
+          key: ${{ secrets.ssh-key }}
           script: |
             sudo service mechanicbuddy stop
             ${{ inputs.application-path }}dbup/DbUp
