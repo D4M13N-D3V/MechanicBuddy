@@ -301,8 +301,11 @@ namespace MechanicBuddy.Http.Api.Controllers
 
             }
           
-            if (clientId  != null) query.Where($"w.clientid = '{clientId }'");
-            if (vehicleId != null ) query.Where($"w.vehicleid = '{vehicleId}' ");
+            // Security: clientId/vehicleId come straight from the query string and
+            // are interpolated into SQL. Parse them as GUIDs and only use the
+            // canonical (injection-safe) form; ignore anything that isn't a GUID.
+            if (Guid.TryParse(clientId, out var clientGuid)) query.Where($"w.clientid = '{clientGuid}'");
+            if (Guid.TryParse(vehicleId, out var vehicleGuid)) query.Where($"w.vehicleid = '{vehicleGuid}'");
             if (workForm is not null || workForm is not null)
             { 
                 var dateRestriction = @" work.startedon {0})";
@@ -340,8 +343,10 @@ namespace MechanicBuddy.Http.Api.Controllers
             }
             if (!string.IsNullOrWhiteSpace(saleable))
             {
-                var tokens = new WildcardTokens(saleable).AllTokens();
-                
+                // Security: use sanitized tokens (escapes quotes and LIKE wildcards)
+                // before interpolating into the ilike pattern — matches PageResultQuery.
+                var tokens = new WildcardTokens(saleable).AllTokensSanitized();
+
                 var productTokens = string.Join(" and ", tokens.Select(word => $"concat_ws(' ',p.code,s.name) ilike '%{word}%'"));
                 var restriction = onlyIssued ?
 $@" exists (select * from domain.productinstalled p 
