@@ -115,9 +115,11 @@ namespace MechanicBuddy.Http.Api.Controllers
         }
 
         [HttpDelete()]
-        public  IActionResult DeleteAccount()
+        public IActionResult DeleteAccount()
         {
-            return Ok();
+            // Account deletion is not implemented. Returning Ok() previously
+            // implied success while doing nothing; report Not Implemented instead.
+            return StatusCode(501, "Account deletion is not implemented yet.");
         }
     }
 

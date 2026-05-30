@@ -303,20 +303,20 @@ namespace MechanicBuddy.Http.Api.Controllers
           
             if (clientId  != null) query.Where($"w.clientid = '{clientId }'");
             if (vehicleId != null ) query.Where($"w.vehicleid = '{vehicleId}' ");
-            if (workForm is not null || workForm is not null)
-            { 
-                var dateRestriction = @" work.startedon {0})";
-                if (invoiceTo is null)
+            if (workForm is not null || workTo is not null)
+            {
+                var dateRestriction = @" work.startedon {0}";
+                if (workTo is null)
                 {
-                    dateRestriction = string.Format(dateRestriction, $" >= '{pgDate(invoiceFrom)}'");
+                    dateRestriction = string.Format(dateRestriction, $" >= '{pgDate(workForm)}'");
                 }
-                else if (invoiceFrom is null)
+                else if (workForm is null)
                 {
-                    dateRestriction = string.Format(dateRestriction, $" < '{pgDate(invoiceTo)}'");
+                    dateRestriction = string.Format(dateRestriction, $" < '{pgDate(workTo)}'");
                 }
                 else
                 {
-                    dateRestriction = string.Format(dateRestriction, $" between '{pgDate(invoiceFrom)}' and '{pgDate(invoiceTo)}' ");
+                    dateRestriction = string.Format(dateRestriction, $" between '{pgDate(workForm)}' and '{pgDate(workTo)}' ");
                 }
                 query.Where(dateRestriction);
             }
