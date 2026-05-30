@@ -34,6 +34,11 @@ ENV NEXT_PUBLIC_APP_VERSION=${VERSION}
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 
 COPY --from=build /app ./
+
+# Run as the non-root 'node' user shipped with the Node base image.
+RUN chown -R node:node /app
+USER node
+
 EXPOSE 3000
 CMD ["npm","start"]
 

@@ -71,4 +71,9 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
+# Run as the non-root 'app' user shipped with the .NET base image.
+# Give it ownership of the writable directories it needs at runtime.
+RUN chown -R app:app /app /var/carcare /opt/puppeteer
+USER app
+
 ENTRYPOINT ["dotnet","MechanicBuddy.Http.Api.dll"]

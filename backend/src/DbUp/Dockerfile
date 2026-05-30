@@ -14,4 +14,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Run as the non-root 'app' user shipped with the .NET base image.
+USER app
+
 ENTRYPOINT ["dotnet", "DbUp.dll"]
