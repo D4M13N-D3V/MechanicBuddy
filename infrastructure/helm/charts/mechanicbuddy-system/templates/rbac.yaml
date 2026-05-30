@@ -25,10 +25,15 @@ rules:
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list", "create", "delete", "patch"]
-  # Secret management
+  # Secret management.
+  # NOTE: "list" is intentionally omitted — the provisioner only reads secrets
+  # by name (ReadNamespacedSecret), so cluster-wide secret *enumeration* is not
+  # needed and would let a compromised pod exfiltrate every secret in the
+  # cluster. Scoping the remaining verbs to specific namespaces via per-tenant
+  # Roles is a further hardening step (tracked in the issue).
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list", "create", "delete", "patch"]
+    verbs: ["get", "create", "delete", "patch"]
   # ConfigMap management
   - apiGroups: [""]
     resources: ["configmaps"]
