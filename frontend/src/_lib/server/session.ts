@@ -48,9 +48,11 @@ export async function createSession(rootJwt: string,publicJwt: string,mustChange
     sameSite: 'lax',
     path: '/',
   })
-  //jwt for public side resources
+  // Public-side JWT. httpOnly so it is NOT readable by client-side JS; the only
+  // consumers are server components/routes (layout, profile-image, proxy), which
+  // read cookies server-side.
   cookieStore.set('jwt',  publicJwt, {
-    httpOnly: false,
+    httpOnly: true,
     secure: false,
     expires: expiresAt,
     sameSite: 'lax',

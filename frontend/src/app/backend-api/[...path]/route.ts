@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
 
 const API_URL = process.env.API_URL || 'http://localhost:15567';
+const encodedKey = new TextEncoder().encode(process.env.SESSION_SECRET);
+
+// Security: derive the API token from the httpOnly `session` cookie server-side.
+// The proxy must never trust a client-supplied Authorization header, and the
+// API token must never be exposed to client-side JavaScript.
+async function getApiTokenFromSession(): Promise<string | null> {
+  const session = (await cookies()).get('session')?.value;
+  if (!session) return null;
+  try {
+    const { payload } = await jwtVerify(session, encodedKey, { algorithms: ['HS256'] });
+    return (payload.apiRootJwt as string) ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -47,11 +64,12 @@ async function proxyRequest(
 
   const headers = new Headers();
 
-  // Forward relevant headers
-  const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    headers.set('Authorization', authHeader);
+  // Authenticate from the httpOnly session — never from a client-supplied header.
+  const token = await getApiTokenFromSession();
+  if (!token) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  headers.set('Authorization', `Bearer ${token}`);
 
   const contentType = request.headers.get('content-type');
   if (contentType) {

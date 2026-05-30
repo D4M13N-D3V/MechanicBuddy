@@ -1,15 +1,7 @@
-import {
-    getCookie
-  } from 'cookies-next/client';
-
-// Use relative path for client-side API calls - Next.js rewrites will proxy to backend
+// Use relative path for client-side API calls - Next.js rewrites will proxy to backend.
+// The /backend-api proxy injects the Authorization header from the httpOnly session,
+// so the client neither reads nor sends the API token.
 const basePath = '/backend-api';
-
-const getJwtToken =()=>{
-
-    const jwt = getCookie('jwt');
-    return jwt;
-}
 
 // Extract tenant ID from hostname (e.g., "demo-1b94f2" from "demo-1b94f2.mechanicbuddy.app")
 const getTenantIdFromHost = (): string | null => {
@@ -95,13 +87,11 @@ const dataPage =({
 
     }) => {
 
-    const jwt = getJwtToken();
+    // No Authorization header here: the /backend-api proxy injects it from the
+    // httpOnly session. The client must not handle the API token.
     const headers:HeadersInit = {
       'Content-Type': 'application/json',
     };
-    if (jwt) {
-      headers['Authorization'] = 'Bearer ' + jwt;
-    }
 
     // Pass tenant ID to API for multi-tenant routing
     const tenantId = getTenantIdFromHost();
