@@ -18,14 +18,20 @@ FROM base AS builder
 ARG VERSION=0.0.0
 ARG BUILD_SHA=unknown
 
+# Public client build args. NEXT_PUBLIC_* is inlined into the client bundle at
+# build time, so production values must be supplied here (not at runtime).
+# Defaults target local dev.
+ARG NEXT_PUBLIC_MANAGEMENT_API_URL=http://localhost:15568
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
+
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Set dummy env vars for build time (actual values injected at runtime)
 ENV SESSION_SECRET=build-time-placeholder-secret-32chars
-ENV NEXT_PUBLIC_MANAGEMENT_API_URL=http://localhost:15568
-ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder
+ENV NEXT_PUBLIC_MANAGEMENT_API_URL=$NEXT_PUBLIC_MANAGEMENT_API_URL
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ENV NEXT_PUBLIC_APP_VERSION=${VERSION}
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 
