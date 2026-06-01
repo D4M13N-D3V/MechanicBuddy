@@ -755,6 +755,38 @@ public class TenantProvisioningService : ITenantProvisioningService
         return slug;
     }
 
+    // Valid environment-variable names (used to filter AdditionalEnvVars keys).
+    private static readonly Regex EnvVarNamePattern = new("^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
+
+    // Security: escape a user-supplied value for safe inclusion inside a YAML
+    // double-quoted scalar. Without this, a value containing '"', newlines, or
+    // YAML structure could break out of its field and inject arbitrary Helm
+    // values (e.g. override image.repository to run an attacker image).
+    private static string YamlScalar(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        var sb = new StringBuilder(value.Length);
+        foreach (var c in value)
+        {
+            switch (c)
+            {
+                case '\\': sb.Append("\\\\"); break;
+                case '"': sb.Append("\\\""); break;
+                case '\n': sb.Append("\\n"); break;
+                case '\r': sb.Append("\\r"); break;
+                case '\t': sb.Append("\\t"); break;
+                default:
+                    if (!char.IsControl(c)) sb.Append(c);
+                    break;
+            }
+        }
+        return sb.ToString();
+    }
+
     private string BuildHelmValues(TenantProvisioningRequest request, string tenantId)
     {
         var tierLimits = GetTierLimits(request.SubscriptionTier, request.ResourceOverrides);
@@ -769,20 +801,20 @@ public class TenantProvisioningService : ITenantProvisioningService
 
         // Tenant configuration
         values.AppendLine("tenant:");
-        values.AppendLine($"  id: \"{tenantId}\"");
-        values.AppendLine($"  name: \"{request.CompanyName}\"");
-        values.AppendLine($"  tier: \"{request.SubscriptionTier}\"");
-        values.AppendLine($"  ownerEmail: \"{request.OwnerEmail}\"");
+        values.AppendLine($"  id: \"{YamlScalar(tenantId)}\"");
+        values.AppendLine($"  name: \"{YamlScalar(request.CompanyName)}\"");
+        values.AppendLine($"  tier: \"{YamlScalar(request.SubscriptionTier)}\"");
+        values.AppendLine($"  ownerEmail: \"{YamlScalar(request.OwnerEmail)}\"");
         values.AppendLine();
 
         // Domain configuration
         values.AppendLine("domains:");
         values.AppendLine($"  baseDomain: \"{_options.BaseDomain}\"");
-        values.AppendLine($"  default: \"{domain}\"");
+        values.AppendLine($"  default: \"{YamlScalar(domain)}\"");
         if (!string.IsNullOrEmpty(request.CustomDomain))
         {
             values.AppendLine("  custom:");
-            values.AppendLine($"    - \"{request.CustomDomain}\"");
+            values.AppendLine($"    - \"{YamlScalar(request.CustomDomain)}\"");
         }
         values.AppendLine($"  clusterIssuer: \"{_options.ClusterIssuer}\"");
         values.AppendLine();
@@ -840,8 +872,14 @@ public class TenantProvisioningService : ITenantProvisioningService
             values.AppendLine("  extraEnv:");
             foreach (var env in request.AdditionalEnvVars)
             {
+                // Security: only allow well-formed env var names; escape values.
+                if (string.IsNullOrEmpty(env.Key) || !EnvVarNamePattern.IsMatch(env.Key))
+                {
+                    _logger.LogWarning("Skipping additional env var with invalid name '{Key}' for tenant {TenantId}", env.Key, tenantId);
+                    continue;
+                }
                 values.AppendLine($"    - name: \"{env.Key}\"");
-                values.AppendLine($"      value: \"{env.Value}\"");
+                values.AppendLine($"      value: \"{YamlScalar(env.Value)}\"");
             }
         }
         values.AppendLine();
@@ -876,10 +914,10 @@ public class TenantProvisioningService : ITenantProvisioningService
         if (!string.IsNullOrEmpty(request.StripeCustomerId))
         {
             values.AppendLine("billing:");
-            values.AppendLine($"  stripeCustomerId: \"{request.StripeCustomerId}\"");
+            values.AppendLine($"  stripeCustomerId: \"{YamlScalar(request.StripeCustomerId)}\"");
             if (!string.IsNullOrEmpty(request.StripeSubscriptionId))
             {
-                values.AppendLine($"  subscriptionId: \"{request.StripeSubscriptionId}\"");
+                values.AppendLine($"  subscriptionId: \"{YamlScalar(request.StripeSubscriptionId)}\"");
             }
             if (tierLimits.MechanicLimit.HasValue)
             {
