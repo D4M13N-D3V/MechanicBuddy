@@ -120,6 +120,42 @@ public class KubernetesClient : IKubernetesClient
         return namespaceName;
     }
 
+    private static string GenerateSigningSecret() =>
+        Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48));
+
+    // Returns the tenant's existing (jwtSecret, consumerSecret) from its API secret
+    // if present, otherwise a freshly generated random pair. Keeps keys stable across
+    // re-deploys so live sessions aren't invalidated, while ensuring each tenant has
+    // its own keys (never the management API key).
+    private async Task<(string jwtSecret, string consumerSecret)> GetOrCreateTenantSigningSecretsAsync(
+        string namespaceName, string apiSecretName)
+    {
+        try
+        {
+            var existing = await _client.CoreV1.ReadNamespacedSecretAsync(apiSecretName, namespaceName);
+            if (existing?.Data != null &&
+                existing.Data.TryGetValue("appsettings.Secrets.json", out var bytes) && bytes != null)
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(System.Text.Encoding.UTF8.GetString(bytes));
+                if (doc.RootElement.TryGetProperty("JwtOptions", out var jwt))
+                {
+                    var s = jwt.TryGetProperty("Secret", out var se) ? se.GetString() : null;
+                    var c = jwt.TryGetProperty("ConsumerSecret", out var ce) ? ce.GetString() : null;
+                    if (!string.IsNullOrEmpty(s) && !string.IsNullOrEmpty(c))
+                    {
+                        return (s, c);
+                    }
+                }
+            }
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // No existing secret yet — generate fresh keys below.
+        }
+
+        return (GenerateSigningSecret(), GenerateSigningSecret());
+    }
+
     public async Task<string> DeployTenantInstanceAsync(string tenantId, string tier)
     {
         var namespaceName = $"mb-{tenantId}";
@@ -140,14 +176,22 @@ public class KubernetesClient : IKubernetesClient
         // Create appsettings.Secrets.json content for tenant
         // Each tenant gets a dedicated database: mechanicbuddy-{tenantId}
         var tenantDbName = $"mechanicbuddy-{tenantId}";
+
+        // Security: each tenant gets its OWN signing/consumer secret, distinct
+        // from the management API key and from every other tenant. Reuse the
+        // existing values if the secret already exists so a re-deploy does not
+        // rotate keys and invalidate live sessions.
+        var (tenantJwtSecret, tenantConsumerSecret) =
+            await GetOrCreateTenantSigningSecretsAsync(namespaceName, apiSecretName);
+
         var secretsJson = System.Text.Json.JsonSerializer.Serialize(new
         {
             PdfDirectory = "/var/mechanicbuddy/pdf",
             PuppeteerPath = "/opt/puppeteer",
             JwtOptions = new
             {
-                Secret = _jwtSecret,
-                ConsumerSecret = _consumerSecret
+                Secret = tenantJwtSecret,
+                ConsumerSecret = tenantConsumerSecret
             },
             DbOptions = new
             {
@@ -225,7 +269,7 @@ public class KubernetesClient : IKubernetesClient
             Type = "Opaque",
             StringData = new Dictionary<string, string>
             {
-                ["SERVER_SECRET"] = _consumerSecret,
+                ["SERVER_SECRET"] = tenantConsumerSecret,
                 ["SESSION_SECRET"] = Convert.ToBase64String([.. Guid.NewGuid().ToByteArray(), .. Guid.NewGuid().ToByteArray()]),
                 ["API_URL"] = $"http://{apiServiceName}:80",
                 ["NEXT_PUBLIC_API_URL"] = $"https://{tenantDomain}/api",
