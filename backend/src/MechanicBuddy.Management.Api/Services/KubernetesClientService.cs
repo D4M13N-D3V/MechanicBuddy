@@ -20,11 +20,29 @@ public class KubernetesClientService : IKubernetesClientService
         _logger = logger;
     }
 
+    // Security: the provisioner may only ever create/delete tenant namespaces.
+    // This guards against a crafted/unexpected namespace name being used to
+    // create or (far worse) delete a platform namespace such as
+    // mechanicbuddy-system or kube-system.
+    private static readonly string[] ManagedNamespacePrefixes = { "mb-", "tenant-" };
+
+    private static bool IsManagedTenantNamespace(string namespaceName) =>
+        !string.IsNullOrWhiteSpace(namespaceName)
+        && namespaceName.Length <= 63
+        && ManagedNamespacePrefixes.Any(p => namespaceName.StartsWith(p, StringComparison.Ordinal))
+        && System.Text.RegularExpressions.Regex.IsMatch(namespaceName, "^[a-z0-9-]+$");
+
     public async Task<bool> CreateNamespaceAsync(
         string namespaceName,
         Dictionary<string, string>? labels = null,
         CancellationToken cancellationToken = default)
     {
+        if (!IsManagedTenantNamespace(namespaceName))
+        {
+            _logger.LogError("Refusing to create non-tenant namespace {Namespace}", namespaceName);
+            return false;
+        }
+
         try
         {
             _logger.LogInformation("Creating namespace {Namespace}", namespaceName);
@@ -58,6 +76,12 @@ public class KubernetesClientService : IKubernetesClientService
         string namespaceName,
         CancellationToken cancellationToken = default)
     {
+        if (!IsManagedTenantNamespace(namespaceName))
+        {
+            _logger.LogError("Refusing to delete non-tenant namespace {Namespace}", namespaceName);
+            return false;
+        }
+
         try
         {
             _logger.LogInformation("Deleting namespace {Namespace}", namespaceName);
