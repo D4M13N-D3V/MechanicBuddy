@@ -36,6 +36,14 @@ namespace MechanicBuddy.Core.Application.Configuration
             public string TenantId { get; set; }
             public SuffixOptions Suffix { get; set; }
 
+            // Security: when true, the tenant may be resolved from the
+            // X-Tenant-ID / X-Forwarded-Host request headers. Enable this ONLY
+            // when a trusted ingress/edge injects these headers AND strips any
+            // client-supplied copy. When false (the default) those headers are
+            // ignored and the tenant is taken from the connection Host only,
+            // so a direct caller cannot select another tenant at login.
+            public bool TrustProxyHeaders { get; set; }
+
 
             public class SuffixOptions
             {

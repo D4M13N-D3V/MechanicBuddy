@@ -60,44 +60,58 @@ namespace MechanicBuddy.Core.Repository.Postgres
                 return dbOptions.MultiTenancy.TenantId;
             }
 
-            // For shared instances, resolve from HTTP headers
+            // For shared instances, resolve from the request.
             var httpContext = _httpContextAccessor?.HttpContext;
-            if (httpContext == null)
+            if (httpContext?.Request == null)
             {
                 return null;
             }
 
-            // Priority: X-Tenant-ID > X-Forwarded-Host > Host
-            if (httpContext.Request?.Headers?.TryGetValue("X-Tenant-ID", out var tenantIdHeader) == true)
+            // SECURITY: X-Tenant-ID and X-Forwarded-Host are client-controllable.
+            // Honoring them at login lets a direct caller authenticate against an
+            // arbitrary tenant's users (the shared public.user table is keyed by
+            // tenant name). Only trust them when an authenticated ingress is known
+            // to inject these headers and strip any client-supplied copy.
+            if (dbOptions.MultiTenancy?.TrustProxyHeaders == true)
             {
-                var headerValue = tenantIdHeader.ToString();
-                if (!string.IsNullOrEmpty(headerValue))
+                if (httpContext.Request.Headers.TryGetValue("X-Tenant-ID", out var tenantIdHeader))
                 {
-                    return headerValue;
-                }
-            }
-
-            if (httpContext.Request?.Headers?.TryGetValue("X-Forwarded-Host", out var forwardedHost) == true)
-            {
-                var host = forwardedHost.ToString();
-                if (!string.IsNullOrEmpty(host))
-                {
-                    var parts = host.Split('.');
-                    if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+                    var headerValue = tenantIdHeader.ToString();
+                    if (!string.IsNullOrEmpty(headerValue))
                     {
-                        return parts[0];
+                        return headerValue;
+                    }
+                }
+
+                if (httpContext.Request.Headers.TryGetValue("X-Forwarded-Host", out var forwardedHost))
+                {
+                    var fromForwarded = TenantFromHost(forwardedHost.ToString());
+                    if (fromForwarded != null)
+                    {
+                        return fromForwarded;
                     }
                 }
             }
 
-            if (httpContext.Request?.Host.Host != null)
+            // Default: derive the tenant from the connection Host only.
+            return TenantFromHost(httpContext.Request.Host.Host);
+        }
+
+        /// <summary>
+        /// Extracts the tenant subdomain label from a host, or null when it is
+        /// not a tenant host (bare domain, www, api).
+        /// </summary>
+        private static string TenantFromHost(string host)
+        {
+            if (string.IsNullOrEmpty(host))
             {
-                var host = httpContext.Request.Host.Host;
-                var parts = host.Split('.');
-                if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
-                {
-                    return parts[0];
-                }
+                return null;
+            }
+
+            var parts = host.Split('.');
+            if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && parts[0] != "www" && parts[0] != "api")
+            {
+                return parts[0];
             }
 
             return null;
