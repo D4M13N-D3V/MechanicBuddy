@@ -1,0 +1,60 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "mechanicbuddy-free-tier.fullname" . }}-default
+  namespace: {{ include "mechanicbuddy-free-tier.namespace" . }}
+  labels:
+    {{- include "mechanicbuddy-free-tier.labels" . | nindent 4 }}
+spec:
+  # Applies to every pod in the shared free-tier namespace (default-deny posture:
+  # only the traffic explicitly allowed below is permitted).
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Ingress controller -> web/api. Allow the common controller namespaces
+    # (standalone "ingress-nginx" AND RKE2's bundled controller in "kube-system").
+    # NOTE: if your ingress controller lives elsewhere, add its namespace here —
+    # an over-narrow selector here would black-hole all inbound traffic.
+    - from:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: ["ingress-nginx", "kube-system"]
+    # Communication between pods in this namespace (api <-> web)
+    - from:
+        - podSelector: {}
+  egress:
+    # DNS resolution. Allow port 53 to any namespace rather than keying off a
+    # specific CoreDNS pod label (label conventions differ between distros, and
+    # a wrong label would break all DNS -> break everything).
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Communication between pods in this namespace
+    - to:
+        - podSelector: {}
+    # PostgreSQL (shared cluster — may be in- or out-of-cluster)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 5432
+    # External HTTPS / SMTP (external APIs, Stripe, Resend, etc.)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 587
+        - protocol: TCP
+          port: 465
