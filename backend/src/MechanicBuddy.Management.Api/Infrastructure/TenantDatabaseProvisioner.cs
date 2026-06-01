@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Npgsql;
 
 namespace MechanicBuddy.Management.Api.Infrastructure;
@@ -86,7 +87,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
                 {
                     // Create database from template
                     // Note: Need to use dynamic SQL since parameterized identifiers aren't supported
-                    var createDbSql = $"CREATE DATABASE \"{tenantDbName}\" WITH TEMPLATE \"{_templateDbName}\" OWNER \"{_postgresUser}\"";
+                    var createDbSql = $"CREATE DATABASE \"{QuoteIdentifier(tenantDbName)}\" WITH TEMPLATE \"{QuoteIdentifier(_templateDbName)}\" OWNER \"{QuoteIdentifier(_postgresUser)}\"";
                     await using var createCmd = new NpgsqlCommand(createDbSql, adminConnection);
                     await createCmd.ExecuteNonQueryAsync();
 
@@ -157,7 +158,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
 
             // Drop the database
             await using (var dropCmd = new NpgsqlCommand(
-                $"DROP DATABASE IF EXISTS \"{tenantDbName}\"", adminConnection))
+                $"DROP DATABASE IF EXISTS \"{QuoteIdentifier(tenantDbName)}\"", adminConnection))
             {
                 await dropCmd.ExecuteNonQueryAsync();
             }
@@ -221,9 +222,31 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         return rowsAffected;
     }
 
+    // Security: tenant IDs reach raw SQL (CREATE/DROP DATABASE) and Postgres
+    // identifiers cannot be parameterized, so every tenant ID must match this
+    // strict pattern before it is used to build a database name.
+    private static readonly Regex TenantIdPattern =
+        new("^[a-z0-9][a-z0-9-]{1,29}$", RegexOptions.Compiled);
+
+    private static void ValidateTenantId(string tenantId)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId) || !TenantIdPattern.IsMatch(tenantId))
+        {
+            throw new ArgumentException(
+                $"Invalid tenant identifier '{tenantId}'. Tenant IDs must be 2-30 chars, " +
+                "lowercase letters/digits/hyphens, starting with a letter or digit.");
+        }
+    }
+
+    // Escapes a value for safe use as a quoted Postgres identifier (defense in
+    // depth on top of ValidateTenantId / trusted config).
+    private static string QuoteIdentifier(string identifier) =>
+        identifier.Replace("\"", "\"\"");
+
     private string GetTenantDbName(string tenantId)
     {
         // Database naming: mechanicbuddy-{tenantId}
+        ValidateTenantId(tenantId);
         return $"{_tenantDbPrefix}-{tenantId}";
     }
 
