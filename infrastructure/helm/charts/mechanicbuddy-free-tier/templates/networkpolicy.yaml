@@ -13,21 +13,25 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Ingress controller -> web/api
+    # Ingress controller -> web/api. Allow the common controller namespaces
+    # (standalone "ingress-nginx" AND RKE2's bundled controller in "kube-system").
+    # NOTE: if your ingress controller lives elsewhere, add its namespace here —
+    # an over-narrow selector here would black-hole all inbound traffic.
     - from:
         - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: ingress-nginx
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values: ["ingress-nginx", "kube-system"]
     # Communication between pods in this namespace (api <-> web)
     - from:
         - podSelector: {}
   egress:
-    # DNS resolution
+    # DNS resolution. Allow port 53 to any namespace rather than keying off a
+    # specific CoreDNS pod label (label conventions differ between distros, and
+    # a wrong label would break all DNS -> break everything).
     - to:
         - namespaceSelector: {}
-          podSelector:
-            matchLabels:
-              k8s-app: kube-dns
       ports:
         - protocol: UDP
           port: 53
