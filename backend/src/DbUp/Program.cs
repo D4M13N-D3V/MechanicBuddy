@@ -102,6 +102,7 @@ builder.AddJsonFile("appsettings.Production.json", optional: true, reloadOnChang
 
         builder.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
+        builder.AddEnvironmentVariables();
 
         IConfigurationRoot configuration = builder.Build();
         return configuration;
