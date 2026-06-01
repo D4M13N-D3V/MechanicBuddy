@@ -82,6 +82,14 @@ All authenticated user operations; decorate the whole class with [TenantRateLimi
             this.dbOptions = dbOptions.Value;
         }
 
+        // Login lockout / password state read from public.user (Dapper maps by column name).
+        private sealed class LoginStateDto
+        {
+            public int failed_login_attempts { get; set; }
+            public DateTime? locked_until { get; set; }
+            public bool? must_change_password { get; set; }
+        }
+
 
         [AllowAnonymous, LimitRequests(MaxRequests = 10, TimeWindow = 60)]
         [HttpPost("authenticate")]
@@ -105,43 +113,75 @@ All authenticated user operations; decorate the whole class with [TenantRateLimi
                 return Unauthorized();
             }
 
-            if (!PasswordHasher.verifyHash(model.Password, user.Password))
-            {
-                logger.LogInformation("Authentication failure: {user} - Password verification failed (hash: {hash})", model.Username, user.Password?.Substring(0, 20) + "...");
-                await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt));
-                return Unauthorized();
-            }
+            const int MaxFailedAttempts = 5;
+            const int LockoutMinutes = 15;
 
-            // Check if user must change password
-            var mustChangePassword = false;
-
-            // Check if using default password hash
             var isUsingDefaultPassword = user.Password == DefaultPasswordHash;
 
-            // Also check the must_change_password field from database
             var databaseName = dbOptions.MultiTenancy?.Enabled == true
                 ? new MultiTenancyDbName(dbOptions, DbKind.Tenancy)
                 : dbOptions.Name;
 
-            var connectionBuilder = new Npgsql.NpgsqlConnectionStringBuilder
+            var connectionString = new Npgsql.NpgsqlConnectionStringBuilder
             {
                 Host = dbOptions.Host,
                 Port = dbOptions.Port,
                 Username = dbOptions.UserId,
                 Password = dbOptions.Password,
                 Database = databaseName
-            };
+            }.ToString();
 
-            using (var connection = new Npgsql.NpgsqlConnection(connectionBuilder.ToString()))
+            var userKey = new { TenantName = user.Id.TenantName, EmployeeId = user.Id.EmployeeId };
+            bool mustChangePassword;
+
+            await using (var connection = new Npgsql.NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                var result = await connection.QuerySingleOrDefaultAsync<bool?>(
-                    @"SELECT must_change_password
+
+                var state = await connection.QuerySingleOrDefaultAsync<LoginStateDto>(
+                    @"SELECT failed_login_attempts, locked_until, must_change_password
                       FROM public.user
                       WHERE tenantname = @TenantName AND employeeid = @EmployeeId",
-                    new { TenantName = user.Id.TenantName, EmployeeId = user.Id.EmployeeId });
+                    userKey);
 
-                var mustChangePasswordFromDb = result ?? false;
+                var failedAttempts = state?.failed_login_attempts ?? 0;
+                var lockedUntil = state?.locked_until;
+                var mustChangePasswordFromDb = state?.must_change_password ?? false;
+
+                // Account lockout: reject while locked, without revealing whether the password was right.
+                if (lockedUntil.HasValue && lockedUntil.Value.ToUniversalTime() > DateTime.UtcNow)
+                {
+                    logger.LogInformation("Authentication blocked: {user} - account temporarily locked", model.Username);
+                    await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt));
+                    return Unauthorized();
+                }
+
+                if (!PasswordHasher.verifyHash(model.Password, user.Password))
+                {
+                    var newCount = failedAttempts + 1;
+                    DateTime? newLock = newCount >= MaxFailedAttempts
+                        ? DateTime.UtcNow.AddMinutes(LockoutMinutes)
+                        : null;
+                    await connection.ExecuteAsync(
+                        @"UPDATE public.user SET failed_login_attempts = @Count, locked_until = @Locked
+                          WHERE tenantname = @TenantName AND employeeid = @EmployeeId",
+                        new { Count = newCount, Locked = newLock, user.Id.TenantName, user.Id.EmployeeId });
+
+                    // Never log password hash material.
+                    logger.LogInformation("Authentication failure: {user} - invalid password", model.Username);
+                    await Task.Delay(TimeSpan.FromSeconds(SecondsToWaitOnFailedLogonAttempt));
+                    return Unauthorized();
+                }
+
+                // Successful login: clear any failed-attempt / lock state.
+                if (failedAttempts != 0 || lockedUntil.HasValue)
+                {
+                    await connection.ExecuteAsync(
+                        @"UPDATE public.user SET failed_login_attempts = 0, locked_until = NULL
+                          WHERE tenantname = @TenantName AND employeeid = @EmployeeId",
+                        userKey);
+                }
+
                 mustChangePassword = isUsingDefaultPassword || mustChangePasswordFromDb;
             }
 

@@ -13,7 +13,10 @@ namespace MechanicBuddy.Core.Application.Authorization
     {
         public static string getHash(string input)
         {
-            return BCrypt.Net.BCrypt.HashPassword(input);
+            // Use the modern $2b$ bcrypt revision (work factor 11). Verify still
+            // accepts existing $2a$ hashes, so this is backwards compatible.
+            var salt = BCrypt.Net.BCrypt.GenerateSalt(11, 'b');
+            return BCrypt.Net.BCrypt.HashPassword(input, salt);
         }
 
         // Verify a hash against a string.
