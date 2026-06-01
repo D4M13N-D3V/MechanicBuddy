@@ -64,7 +64,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // Set to true in production
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment(); // HTTPS required outside Development
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
