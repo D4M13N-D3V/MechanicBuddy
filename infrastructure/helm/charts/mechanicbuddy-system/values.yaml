@@ -42,7 +42,7 @@ managementApi:
   replicas: 2
   image:
     repository: "ghcr.io/mechanicbuddy/management-api"
-    tag: "latest"
+    tag: "f44547f"  # pin to an immutable image tag; override per release
     pullPolicy: "IfNotPresent"
   port: 15568
   resources:
@@ -65,7 +65,7 @@ portal:
   replicas: 2
   image:
     repository: "ghcr.io/mechanicbuddy/management-portal"
-    tag: "latest"
+    tag: "f44547f"  # pin to an immutable image tag; override per release
     pullPolicy: "IfNotPresent"
   port: 3001
   resources:
@@ -151,7 +151,7 @@ demoCleanup:
   schedule: "0 3 * * *"  # Daily at 3 AM
   image:
     repository: "ghcr.io/mechanicbuddy/demo-cleanup"
-    tag: "latest"
+    tag: "f44547f"  # pin to an immutable image tag; override per release
 
 # -----------------------------------------------------------------------------
 # Subscription Expiry Check (CronJob)

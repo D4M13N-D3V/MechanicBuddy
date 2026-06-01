@@ -45,7 +45,7 @@ api:
   # Container image
   image:
     repository: "ghcr.io/d4m13n-d3v/mechanicbuddy-api"
-    tag: "latest"
+    tag: "f44547f"  # pin to an immutable image tag; override per release
     pullPolicy: "IfNotPresent"
   # Service port
   port: 15567
@@ -73,7 +73,7 @@ web:
   # Container image
   image:
     repository: "ghcr.io/d4m13n-d3v/mechanicbuddy-web"
-    tag: "latest"
+    tag: "f44547f"  # pin to an immutable image tag; override per release
     pullPolicy: "IfNotPresent"
   # Service port
   port: 3000
@@ -97,7 +97,7 @@ migrations:
   # Migration job image
   image:
     repository: "ghcr.io/d4m13n-d3v/mechanicbuddy-dbup"
-    tag: "latest"
+    tag: "f44547f"  # pin to an immutable image tag; override per release
     pullPolicy: "IfNotPresent"
   # Timeout for migration job
   timeout: 300
