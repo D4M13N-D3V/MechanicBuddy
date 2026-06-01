@@ -6,6 +6,12 @@ WORKDIR /app
 ARG VERSION=0.0.0
 ARG BUILD_SHA=unknown
 
+# API URL build args. NEXT_PUBLIC_* is inlined into the client bundle at build
+# time, so the production URL must be supplied here (not at runtime). Defaults
+# target local dev.
+ARG API_URL=http://localhost:15567
+ARG NEXT_PUBLIC_API_URL=http://localhost:15567
+
 COPY frontend/package*.json ./
 RUN npm ci
 
@@ -14,8 +20,8 @@ COPY frontend/. .
 # Set dummy env vars for build time (actual values injected at runtime)
 ENV SESSION_SECRET=build-time-placeholder-secret-32chars
 ENV SERVER_SECRET=build-time-placeholder
-ENV API_URL=http://localhost:15567
-ENV NEXT_PUBLIC_API_URL=http://localhost:15567
+ENV API_URL=$API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_VERSION=${VERSION}
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 

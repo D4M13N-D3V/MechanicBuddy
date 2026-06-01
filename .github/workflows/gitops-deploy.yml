@@ -75,6 +75,9 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:${{ steps.vars.outputs.sha_short }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web:latest
+          build-args: |
+            API_URL=https://api.mechanicbuddy.demos.d4m13n.dev
+            NEXT_PUBLIC_API_URL=https://api.mechanicbuddy.demos.d4m13n.dev
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -114,6 +117,8 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal:${{ steps.vars.outputs.sha_short }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-management-portal:latest
+          build-args: |
+            NEXT_PUBLIC_MANAGEMENT_API_URL=https://manage-api.mechanicbuddy.demos.d4m13n.dev
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
