@@ -1,6 +1,7 @@
 import { Navigation } from "./_components/landing/Navigation"
 import { HeroSection, ServicesSection, AboutSection, TipsSection, GallerySection, ContactSection, Footer } from "./_components/landing/Sections"
 import { LandingThemeProvider } from "@/_components/ThemeProvider"
+import { sanitizeColor } from "@/_lib/colorValidator"
 import { IPublicLandingData } from "./home/settings/branding/model"
 import { headers } from "next/headers"
 
@@ -71,15 +72,26 @@ export default async function Home() {
         );
     }
 
-    // Generate inline CSS for immediate color application (prevents flash)
+    // Generate inline CSS for immediate color application (prevents flash).
+    // SECURITY: these colors come from tenant branding and are injected into a
+    // <style> block, so every value MUST be validated. sanitizeColor() returns
+    // the value only if it is a well-formed color, otherwise undefined — this
+    // prevents breaking out of the <style> with markup/script (stored XSS).
     const landingColors = data.branding.landingColors;
-    const themeStyles = landingColors ? `
+    const cssVars: Array<[string, string | undefined]> = landingColors ? [
+        ["--landing-primary", sanitizeColor(landingColors.primaryColor)],
+        ["--landing-secondary", sanitizeColor(landingColors.secondaryColor)],
+        ["--landing-accent", sanitizeColor(landingColors.accentColor)],
+        ["--landing-header-bg", sanitizeColor(landingColors.headerBg)],
+        ["--landing-footer-bg", sanitizeColor(landingColors.footerBg)],
+    ] : [];
+    const cssBody = cssVars
+        .filter((entry): entry is [string, string] => Boolean(entry[1]))
+        .map(([name, value]) => `${name}: ${value};`)
+        .join("\n            ");
+    const themeStyles = cssBody ? `
         :root {
-            ${landingColors.primaryColor ? `--landing-primary: ${landingColors.primaryColor};` : ''}
-            ${landingColors.secondaryColor ? `--landing-secondary: ${landingColors.secondaryColor};` : ''}
-            ${landingColors.accentColor ? `--landing-accent: ${landingColors.accentColor};` : ''}
-            ${landingColors.headerBg ? `--landing-header-bg: ${landingColors.headerBg};` : ''}
-            ${landingColors.footerBg ? `--landing-footer-bg: ${landingColors.footerBg};` : ''}
+            ${cssBody}
         }
     ` : '';
 
