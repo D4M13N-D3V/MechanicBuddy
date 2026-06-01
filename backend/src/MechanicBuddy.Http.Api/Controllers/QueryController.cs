@@ -44,9 +44,11 @@ namespace MechanicBuddy.Http.Api.Controllers
                         union all
                         select id, 'Employer' as resourcename,concat_ws(' ',firstname,lastname) as name,'tootaja' as controller from domain.employee 
                         ) results   
-	                        where to_tsvector(name) @@ to_tsquery(@arg)
+	                        where to_tsvector(name) @@ plainto_tsquery(@arg)
                         limit 10";
-            var arg = new WildcardTokens(searchText).ToString();
+            // plainto_tsquery accepts free text safely (parameterized). The old
+            // WildcardTokens.ToString() returned the type name, so search never worked.
+            var arg = searchText ?? string.Empty;
 
             var results = session.Connection.Query(sql, new { arg }).ToList();
 
