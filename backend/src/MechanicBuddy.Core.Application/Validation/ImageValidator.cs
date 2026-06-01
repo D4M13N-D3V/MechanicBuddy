@@ -25,8 +25,10 @@ namespace MechanicBuddy.Core.Application.Validation
             "image/jpg",
             "image/png",
             "image/gif",
-            "image/webp",
-            "image/svg+xml"
+            "image/webp"
+            // SVG intentionally NOT allowed: SVG is XML and can carry <script>,
+            // and these images are served same-origin from anonymous endpoints,
+            // which would allow stored XSS.
         };
 
         // Magic bytes for common image formats
@@ -84,8 +86,7 @@ namespace MechanicBuddy.Core.Application.Validation
             }
 
             // Validate magic bytes (actual file content matches declared MIME type)
-            // Skip SVG as it's text-based
-            if (mimeType != "image/svg+xml" && !ValidateMagicBytes(imageBytes, mimeType))
+            if (!ValidateMagicBytes(imageBytes, mimeType))
             {
                 return ImageValidationResult.Failure("Image content does not match declared MIME type");
             }
@@ -198,8 +199,8 @@ namespace MechanicBuddy.Core.Application.Validation
 
             if (!MagicBytes.TryGetValue(lookupMime, out var expectedMagicBytesArray))
             {
-                // Unknown type, allow it (conservative approach for extensibility)
-                return true;
+                // Fail closed: a MIME type we cannot verify by magic bytes is rejected.
+                return false;
             }
 
             foreach (var expectedMagicBytes in expectedMagicBytesArray)
