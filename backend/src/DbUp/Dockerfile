@@ -14,4 +14,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
+# Run as non-root uid 1000 to match the pod securityContext (runAsUser = 1000).
+USER 1000
+
 ENTRYPOINT ["dotnet", "DbUp.dll"]

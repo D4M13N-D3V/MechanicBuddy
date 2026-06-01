@@ -71,4 +71,11 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
+# Run as non-root uid 1000 to match the pod securityContext (runAsUser/fsGroup
+# = 1000 in the Helm charts). The .NET base image's built-in 'app' user is uid
+# 1654, which would NOT own these dirs once the pod forces uid 1000 — so chown
+# to 1000 explicitly and run as that uid.
+RUN chown -R 1000:1000 /app /var/carcare /opt/puppeteer
+USER 1000
+
 ENTRYPOINT ["dotnet","MechanicBuddy.Http.Api.dll"]
