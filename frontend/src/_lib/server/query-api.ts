@@ -58,13 +58,11 @@ async function apiCall({
    
   const response = await fetch(fullUrl,request);
   if (!response.ok) {
-    debugger;
     const responseText = await response.text();
-    console.log("API response content type header: " + response.headers.get('Content-Type'));
-    console.log("API threw an exception: " + responseText);
-    console.log(method+' request to: '+fullUrl);
-    console.log('headers: '+JSON.stringify(requestHeaders));
-    console.log('body: '+request.body);
+    // Do NOT log request headers (contains Authorization) or the request body.
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(`API error: ${method} ${fullUrl} -> ${response.status}`);
+    }
     const hasContentType = response.headers.has('Content-Type');
     let message = 'API Error occurred server side';
     let isUserError = false;
