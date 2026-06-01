@@ -32,7 +32,10 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
         _postgresHost = configuration["Database:PostgresHost"] ?? "postgres";
         _postgresPort = int.TryParse(configuration["Database:PostgresPort"], out var port) ? port : 5432;
         _postgresUser = configuration["Database:PostgresUser"] ?? "postgres";
-        _postgresPassword = configuration["Database:PostgresPassword"] ?? "postgres";
+        // No default for the password: fail fast rather than fall back to a
+        // well-known credential.
+        _postgresPassword = configuration["Database:PostgresPassword"]
+            ?? throw new InvalidOperationException("Database:PostgresPassword is not configured");
         // Tenant databases are named: mechanicbuddy-{tenantId}
         // Use dedicated config key to avoid confusion with management database
         _tenantDbPrefix = configuration["Database:TenantDatabasePrefix"] ?? "mechanicbuddy";

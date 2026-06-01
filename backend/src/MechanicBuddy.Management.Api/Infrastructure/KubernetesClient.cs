@@ -56,7 +56,10 @@ public class KubernetesClient : IKubernetesClient
         _baseDomain = configuration["Cloudflare:BaseDomain"] ?? "mechanicbuddy.app";
         _postgresHost = configuration["Database:PostgresHost"] ?? "postgres";
         _postgresUser = configuration["Database:PostgresUser"] ?? "postgres";
-        _postgresPassword = configuration["Database:PostgresPassword"] ?? "postgres";
+        // No default for the password: fail fast rather than fall back to a
+        // well-known credential that would be serialized into tenant secrets.
+        _postgresPassword = configuration["Database:PostgresPassword"]
+            ?? throw new InvalidOperationException("Database:PostgresPassword is not configured");
 
         // Resend SMTP configuration for tenant instances
         _resendSmtpHost = configuration["Email:SmtpHost"] ?? "smtp.resend.com";
