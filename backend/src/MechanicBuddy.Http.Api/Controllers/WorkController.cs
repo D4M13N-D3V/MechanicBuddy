@@ -102,7 +102,7 @@ namespace MechanicBuddy.Http.Api.Controllers
 										   startedon,
 										   starterId,'offer' as name,
 										   notes,
-										   isvehilelesonestimate as isvehiclelinesonpricing,
+										   isvehilelinesonestimate as isvehiclelinesonpricing,
 										   (offer.notes IS NULL OR length(offer.notes)=0) 
 										    and not   exists(select * from domain.productoffered where offerid = offer.id)
 											and not exists(select * from domain.serviceoffered where offerid = offer.id) AS isempty 
