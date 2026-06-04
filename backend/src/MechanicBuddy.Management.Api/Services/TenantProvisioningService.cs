@@ -110,12 +110,16 @@ public class TenantProvisioningService : ITenantProvisioningService
             // Step 4: Create tenant database on shared PostgreSQL cluster
             AddLog(result, "Info", "CreateDatabase", "Creating database on shared PostgreSQL cluster");
             var ownerFullName = $"{request.OwnerFirstName} {request.OwnerLastName}".Trim();
+            // Per-tenant random admin password (never a shared default); surfaced
+            // in the result for out-of-band delivery to the owner.
+            var adminPassword = SecurePasswordGenerator.Generate();
             await _dbProvisioner.ProvisionTenantDatabaseAsync(
                 tenantId,
                 _options.FreeTier.PostgresHost,
                 _options.FreeTier.PostgresPort,
                 request.OwnerEmail,
-                ownerFullName);
+                ownerFullName,
+                adminPassword);
 
             AddLog(result, "Info", "CreateDatabase", "Database created successfully");
 
@@ -179,9 +183,9 @@ public class TenantProvisioningService : ITenantProvisioningService
             result.TenantUrl = $"https://{domain}";
             result.ApiUrl = $"https://{domain}/api";
 
-            // Step 8: Set admin credentials
-            result.AdminUsername = _options.DefaultAdmin.Username;
-            result.AdminPassword = _options.DefaultAdmin.Password;
+            // Step 8: Set admin credentials (the actual per-tenant random password)
+            result.AdminUsername = "admin";
+            result.AdminPassword = adminPassword;
 
             // Step 9: Set resource allocation (shared instance limits)
             var tierLimits = GetTierLimits(request.SubscriptionTier, request.ResourceOverrides);

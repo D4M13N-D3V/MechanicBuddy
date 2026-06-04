@@ -17,11 +17,6 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     // Template employee ID (from mechanicbuddy-testt template database)
     private const string TemplateEmployeeId = "a7227c1f-3bbc-4367-a9b8-baa83d0f19ca";
 
-    // Default admin password - same as the application default "carcare"
-    private const string DefaultAdminPassword = "carcare";
-    // BCrypt hash of "carcare" - precomputed for consistency
-    private const string DefaultAdminPasswordHash = "$2a$11$zsTS62pGn5Cfca4CgqRJxebx45je/3nJj.puxIArFwtAjHew67m6i";
-
     public TenantDatabaseProvisioner(
         IConfiguration configuration,
         ILogger<TenantDatabaseProvisioner> logger)
@@ -56,7 +51,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
     /// <param name="ownerEmail">Owner's email address for the admin account (null = use default).</param>
     /// <param name="ownerName">Owner's name for the admin account (null = use default).</param>
     /// <returns>Connection string to the tenant database.</returns>
-    public async Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort, string? ownerEmail = null, string? ownerName = null)
+    public async Task<string> ProvisionTenantDatabaseAsync(string tenantId, string? targetPostgresHost, int? targetPostgresPort, string? ownerEmail = null, string? ownerName = null, string? adminPassword = null)
     {
         var tenantDbName = GetTenantDbName(tenantId);
         var postgresHost = targetPostgresHost ?? _postgresHost;
@@ -100,7 +95,7 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
 
         // Create admin user in tenancy database (always uses default host - shared tenancy DB)
         // But employee name update needs to use the target host where the tenant DB resides
-        await CreateDefaultAdminAsync(tenantId, postgresHost, postgresPort, ownerEmail, ownerName);
+        await CreateDefaultAdminAsync(tenantId, postgresHost, postgresPort, ownerEmail, ownerName, adminPassword);
 
         _logger.LogInformation("Successfully provisioned database for tenant {TenantId} on host {Host}", tenantId, postgresHost);
 
@@ -246,8 +241,13 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             rowsAffected, tenantDbName, tenantId);
     }
 
-    private async Task CreateDefaultAdminAsync(string tenantId, string postgresHost, int postgresPort, string? ownerEmail = null, string? ownerName = null)
+    private async Task CreateDefaultAdminAsync(string tenantId, string postgresHost, int postgresPort, string? ownerEmail = null, string? ownerName = null, string? adminPassword = null)
     {
+        // Use the supplied password or generate a cryptographically-random one.
+        var plaintextPassword = string.IsNullOrEmpty(adminPassword)
+            ? SecurePasswordGenerator.Generate()
+            : adminPassword;
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(plaintextPassword);
         // Create admin user in the tenancy database (where all users are stored)
         // The employee record already exists in the cloned tenant database from the template
         var tenancyConnectionString = BuildConnectionString(_tenancyDbName);
@@ -273,14 +273,14 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             }
         }
 
-        // Create the admin user with the default "carcare" password
-        // Users will be prompted to change password on first login
+        // Create the admin user with a per-tenant random password.
+        // Users are prompted to change password on first login.
         await using (var cmd = new NpgsqlCommand(@"
             INSERT INTO public.""user"" (username, password, tenantname, email, validated, profile_image, employeeid, must_change_password)
             VALUES (@username, @password, @tenantname, @email, @validated, @profileImage, @employeeId, @mustChangePassword)", connection))
         {
             cmd.Parameters.AddWithValue("username", "admin");
-            cmd.Parameters.AddWithValue("password", DefaultAdminPasswordHash);
+            cmd.Parameters.AddWithValue("password", passwordHash);
             cmd.Parameters.AddWithValue("tenantname", tenantId);
             cmd.Parameters.AddWithValue("email", email);
             cmd.Parameters.AddWithValue("validated", true);
@@ -297,8 +297,8 @@ public class TenantDatabaseProvisioner : ITenantDatabaseProvisioner
             await UpdateEmployeeNameAsync(tenantId, postgresHost, postgresPort, employeeId, ownerName);
         }
 
-        _logger.LogInformation("Created default admin user for tenant {TenantId} with email {Email}. Default password: {Password}",
-            tenantId, email, DefaultAdminPassword);
+        // Never log the plaintext password.
+        _logger.LogInformation("Created default admin user for tenant {TenantId} with email {Email}", tenantId, email);
     }
 
     private async Task UpdateEmployeeNameAsync(string tenantId, string postgresHost, int postgresPort, Guid employeeId, string fullName)
