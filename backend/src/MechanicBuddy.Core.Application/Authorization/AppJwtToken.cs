@@ -23,7 +23,7 @@ namespace MechanicBuddy.Core.Application.Authorization
         {
             EnsureJwtSecret(options);
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(options.Secret);
+            var key = Encoding.UTF8.GetBytes(options.Secret);
             tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
@@ -46,7 +46,7 @@ namespace MechanicBuddy.Core.Application.Authorization
         {
             EnsureJwtSecret(options);
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(options.Secret);
+            var key = Encoding.UTF8.GetBytes(options.Secret);
 
             var subject = ((ClaimsIdentity)principal.Identity);
 
